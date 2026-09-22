@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ARK305 — app
 
-## Getting Started
+La app real de ARK305, hecha con el diseño nuevo (negro, dorado y crema).
 
-First, run the development server:
+## Cómo abrirla en tu compu
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Luego abre http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pantallas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Dirección | Pantalla |
+|---|---|
+| `/` | Inicio: funciones y Concierge IA |
+| `/perfil` | Tu perfil, con la lista "Hazte visible" |
+| `/@usuario` | Perfil público de cualquier persona (por ejemplo `/@lente305`) |
+| `/descubrir` | Buscar personas y servicios |
+| `/ganar` | Gana dinero |
+| `/crear` | Crear |
 
-## Learn More
+## Dónde está cada cosa
 
-To learn more about Next.js, take a look at the following resources:
+- `src/app/` — una carpeta por pantalla.
+- `src/components/` — piezas que se repiten (barra de abajo, perfil, íconos).
+- `src/lib/dictionaries/` — todos los textos en español (`es.ts`) e inglés (`en.ts`).
+- `src/lib/mock-data.ts` — perfiles y servicios de ejemplo. En la Fase 2 se cambian por datos reales de Supabase.
+- `src/proxy.ts` — hace que `ark305.com/@usuario` abra el perfil.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Idioma
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+La app se abre en inglés si el teléfono está en inglés y en español en los demás casos. Se cambia en el menú (☰) del perfil.
 
-## Deploy on Vercel
+## Estado
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Fase 1:** las pantallas son reales, pero los datos son de ejemplo. Los botones que todavía no funcionan muestran "Muy pronto en ARK305".
