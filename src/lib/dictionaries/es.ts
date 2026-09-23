@@ -80,6 +80,13 @@ export const es = {
     ladderLabel: "Escalón",
     ladderNote: "Los escalones se ganan con trabajo real, reseñas y certificaciones. Las suscripciones no suben de escalón.",
     goHome: "Ir a mi inicio",
+    demand: "Lo que necesitas de ARK",
+    supply: "Lo que puedes ofrecer en ARK",
+    supplyNone: "Cuando quieras, también puedes ofrecer: tus habilidades, tus cosas o recomendar gente.",
+    both: "En ARK todos pueden contratar y ofrecer a la vez.",
+    experiences: "Experiencias para tu negocio",
+    expLine: (kinds: string, who: string, freq?: string) => `${kinds} para ${who}${freq ? `, ${freq}` : ""}.`,
+    planExp: "Armar la primera",
     knows: "Lo que ARK sabe de mí",
   },
   knows: {

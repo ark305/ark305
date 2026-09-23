@@ -20,6 +20,7 @@ export type Question = {
 };
 
 const o = (id: string, es: string, en: string): Opt => ({ id, label: { es, en } });
+const list = (a: Answers, id: string) => (Array.isArray(a[id]) ? (a[id] as string[]) : a[id] ? [a[id] as string] : []);
 
 export const WHO: Question = {
   id: "who",
@@ -78,6 +79,12 @@ const INDIVIDUAL: Question[] = [
     kind: "single",
     options: [o("none", "Nada todavía", "Nothing yet"), o("some", "Algo", "Some"), o("team", "Un equipo completo", "A full team")],
   },
+  {
+    id: "offer",
+    ask: { es: "En ARK todos pueden contratar y también ofrecer. ¿Te gustaría ganar algo aquí?", en: "On ARK everyone can hire and also offer. Would you like to earn something here?" },
+    kind: "multi",
+    options: [o("skills", "Con lo que sé hacer", "With my skills"), o("assets", "Con mis cosas (bote, carro, casa)", "With my things (boat, car, home)"), o("refer", "Recomendando gente", "By referring people"), o("no", "Por ahora no", "Not for now")],
+  },
 ];
 
 const EARNER: Question[] = [
@@ -134,7 +141,48 @@ const EARNER: Question[] = [
       o("trust", "No tengo reseñas", "No reviews yet"),
     ],
   },
+  {
+    id: "need",
+    ask: { es: "¿Y qué te ayudaría más a crecer?", en: "And what would help you grow most?" },
+    kind: "multi",
+    options: [o("clients", "Clientes", "Clients"), o("training", "Capacitación", "Training"), o("team", "Un equipo", "A team"), o("tools", "Herramientas", "Tools"), o("funding", "Financiamiento", "Funding")],
+  },
 ];
+
+// Experiencias que necesita un negocio o empresa, y quién las recibe.
+const EXP_FOR: Question = {
+  id: "expFor",
+  ask: { es: "Tu negocio también puede usar ARK para vivir experiencias. ¿Para quién serían?", en: "Your business can also use ARK for experiences. Who would they be for?" },
+  kind: "multi",
+  options: [
+    o("clients", "Mis clientes", "My clients"),
+    o("team", "Mi equipo", "My team"),
+    o("vip", "Ejecutivos o VIP", "Executives or VIPs"),
+    o("guests", "Invitados de eventos", "Event guests"),
+    o("partners", "Socios o inversionistas", "Partners or investors"),
+    o("none", "Por ahora no", "Not for now"),
+  ],
+};
+const needsExperiences = (a: Answers) => list(a, "expFor").some((x) => x !== "none");
+const EXP_TYPES: Question = {
+  id: "expTypes",
+  ask: { es: "¿Qué tipo de experiencias?", en: "What kind of experiences?" },
+  kind: "multi",
+  options: [
+    o("entertain", "Cenas y yates con clientes", "Dinners and yachts with clients"),
+    o("events", "Eventos y lanzamientos", "Events and launches"),
+    o("offsite", "Retiros de equipo", "Team offsites"),
+    o("travel", "Viajes ejecutivos", "Executive travel"),
+    o("gifts", "Regalos e incentivos", "Gifts and incentives"),
+    o("content", "Contenido para la marca", "Brand content"),
+  ],
+};
+const EXP_FREQ: Question = {
+  id: "expFreq",
+  ask: { es: "¿Cada cuánto?", en: "How often?" },
+  kind: "single",
+  options: [o("once", "Una vez", "Once"), o("monthly", "Cada mes", "Monthly"), o("weekly", "Cada semana", "Weekly")],
+};
 
 const COMPANY: Question[] = [
   {
@@ -152,9 +200,9 @@ const COMPANY: Question[] = [
   },
   {
     id: "team",
-    ask: { es: "¿Cuántas personas trabajan contigo?", en: "How many people work with you?" },
+    ask: { es: "¿De qué tamaño es tu negocio?", en: "How big is your business?" },
     kind: "single",
-    options: [o("solo", "Solo yo", "Just me"), o("2-5", "2 a 5", "2 to 5"), o("6-20", "6 a 20", "6 to 20"), o("20+", "Más de 20", "More than 20")],
+    options: [o("solo", "Solo yo", "Just me"), o("small", "Pequeño (2 a 10)", "Small (2–10)"), o("medium", "Mediano (11 a 100)", "Medium (11–100)"), o("large", "Grande (más de 100)", "Large (100+)")],
   },
   {
     id: "revenue",
@@ -174,6 +222,9 @@ const COMPANY: Question[] = [
     kind: "single",
     options: [o("grow", "Crecer", "Grow"), o("hire", "Contratar", "Hire"), o("systems", "Ordenar procesos", "Systematize"), o("expand", "Expandirme", "Expand"), o("sell", "Vender el negocio", "Sell the business")],
   },
+  EXP_FOR,
+  { ...EXP_TYPES, showIf: needsExperiences },
+  { ...EXP_FREQ, showIf: needsExperiences },
 ];
 
 const ENTERPRISE: Question[] = [
@@ -189,6 +240,13 @@ const ENTERPRISE: Question[] = [
     ask: { es: "¿Qué necesitan de ARK?", en: "What do you need from ARK?" },
     kind: "multi",
     options: [o("events", "Eventos y offsites", "Events & offsites"), o("travel", "Viajes ejecutivos", "Executive travel"), o("staffing", "Personal a escala", "Staffing at scale"), o("remote", "Equipos remotos", "Remote teams"), o("deals", "Compras de empresas", "Acquisitions")],
+  },
+  { ...EXP_FOR, id: "expFor", showIf: (a) => list(a, "needs").some((n) => n === "events" || n === "travel") },
+  {
+    id: "offer",
+    ask: { es: "¿La empresa también ofrece algo que otros puedan contratar en ARK?", en: "Does the company also offer something others could book on ARK?" },
+    kind: "multi",
+    options: [o("venues", "Espacios o venues", "Spaces or venues"), o("products", "Productos", "Products"), o("services", "Servicios corporativos", "Corporate services"), o("sponsor", "Patrocinios", "Sponsorships"), o("no", "Por ahora no", "Not for now")],
   },
   {
     id: "approval",
@@ -259,10 +317,14 @@ export type Snapshot = {
   dayPrompt?: Localized;
   health?: { score: number; metric: Localized };
   blueprint?: string[]; // ids de puestos de Talento
+  // Todos pueden ser cliente y proveedor a la vez:
+  demand: Localized[]; // lo que necesita de ARK
+  supply: Localized[]; // lo que puede ofrecer en ARK
+  size?: Localized; // pequeño, mediano o grande
+  experiences?: { recipients: Localized; kinds: Localized; freq?: Localized; prompt: Localized };
 };
 
 const L = (es: string, en: string): Localized => ({ es, en });
-const list = (a: Answers, id: string) => (Array.isArray(a[id]) ? (a[id] as string[]) : a[id] ? [a[id] as string] : []);
 const pick = <T>(xs: T[], n = 3) => xs.filter(Boolean).slice(0, n);
 
 const INTEREST: Record<string, Localized> = {
@@ -303,7 +365,141 @@ export const PLAYBOOK: Record<string, string[]> = {
   other: ["r-va", "r-book", "r-crm"],
 };
 
+type Base = Omit<Snapshot, "demand" | "supply" | "size" | "experiences">;
+
+const RECIPIENT: Record<string, Localized> = {
+  clients: L("tus clientes", "your clients"),
+  team: L("tu equipo", "your team"),
+  vip: L("ejecutivos VIP", "VIP executives"),
+  guests: L("invitados de eventos", "event guests"),
+  partners: L("socios", "partners"),
+};
+const EXP_KIND: Record<string, Localized> = {
+  entertain: L("yates con cena", "yacht dinners"),
+  events: L("eventos de lanzamiento", "launch events"),
+  offsite: L("retiros de equipo", "team offsites"),
+  travel: L("viajes ejecutivos", "executive travel"),
+  gifts: L("regalos corporativos", "corporate gifts"),
+  content: L("contenido de marca", "brand content"),
+};
+const SIZE: Record<string, Localized> = {
+  solo: L("Negocio de una persona", "One-person business"),
+  small: L("Negocio pequeño", "Small business"),
+  medium: L("Negocio mediano", "Medium business"),
+  large: L("Negocio grande", "Large business"),
+  "50": L("Empresa grande (50 a 200)", "Large company (50–200)"),
+  "200": L("Empresa grande (200 a 1,000)", "Large company (200–1,000)"),
+  "1000": L("Corporación (más de 1,000)", "Corporation (1,000+)"),
+};
+const INDUSTRY: Record<string, Localized> = {
+  yachts: L("yates y charters", "yachts and charters"),
+  food: L("restaurante o noche", "restaurant or nightlife"),
+  transport: L("transporte", "transportation"),
+  realestate: L("bienes raíces", "real estate"),
+  brand: L("tu marca", "your brand"),
+  other: L("tus servicios", "your services"),
+};
+
+// Lo que cada persona o negocio necesita y lo que puede ofrecer (todos son las dos cosas).
+function market(a: Answers, base: Base): Snapshot {
+  const demand: Localized[] = [];
+  const supply: Localized[] = [];
+  let experiences: Snapshot["experiences"];
+
+  if (a.who === "individual") {
+    demand.push(L("Días y experiencias en Miami", "Days and experiences in Miami"));
+    if (a.support === "none" || a.support === "some") demand.push(L("Ayuda fija en casa y en tu día", "Regular help at home and day to day"));
+    const offer = list(a, "offer");
+    if (offer.includes("skills")) supply.push(L("Tus habilidades, por horas o por proyecto", "Your skills, hourly or per project"));
+    if (offer.includes("assets")) supply.push(L("Tus cosas: bote, carro o casa, con reserva", "Your things: boat, car or home, bookable"));
+    if (offer.includes("refer")) supply.push(L("Recomendar clientes y proveedores", "Referring clients and providers"));
+  }
+  if (a.who === "earner") {
+    const needs: Record<string, Localized> = {
+      clients: L("Clientes", "Clients"),
+      training: L("Capacitación y certificados", "Training and certificates"),
+      team: L("Un equipo para crecer", "A team to grow"),
+      tools: L("Herramientas (CRM, agenda, cobros)", "Tools (CRM, calendar, payments)"),
+      funding: L("Financiamiento (cuando tengas historial en ARK)", "Funding (once you have history on ARK)"),
+    };
+    list(a, "need").forEach((n) => needs[n] && demand.push(needs[n]));
+    list(a, "skills").forEach((s) => SKILL[s] && supply.push(L(`Tu servicio de ${SKILL[s].es}`, `Your ${SKILL[s].en} service`)));
+    list(a, "assets")
+      .filter((x) => x !== "none" && x !== "laptop")
+      .forEach(() => supply.length < 5 && supply.push(L("Tus herramientas incluidas en el servicio", "Your equipment included in the service")));
+  }
+  if (a.who === "company" || a.who === "enterprise") {
+    if (a.who === "company") supply.push(L(`Lo que vendes: ${INDUSTRY[(a.industry as string) ?? "other"].es}`, `What you sell: ${INDUSTRY[(a.industry as string) ?? "other"].en}`));
+    list(a, "offer")
+      .filter((x) => x !== "no")
+      .forEach((x) => {
+        const m: Record<string, Localized> = {
+          venues: L("Tus espacios para eventos", "Your spaces for events"),
+          products: L("Tus productos", "Your products"),
+          services: L("Tus servicios corporativos", "Your corporate services"),
+          sponsor: L("Patrocinios", "Sponsorships"),
+        };
+        if (m[x]) supply.push(m[x]);
+      });
+    if (a.breaking === "staffing" || a.goal === "hire") demand.push(L("Talento y equipos", "Talent and teams"));
+    if (a.breaking === "demand" || a.goal === "grow") demand.push(L("Más clientes", "More clients"));
+    list(a, "needs").forEach((n) => {
+      const m: Record<string, Localized> = {
+        events: L("Eventos y offsites", "Events and offsites"),
+        travel: L("Viajes ejecutivos", "Executive travel"),
+        staffing: L("Personal a escala", "Staffing at scale"),
+        remote: L("Equipos remotos", "Remote teams"),
+        deals: L("Compras de empresas (con asesores con licencia)", "Acquisitions (with licensed advisors)"),
+      };
+      if (m[n]) demand.push(m[n]);
+    });
+
+    const recips = list(a, "expFor").filter((x) => x !== "none" && RECIPIENT[x]);
+    if (recips.length) {
+      const kinds = list(a, "expTypes").map((k) => EXP_KIND[k]).filter(Boolean);
+      const r = joinL(recips.map((x) => RECIPIENT[x]));
+      const k = kinds.length ? joinL(kinds) : L("experiencias", "experiences");
+      const freq = a.expFreq === "weekly" ? L("cada semana", "every week") : a.expFreq === "monthly" ? L("cada mes", "every month") : a.expFreq === "once" ? L("una vez", "once") : undefined;
+      experiences = {
+        recipients: r,
+        kinds: k,
+        freq,
+        prompt: L(
+          recips.includes("clients") ? "Cena y yate para 8 clientes" : recips.includes("team") ? "Retiro de equipo para 12, algo en el agua y cena" : "Evento para 20 invitados con chef y fotos",
+          recips.includes("clients") ? "Dinner and a yacht for 8 clients" : recips.includes("team") ? "Team offsite for 12, something on the water and dinner" : "Event for 20 guests with a chef and photos",
+        ),
+      };
+      demand.push(L(`Experiencias para ${r.es}`, `Experiences for ${r.en}`));
+    }
+  }
+
+  const size = a.who === "company" ? SIZE[a.team as string] : a.who === "enterprise" ? SIZE[a.size as string] : undefined;
+  const snap: Snapshot = { ...base, demand: pick(demand, 4), supply: pick(supply, 4), size, experiences };
+
+  // Si puede ofrecer algo, un paso concreto para empezar; si necesita experiencias, uno para armarlas.
+  if (a.who === "individual" && supply.length) {
+    snap.opportunities = [L("Gana en ARK con lo que ya tienes", "Earn on ARK with what you already have"), ...snap.opportunities].slice(0, 3);
+    snap.actions = [...snap.actions.slice(0, 2), { label: L("Publica lo que ofreces", "Publish what you offer"), href: "/perfil/editar" }];
+  }
+  if (experiences) {
+    snap.opportunities = [
+      a.expFreq === "monthly" || a.expFreq === "weekly"
+        ? L(`Plan de experiencias ${experiences.freq?.es} para ${experiences.recipients.es}`, `An experience plan ${experiences.freq?.en} for ${experiences.recipients.en}`)
+        : L(`Experiencias para ${experiences.recipients.es}, con una sola factura`, `Experiences for ${experiences.recipients.en}, on one invoice`),
+      ...snap.opportunities,
+    ].slice(0, 3);
+    snap.actions = [snap.actions[0], { label: L(`Arma una experiencia para ${experiences.recipients.es}`, `Plan an experience for ${experiences.recipients.en}`), href: `/mi-dia?q=${encodeURIComponent(experiences.prompt.es)}` }, snap.actions[1]];
+  }
+  if (a.who === "company" && a.team === "large") snap.enterprise = true;
+  return snap;
+}
+
 export function buildSnapshot(a: Answers): Snapshot | null {
+  const base = baseSnapshot(a);
+  return base ? market(a, base) : null;
+}
+
+function baseSnapshot(a: Answers): Base | null {
   if (!a.who) return null;
 
   if (a.who === "individual") {
@@ -404,10 +600,10 @@ export function buildSnapshot(a: Answers): Snapshot | null {
 
   if (a.who === "company") {
     const rev = a.revenue as string | undefined;
-    const ladder: Ladder = rev === "20-100" || rev === "100+" || a.team === "6-20" || a.team === "20+" ? "owner" : "operator";
+    const ladder: Ladder = rev === "20-100" || rev === "100+" || a.team === "medium" || a.team === "large" ? "owner" : "operator";
     const score = Math.max(
       30,
-      Math.min(90, 45 + ({ lt5: 0, "5-20": 10, "20-100": 18, "100+": 25 }[rev ?? ""] ?? 5) + ({ solo: 0, "2-5": 5, "6-20": 8, "20+": 10 }[(a.team as string) ?? ""] ?? 0) - (a.breaking === "cash" ? 10 : 5)),
+      Math.min(90, 45 + ({ lt5: 0, "5-20": 10, "20-100": 18, "100+": 25 }[rev ?? ""] ?? 5) + ({ solo: 0, small: 5, medium: 8, large: 10 }[(a.team as string) ?? ""] ?? 0) - (a.breaking === "cash" ? 10 : 5)),
     );
     const metric: Record<string, Localized> = {
       demand: L("Clientes nuevos por mes", "New clients per month"),

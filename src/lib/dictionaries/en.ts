@@ -82,6 +82,13 @@ export const en: typeof es = {
     ladderLabel: "Level",
     ladderNote: "Levels are earned with real work, reviews and certifications. Subscriptions never raise your level.",
     goHome: "Go to my home",
+    demand: "What you need from ARK",
+    supply: "What you can offer on ARK",
+    supplyNone: "Whenever you like, you can also offer: your skills, your things or referrals.",
+    both: "On ARK everyone can hire and offer at the same time.",
+    experiences: "Experiences for your business",
+    expLine: (kinds: string, who: string, freq?: string) => `${kinds} for ${who}${freq ? `, ${freq}` : ""}.`,
+    planExp: "Plan the first one",
     knows: "What ARK knows about me",
   },
   knows: {

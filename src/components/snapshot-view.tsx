@@ -63,6 +63,7 @@ export function SnapshotView({ locale, fromAccount }: { locale: Locale; fromAcco
         <p className="flex flex-wrap items-center gap-2">
           <span className={`rounded-full px-3 py-1 text-[13px] font-bold text-ink ${snap.side === "business" ? "bg-[#D8B170]" : "bg-[#7FC2B7]"}`}>{t.side[snap.side]}</span>
           {snap.ladder && <span className="rounded-full border border-white/15 px-3 py-1 text-[13px] font-bold text-cream">{`${s.ladderLabel}: ${s.ladder[snap.ladder]}`}</span>}
+          {snap.size && <span className="rounded-full border border-white/15 px-3 py-1 text-[13px] font-bold text-cream">{snap.size[locale]}</span>}
           {snap.enterprise && <span className="rounded-full border border-white/15 px-3 py-1 text-[13px] font-bold text-cream">{t.side.enterprise}</span>}
         </p>
         <p className="text-[14px] leading-snug text-cream/85">{snap.reason[locale]}</p>
@@ -82,6 +83,28 @@ export function SnapshotView({ locale, fromAccount }: { locale: Locale; fromAcco
           ))}
         </ol>
       </Section>
+
+      {/* Todos son cliente y proveedor a la vez */}
+      <div className="grid grid-cols-1 gap-2">
+        <Section title={s.demand}>
+          <Items xs={snap.demand} locale={locale} />
+        </Section>
+        <Section title={s.supply}>
+          {snap.supply.length ? <Items xs={snap.supply} locale={locale} /> : <p className="text-[14px] text-mute">{s.supplyNone}</p>}
+        </Section>
+        <p className="px-1 text-[12px] text-mute">{s.both}</p>
+      </div>
+
+      {snap.experiences && (
+        <Section title={s.experiences}>
+          <p className="text-[15px] leading-snug text-cream">
+            {s.expLine(snap.experiences.kinds[locale].replace(/^./, (c) => c.toUpperCase()), snap.experiences.recipients[locale], snap.experiences.freq?.[locale])}
+          </p>
+          <Link href={`/mi-dia?q=${encodeURIComponent(snap.experiences.prompt[locale])}`} className="mt-1 text-sm font-bold text-gold">
+            {s.planExp}: “{snap.experiences.prompt[locale]}” →
+          </Link>
+        </Section>
+      )}
 
       <Section title={s.strengths}>
         <Items xs={snap.strengths} locale={locale} />
