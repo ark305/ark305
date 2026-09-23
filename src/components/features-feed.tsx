@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IconArrow, IconCalendar, IconChart, IconChatSpark, IconPeople, IconSparkle, IconTicket } from "./icons";
 import { SoonButton } from "./toast";
@@ -14,7 +15,7 @@ const ICONS = {
 };
 
 export type FeatureKey = keyof typeof ICONS;
-export type Feature = { key: FeatureKey; label: string; tagline: string; body: string; color: string };
+export type Feature = { key: FeatureKey; label: string; tagline: string; body: string; color: string; href?: string };
 export type FeatureGroup = { title: string; count: string; items: Feature[] };
 type DemoText = { chatUser: string; chatArk: { before: string; total: string; after: string }; primary: string; secondary: string };
 
@@ -108,9 +109,15 @@ export function FeaturesFeed({ groups, demo, howItWorks }: { groups: FeatureGrou
                     {f.tagline}
                   </p>
                   <p className="line-clamp-3 text-base leading-[1.55] text-mute">{f.body}</p>
-                  <SoonButton className="flex h-9 items-center gap-2 self-start text-base font-bold" style={{ color: f.color }}>
-                    {howItWorks} <IconArrow size={18} stroke={f.color} />
-                  </SoonButton>
+                  {f.href ? (
+                    <Link href={f.href} className="flex h-9 items-center gap-2 self-start text-base font-bold" style={{ color: f.color }}>
+                      {howItWorks} <IconArrow size={18} stroke={f.color} />
+                    </Link>
+                  ) : (
+                    <SoonButton className="flex h-9 items-center gap-2 self-start text-base font-bold" style={{ color: f.color }}>
+                      {howItWorks} <IconArrow size={18} stroke={f.color} />
+                    </SoonButton>
+                  )}
                 </article>
               );
             })}

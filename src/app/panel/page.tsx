@@ -47,7 +47,7 @@ export default async function PanelPage() {
   const groups: FeatureGroup[] = GROUPS.map((g) => ({
     title: p.groups[g.title],
     count: p.count(g.keys.length),
-    items: g.keys.map((key) => ({ key, color: COLORS[key], ...p.features[key] })),
+    items: g.keys.map((key) => ({ key, color: COLORS[key], ...p.features[key], href: key === "talent" ? "/talento" : undefined })),
   }));
 
   const stats = [

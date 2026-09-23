@@ -30,6 +30,7 @@ Por ahora el modo y el nivel se guardan en el navegador y cambiar de nivel no co
 | `/descubrir` | Buscar personas por tipo de perfil |
 | `/panel` | Panel (Ofrecer): reservas, ventas, ARK IA para vender y herramientas |
 | `/crear` · `/ganar` | Crear y Gana dinero (Ofrecer) |
+| `/talento` | Talento (Business): 138 posiciones presenciales y remotas |
 | `/comunidad` | Academia, Equipos, Grupos y Eventos |
 | `/niveles` | Personal, Business y Súper Premium VIP |
 | `/private` | ARK Private (solo VIP; código de prueba ARKPRIVATE) |

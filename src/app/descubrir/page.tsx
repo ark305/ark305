@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DiscoverGrid } from "@/components/discover-grid";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { profiles } from "@/lib/mock-data";
+import { positions } from "@/lib/talent";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -21,5 +22,5 @@ export default async function DiscoverPage() {
     near: p.near,
     photo: p.photo,
   }));
-  return <DiscoverGrid items={items} text={t.discover} vip={level === "vip"} />;
+  return <DiscoverGrid items={items} text={{ ...t.discover, talentTitle: t.talent.discoverTitle, talentSub: t.talent.discoverSub(positions.length) }} vip={level === "vip"} />;
 }

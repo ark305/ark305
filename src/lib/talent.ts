@@ -1,0 +1,200 @@
+// Talento (sección de Business): todas las posiciones del prototipo anterior,
+// presenciales en Miami y remotas desde Latinoamérica. Tarifas "desde".
+import type { Localized } from "./locale";
+
+// h = por hora · p = por proyecto o por persona · f = tarifa fija · m = mensual · q = a cotizar
+export type RateUnit = "h" | "p" | "f" | "m" | "q";
+export type Position = { id: string; group: string; name: Localized; desc: Localized; rate: number; unit: RateUnit; mode: "inperson" | "remote" };
+export type Group = { id: string; mode: "inperson" | "remote"; name: Localized; color: string };
+
+export const groups: Group[] = [
+  { id: "move", mode: "inperson", name: { es: "Transporte", en: "Transportation" }, color: "#8FB0D0" },
+  { id: "marine", mode: "inperson", name: { es: "Marina", en: "Marine" }, color: "#7FC2B7" },
+  { id: "food", mode: "inperson", name: { es: "Chef y noche", en: "Chefs & nightlife" }, color: "#EA9272" },
+  { id: "home", mode: "inperson", name: { es: "Hogar y hosts", en: "Home & hosts" }, color: "#9FC08A" },
+  { id: "media", mode: "inperson", name: { es: "Contenido en Miami", en: "Content in Miami" }, color: "#E07A8F" },
+  { id: "reno", mode: "inperson", name: { es: "Remodelación y oficios", en: "Remodeling & trades" }, color: "#D3A468" },
+  { id: "tech", mode: "inperson", name: { es: "Técnicos a domicilio", en: "On-site technicians" }, color: "#6FA8C9" },
+  { id: "cont", mode: "remote", name: { es: "Contenido y medios", en: "Content & media" }, color: "#E07A8F" },
+  { id: "mkt", mode: "remote", name: { es: "Marketing y crecimiento", en: "Marketing & growth" }, color: "#D8B170" },
+  { id: "sales", mode: "remote", name: { es: "Ventas y atención", en: "Sales & support" }, color: "#7FC2B7" },
+  { id: "ops", mode: "remote", name: { es: "Operaciones y administración", en: "Operations & admin" }, color: "#8FB0D0" },
+  { id: "tech-r", mode: "remote", name: { es: "Tecnología", en: "Technology" }, color: "#6FA8C9" },
+  { id: "fin", mode: "remote", name: { es: "Finanzas y legal", en: "Finance & legal" }, color: "#9FC08A" },
+  { id: "lead", mode: "remote", name: { es: "Estrategia y liderazgo", en: "Strategy & leadership" }, color: "#C49BD0" },
+  { id: "edu", mode: "remote", name: { es: "Educación y bienestar", en: "Education & wellness" }, color: "#EA9272" },
+  { id: "life", mode: "remote", name: { es: "Estilo de vida y lujo", en: "Lifestyle & luxury" }, color: "#B7A58A" },
+];
+
+const P = (mode: Position["mode"]) => (id: string, group: string, name: Localized, desc: Localized, rate: number, unit: RateUnit): Position => ({ id, group, name, desc, rate, unit, mode });
+const inp = P("inperson");
+const rem = P("remote");
+
+export const positions: Position[] = [
+  inp("suv", "move", { es: "SUV con chofer", en: "SUV with chauffeur" }, { es: "Escalade o similar, chofer bilingüe.", en: "Escalade or similar, bilingual chauffeur." }, 125, "h"),
+  inp("sprinter", "move", { es: "Sprinter ejecutiva", en: "Executive Sprinter" }, { es: "Para grupos de hasta 12.", en: "For groups of up to 12." }, 165, "h"),
+  inp("airport", "move", { es: "Traslado aeropuerto", en: "Airport transfer" }, { es: "MIA o FLL, con recepción en llegadas.", en: "MIA or FLL, with meet-and-greet at arrivals." }, 180, "f"),
+  inp("heli", "move", { es: "Helicóptero", en: "Helicopter" }, { es: "Tour por South Beach o traslado a Keys.", en: "South Beach tour or transfer to the Keys." }, 1400, "h"),
+  inp("yacht", "marine", { es: "Yate 50 ft", en: "50 ft yacht" }, { es: "Sandbar, Star Island y Biscayne Bay.", en: "Sandbar, Star Island and Biscayne Bay." }, 700, "h"),
+  inp("cat", "marine", { es: "Catamarán al atardecer", en: "Sunset catamaran" }, { es: "Navegación tranquila, perfecta para parejas.", en: "Calm cruising, perfect for couples." }, 420, "h"),
+  inp("jetski", "marine", { es: "Jet ski", en: "Jet ski" }, { es: "Salida desde Miami Beach Marina.", en: "Departs from Miami Beach Marina." }, 150, "h"),
+  inp("chef", "food", { es: "Chef privado", en: "Private chef" }, { es: "Menú de 4 tiempos en tu casa o a bordo.", en: "A 4-course menu at home or on board." }, 125, "p"),
+  inp("brunch", "food", { es: "Brunch a domicilio", en: "Home brunch" }, { es: "Montaje completo para grupo.", en: "Full setup for groups." }, 65, "p"),
+  inp("deep", "home", { es: "Limpieza profunda", en: "Deep cleaning" }, { es: "Casa o apartamento, equipo de 2.", en: "House or apartment, team of 2." }, 290, "f"),
+  inp("turn", "home", { es: "Recambio Airbnb", en: "Airbnb turnover" }, { es: "Limpieza, ropa de cama y reporte con fotos.", en: "Cleaning, linens and photo report." }, 145, "f"),
+  inp("villa", "home", { es: "Preparar la villa", en: "Prep the villa" }, { es: "Flores, compras y ambiente antes de llegar.", en: "Flowers, groceries and ambiance before you arrive." }, 220, "f"),
+  inp("rec", "media", { es: "Grabación ClipKitchen", en: "ClipKitchen shoot" }, { es: "Sesión presencial en Miami, material sin editar.", en: "In-person session in Miami, unedited footage." }, 500, "h"),
+  inp("photo", "media", { es: "Fotógrafo", en: "Photographer" }, { es: "Sesión en yate, calle o evento.", en: "Session on a yacht, on the street or at an event." }, 350, "h"),
+  inp("drone", "media", { es: "Video con drone", en: "Drone video" }, { es: "Tomas aéreas con piloto licenciado.", en: "Aerial shots with a licensed pilot." }, 480, "h"),
+  inp("reel", "media", { es: "Reel para redes", en: "Social media reel" }, { es: "Grabación y edición de un reel vertical.", en: "Shooting and editing of one vertical reel." }, 650, "f"),
+  inp("club", "food", { es: "Mesa VIP en club", en: "VIP club table" }, { es: "Acceso y mesa con host.", en: "Entry and table with a host." }, 250, "f"),
+  inp("pressure", "home", { es: "Lavado a presión", en: "Pressure washing" }, { es: "Terrazas, entradas, fachadas y muelles.", en: "Terraces, driveways, facades and docks." }, 220, "f"),
+  inp("pool", "home", { es: "Limpieza de piscina", en: "Pool cleaning" }, { es: "Limpieza, químicos y revisión de equipos.", en: "Cleaning, chemicals and equipment check." }, 140, "f"),
+  inp("garden", "home", { es: "Jardinería y paisajismo", en: "Gardening and landscaping" }, { es: "Poda, siembra, riego y mantenimiento.", en: "Pruning, planting, irrigation and maintenance." }, 65, "h"),
+  inp("estimate", "reno", { es: "Visita de evaluación", en: "Assessment visit" }, { es: "Un experto mide, revisa y te deja un presupuesto por escrito.", en: "An expert measures, inspects and leaves you a written estimate." }, 95, "f"),
+  inp("handy", "reno", { es: "Handyman por hora", en: "Handyman by the hour" }, { es: "Arreglos menores, ajustes, sellado y pendientes de la casa.", en: "Minor fixes, adjustments, sealing and odd jobs around the house." }, 85, "h"),
+  inp("tvmount", "reno", { es: "Montaje de TV", en: "TV mounting" }, { es: "TV de hasta 85\" en pared, con cables ocultos si se puede.", en: "TVs up to 85\" on the wall, with hidden cables when possible." }, 129, "f"),
+  inp("assembly", "reno", { es: "Armado de muebles", en: "Furniture assembly" }, { es: "Camas, closets, escritorios y muebles de caja.", en: "Beds, closets, desks and flat-pack furniture." }, 70, "h"),
+  inp("shelves", "reno", { es: "Repisas, cuadros y cortinas", en: "Shelves, frames and curtains" }, { es: "Instalación en drywall, concreto o bloque.", en: "Installation on drywall, concrete or block." }, 75, "h"),
+  inp("smart", "reno", { es: "Casa inteligente", en: "Smart home" }, { es: "Cámaras, timbre, cerraduras y termostato conectados.", en: "Connected cameras, doorbell, locks and thermostat." }, 199, "f"),
+  inp("movehelp", "reno", { es: "Ayuda con mudanza", en: "Moving help" }, { es: "Dos personas para cargar, mover y acomodar.", en: "Two people to load, move and set up." }, 95, "h"),
+  inp("paintroom", "reno", { es: "Pintura por habitación", en: "Painting per room" }, { es: "Paredes y techo de una habitación, con preparación.", en: "Walls and ceiling of one room, with prep." }, 450, "f"),
+  inp("drywall", "reno", { es: "Reparación de drywall", en: "Drywall repair" }, { es: "Huecos, grietas y parches listos para pintar.", en: "Holes, cracks and patches ready to paint." }, 250, "f"),
+  inp("floor", "reno", { es: "Pisos", en: "Flooring" }, { es: "Laminado, vinil, madera o porcelanato.", en: "Laminate, vinyl, hardwood or porcelain." }, 0, "q"),
+  inp("tile", "reno", { es: "Cerámica y porcelanato", en: "Ceramic and porcelain tile" }, { es: "Pisos, paredes, duchas y backsplash.", en: "Floors, walls, showers and backsplash." }, 0, "q"),
+  inp("cabinets", "reno", { es: "Gabinetes y encimeras", en: "Cabinets and countertops" }, { es: "Cuarzo, granito y gabinetes a medida.", en: "Quartz, granite and custom cabinetry." }, 0, "q"),
+  inp("kitchen", "reno", { es: "Remodelación de cocina", en: "Kitchen remodel" }, { es: "Diseño, demolición, instalaciones y acabados.", en: "Design, demolition, systems and finishes." }, 0, "q"),
+  inp("bath", "reno", { es: "Remodelación de baño", en: "Bathroom remodel" }, { es: "Ducha, vanity, porcelanato y plomería.", en: "Shower, vanity, porcelain and plumbing." }, 0, "q"),
+  inp("fullreno", "reno", { es: "Remodelación completa", en: "Full remodel" }, { es: "Casa o apartamento de punta a punta.", en: "House or apartment, top to bottom." }, 0, "q"),
+  inp("electric", "reno", { es: "Electricista con licencia", en: "Licensed electrician" }, { es: "Tomas, luminarias, paneles y circuitos.", en: "Outlets, fixtures, panels and circuits." }, 125, "h"),
+  inp("plumb", "reno", { es: "Plomero con licencia", en: "Licensed plumber" }, { es: "Fugas, grifos, calentadores y destapes.", en: "Leaks, faucets, water heaters and drain clearing." }, 120, "h"),
+  inp("hvac", "reno", { es: "Aire acondicionado", en: "Air conditioning" }, { es: "Mantenimiento, diagnóstico y reparación.", en: "Maintenance, diagnosis and repair." }, 189, "f"),
+  inp("roof", "reno", { es: "Techos", en: "Roofing" }, { es: "Inspección, reparación y reemplazo.", en: "Inspection, repair and replacement." }, 0, "q"),
+  inp("windows", "reno", { es: "Ventanas y puertas de impacto", en: "Impact windows and doors" }, { es: "Protección contra huracanes con permiso.", en: "Permitted hurricane protection." }, 0, "q"),
+  inp("permit", "reno", { es: "Gestión de permisos", en: "Permit management" }, { es: "Trámite ante la ciudad o el condado.", en: "Filing with the city or county." }, 0, "q"),
+  inp("itsupport", "tech", { es: "Soporte técnico a domicilio", en: "On-site tech support" }, { es: "Computadoras lentas, virus, correo, impresoras y configuración.", en: "Slow computers, viruses, email, printers and setup." }, 95, "h"),
+  inp("pcsetup", "tech", { es: "Instalación de computadora nueva", en: "New computer setup" }, { es: "Migración de datos, programas y cuentas.", en: "Data, software and account migration." }, 149, "f"),
+  inp("phonefix", "tech", { es: "Reparación de celular", en: "Phone repair" }, { es: "Pantalla, batería y puerto de carga a domicilio.", en: "Screen, battery and charging port at home." }, 0, "q"),
+  inp("pcfix", "tech", { es: "Reparación de laptop", en: "Laptop repair" }, { es: "Pantalla, teclado, batería y disco.", en: "Screen, keyboard, battery and drive." }, 0, "q"),
+  inp("datarec", "tech", { es: "Recuperación de datos", en: "Data recovery" }, { es: "Discos, memorias y teléfonos dañados.", en: "Damaged drives, memory cards and phones." }, 0, "q"),
+  inp("printer", "tech", { es: "Impresoras y escáneres", en: "Printers and scanners" }, { es: "Instalación, red y solución de errores.", en: "Installation, network and troubleshooting." }, 89, "f"),
+  inp("wifi", "tech", { es: "Wi-Fi para casa o villa", en: "Wi-Fi for home or villa" }, { es: "Red mesh sin zonas muertas, con red de invitados.", en: "Mesh network with no dead zones, plus a guest network." }, 249, "f"),
+  inp("network", "tech", { es: "Red para oficina", en: "Office network" }, { es: "Router, switch, firewall y cableado organizado.", en: "Router, switch, firewall and organized cabling." }, 0, "q"),
+  inp("cabling", "tech", { es: "Cableado estructurado", en: "Structured cabling" }, { es: "Puntos de red Cat6, rack y certificación.", en: "Cat6 network drops, rack and certification." }, 0, "q"),
+  inp("cctv", "tech", { es: "Cámaras de seguridad", en: "Security cameras" }, { es: "Cámaras IP con grabación y app en el teléfono.", en: "IP cameras with recording and a phone app." }, 0, "q"),
+  inp("access", "tech", { es: "Control de acceso", en: "Access control" }, { es: "Cerraduras con código, tarjetas e intercom.", en: "Code locks, cards and intercom." }, 0, "q"),
+  inp("alarm", "tech", { es: "Alarma y monitoreo", en: "Alarm and monitoring" }, { es: "Sensores, sirena y monitoreo 24/7.", en: "Sensors, siren and 24/7 monitoring." }, 0, "q"),
+  inp("avhome", "tech", { es: "Cine en casa y audio", en: "Home theater and audio" }, { es: "Proyector, barra de sonido, parlantes y control.", en: "Projector, soundbar, speakers and control." }, 0, "q"),
+  inp("avoffice", "tech", { es: "Sala de reuniones", en: "Meeting room" }, { es: "Pantalla, cámara, micrófonos y Zoom o Teams.", en: "Display, camera, microphones and Zoom or Teams." }, 0, "q"),
+  inp("automation", "tech", { es: "Automatización del hogar", en: "Home automation" }, { es: "Luces, cortinas, clima y escenas en una sola app.", en: "Lights, shades, climate and scenes in one app." }, 0, "q"),
+  inp("evcharger", "tech", { es: "Cargador de auto eléctrico", en: "EV charger" }, { es: "Instalación de nivel 2 con permiso.", en: "Permitted level 2 installation." }, 0, "q"),
+  inp("solar", "tech", { es: "Paneles solares y baterías", en: "Solar panels and batteries" }, { es: "Evaluación, diseño e instalación con permiso.", en: "Assessment, design and permitted installation." }, 0, "q"),
+  inp("generator", "tech", { es: "Generador para huracanes", en: "Hurricane generator" }, { es: "Generador fijo o portátil con transferencia.", en: "Standby or portable generator with transfer switch." }, 0, "q"),
+  inp("appliance", "tech", { es: "Reparación de electrodomésticos", en: "Appliance repair" }, { es: "Refrigeradores, lavadoras, secadoras y hornos.", en: "Refrigerators, washers, dryers and ovens." }, 129, "f"),
+  inp("locksmith", "tech", { es: "Cerrajería", en: "Locksmith" }, { es: "Aperturas, cambio de cilindros y cerraduras inteligentes.", en: "Lockouts, cylinder changes and smart locks." }, 95, "f"),
+  rem("r-vid", "cont", { es: "Editor de video", en: "Video editor" }, { es: "Edita videos largos y cortos a partir de tu material.", en: "Edits long and short videos from your footage." }, 25, "h"),
+  rem("r-reel", "cont", { es: "Editor de reels y shorts", en: "Reels and shorts editor" }, { es: "Piezas verticales listas para Instagram, TikTok y YouTube.", en: "Vertical pieces ready for Instagram, TikTok and YouTube." }, 22, "h"),
+  rem("r-motion", "cont", { es: "Motion graphics", en: "Motion graphics" }, { es: "Animación de textos, logos y gráficos.", en: "Animated text, logos and graphics." }, 35, "h"),
+  rem("r-3d", "cont", { es: "Animador 3D", en: "3D animator" }, { es: "Renders y animaciones de productos o espacios.", en: "Renders and animations of products or spaces." }, 45, "h"),
+  rem("r-gd", "cont", { es: "Diseñador gráfico", en: "Graphic designer" }, { es: "Piezas para redes, flyers y presentaciones.", en: "Assets for social media, flyers and presentations." }, 25, "h"),
+  rem("r-brand", "cont", { es: "Identidad de marca", en: "Brand identity" }, { es: "Logo, paleta, tipografía y manual de marca.", en: "Logo, palette, typography and brand guidelines." }, 1200, "p"),
+  rem("r-ilus", "cont", { es: "Ilustrador", en: "Illustrator" }, { es: "Ilustraciones para marca, redes o empaques.", en: "Illustrations for brands, social media or packaging." }, 30, "h"),
+  rem("r-photo", "cont", { es: "Retocador de fotos", en: "Photo retoucher" }, { es: "Edición y retoque de fotos de producto, inmueble o retrato.", en: "Product, property or portrait photo editing and retouching." }, 18, "h"),
+  rem("r-thumb", "cont", { es: "Diseñador de miniaturas", en: "Thumbnail designer" }, { es: "Miniaturas que suben los clics en YouTube.", en: "Thumbnails that raise YouTube clicks." }, 15, "h"),
+  rem("r-script", "cont", { es: "Guionista", en: "Scriptwriter" }, { es: "Guiones para reels, anuncios y videos largos.", en: "Scripts for reels, ads and long videos." }, 25, "h"),
+  rem("r-pod", "cont", { es: "Productor de podcast", en: "Podcast producer" }, { es: "Edición, show notes y clips de cada episodio.", en: "Editing, show notes and clips for every episode." }, 30, "h"),
+  rem("r-voice", "cont", { es: "Voz en off", en: "Voiceover" }, { es: "Locución profesional en español o inglés.", en: "Professional voiceover in Spanish or English." }, 150, "p"),
+  rem("r-ugc", "cont", { es: "Creador UGC", en: "UGC creator" }, { es: "Videos tipo testimonio grabados desde casa.", en: "Testimonial-style videos shot at home." }, 200, "p"),
+  rem("r-cm", "mkt", { es: "Community manager", en: "Community manager" }, { es: "Publica, responde comentarios y cuida tu comunidad.", en: "Posts, replies to comments and takes care of your community." }, 18, "h"),
+  rem("r-smm", "mkt", { es: "Social media manager", en: "Social media manager" }, { es: "Estrategia y ejecución de todas tus redes.", en: "Strategy and execution across all your social media." }, 30, "h"),
+  rem("r-strat", "mkt", { es: "Estratega de contenido", en: "Content strategist" }, { es: "Define qué publicar, por qué y para quién.", en: "Defines what to post, why and for whom." }, 40, "h"),
+  rem("r-copy", "mkt", { es: "Copywriter", en: "Copywriter" }, { es: "Textos que venden: anuncios, web y emails.", en: "Copy that sells: ads, web and emails." }, 30, "h"),
+  rem("r-seo", "mkt", { es: "Especialista SEO", en: "SEO specialist" }, { es: "Posiciona tu sitio y tu perfil de Google.", en: "Ranks your website and Google profile." }, 35, "h"),
+  rem("r-ads", "mkt", { es: "Media buyer (Meta, Google, TikTok)", en: "Media buyer (Meta, Google, TikTok)" }, { es: "Crea y optimiza tus campañas pagadas.", en: "Creates and optimizes your paid campaigns." }, 40, "h"),
+  rem("r-email", "mkt", { es: "Email marketer", en: "Email marketer" }, { es: "Campañas y secuencias automáticas por email.", en: "Automated email campaigns and sequences." }, 30, "h"),
+  rem("r-funnel", "mkt", { es: "Especialista en embudos", en: "Funnel specialist" }, { es: "Embudos completos en GoHighLevel o similares.", en: "Full funnels in GoHighLevel or similar." }, 40, "h"),
+  rem("r-growth", "mkt", { es: "Growth marketer", en: "Growth marketer" }, { es: "Experimentos para crecer más rápido.", en: "Experiments to grow faster." }, 50, "h"),
+  rem("r-infl", "mkt", { es: "Gestor de influencers", en: "Influencer manager" }, { es: "Encuentra, negocia y coordina con creadores.", en: "Finds, negotiates and coordinates with creators." }, 30, "h"),
+  rem("r-pr", "mkt", { es: "Relaciones públicas", en: "Public relations" }, { es: "Menciones en medios y notas de prensa.", en: "Media mentions and press releases." }, 45, "h"),
+  rem("r-mkta", "mkt", { es: "Analista de marketing", en: "Marketing analyst" }, { es: "Dashboards y reportes de tus campañas.", en: "Dashboards and reports for your campaigns." }, 40, "h"),
+  rem("r-setter", "sales", { es: "Setter de citas", en: "Appointment setter" }, { es: "Contacta prospectos y agenda llamadas de venta.", en: "Reaches out to prospects and books sales calls." }, 15, "h"),
+  rem("r-closer", "sales", { es: "Closer de ventas", en: "Sales closer" }, { es: "Cierra las llamadas agendadas. Puede ir a comisión.", en: "Closes booked calls. Can be commission-based." }, 30, "h"),
+  rem("r-sdr", "sales", { es: "Prospección (SDR)", en: "Prospecting (SDR)" }, { es: "Encuentra y contacta clientes potenciales.", en: "Finds and contacts potential clients." }, 18, "h"),
+  rem("r-cs", "sales", { es: "Atención al cliente", en: "Customer support" }, { es: "Responde chats, emails y mensajes a tiempo.", en: "Answers chats, emails and messages on time." }, 14, "h"),
+  rem("r-recep", "sales", { es: "Recepcionista virtual", en: "Virtual receptionist" }, { es: "Contesta llamadas y agenda citas por ti.", en: "Answers calls and books appointments for you." }, 14, "h"),
+  rem("r-rev", "sales", { es: "Gestor de reseñas", en: "Review manager" }, { es: "Pide y responde reseñas en Google y ARK.", en: "Requests and replies to reviews on Google and ARK." }, 15, "h"),
+  rem("r-sup", "sales", { es: "Soporte técnico", en: "Tech support" }, { es: "Ayuda a tus clientes con tu producto o app.", en: "Help your customers with your product or app." }, 20, "h"),
+  rem("r-va", "ops", { es: "Asistente virtual", en: "Virtual assistant" }, { es: "Correo, agenda, compras y tareas del día a día.", en: "Email, calendar, shopping and day-to-day tasks." }, 12, "h"),
+  rem("r-ea", "ops", { es: "Asistente ejecutivo", en: "Executive assistant" }, { es: "Apoyo directo para dueños y directivos.", en: "Direct support for owners and executives." }, 25, "h"),
+  rem("r-pm", "ops", { es: "Project manager", en: "Project manager" }, { es: "Coordina equipos, tiempos y entregas.", en: "Coordinates teams, timelines and deliveries." }, 35, "h"),
+  rem("r-opsm", "ops", { es: "Gestor de operaciones", en: "Operations manager" }, { es: "Procesos claros para que el negocio corra solo.", en: "Clear processes so the business runs itself." }, 30, "h"),
+  rem("r-data", "ops", { es: "Data entry", en: "Data entry" }, { es: "Carga y limpieza de datos.", en: "Data entry and cleanup." }, 10, "h"),
+  rem("r-res", "ops", { es: "Investigador", en: "Researcher" }, { es: "Investiga mercados, competidores o proveedores.", en: "Researches markets, competitors or suppliers." }, 20, "h"),
+  rem("r-travel", "ops", { es: "Gestor de viajes", en: "Travel manager" }, { es: "Vuelos, hoteles e itinerarios.", en: "Flights, hotels and itineraries." }, 20, "h"),
+  rem("r-cohost", "ops", { es: "Co-anfitrión de Airbnb", en: "Airbnb co-host" }, { es: "Gestiona huéspedes, calendario y precios.", en: "Manages guests, calendar and pricing." }, 20, "h"),
+  rem("r-trans", "ops", { es: "Traductor", en: "Translator" }, { es: "Traducciones español, inglés y portugués.", en: "Spanish, English and Portuguese translations." }, 25, "h"),
+  rem("r-transc", "ops", { es: "Transcriptor", en: "Transcriber" }, { es: "Transcripción de audios, videos y reuniones.", en: "Transcription of audio, videos and meetings." }, 12, "h"),
+  rem("r-web", "tech-r", { es: "Desarrollador web", en: "Web developer" }, { es: "Sitios rápidos y fáciles de actualizar.", en: "Fast sites that are easy to update." }, 40, "h"),
+  rem("r-app", "tech-r", { es: "Desarrollador de apps", en: "App developer" }, { es: "Apps para iPhone y Android.", en: "iPhone and Android apps." }, 55, "h"),
+  rem("r-ux", "tech-r", { es: "Diseñador UX/UI", en: "UX/UI designer" }, { es: "Pantallas claras que la gente sabe usar.", en: "Clear screens people know how to use." }, 45, "h"),
+  rem("r-crm", "tech-r", { es: "Especialista CRM", en: "CRM specialist" }, { es: "Configura GoHighLevel, HubSpot o similares.", en: "Set up GoHighLevel, HubSpot or similar." }, 35, "h"),
+  rem("r-ai", "tech-r", { es: "Especialista en IA y chatbots", en: "AI and chatbot specialist" }, { es: "Asistentes que responden y venden por ti.", en: "Assistants that answer and sell for you." }, 50, "h"),
+  rem("r-zap", "tech-r", { es: "Automatizaciones (Zapier, Make)", en: "Automations (Zapier, Make)" }, { es: "Conecta tus herramientas para ahorrar horas.", en: "Connect your tools to save hours." }, 35, "h"),
+  rem("r-shop", "tech-r", { es: "Especialista Shopify", en: "Shopify specialist" }, { es: "Tiendas online que convierten.", en: "Online stores that convert." }, 35, "h"),
+  rem("r-qa", "tech-r", { es: "Tester QA", en: "QA tester" }, { es: "Encuentra errores antes que tus clientes.", en: "Finds bugs before your customers do." }, 22, "h"),
+  rem("r-it", "tech-r", { es: "Soporte IT", en: "IT support" }, { es: "Equipos, cuentas y correo funcionando.", en: "Devices, accounts and email working." }, 25, "h"),
+  rem("r-sec", "tech-r", { es: "Ciberseguridad", en: "Cybersecurity" }, { es: "Protege tus cuentas, datos y sitio.", en: "Protects your accounts, data and website." }, 60, "h"),
+  rem("r-bi", "tech-r", { es: "Analista de datos", en: "Data analyst" }, { es: "Convierte tus datos en decisiones.", en: "Turn your data into decisions." }, 40, "h"),
+  rem("r-book", "fin", { es: "Contador (bookkeeping)", en: "Bookkeeper" }, { es: "Libros al día y conciliaciones.", en: "Books up to date and reconciliations." }, 30, "h"),
+  rem("r-tax", "fin", { es: "Preparador de impuestos", en: "Tax preparer" }, { es: "Declaraciones personales y de empresa.", en: "Personal and business tax returns." }, 60, "h"),
+  rem("r-pay", "fin", { es: "Nómina", en: "Payroll" }, { es: "Pagos a empleados y contratistas.", en: "Payments to employees and contractors." }, 30, "h"),
+  rem("r-bill", "fin", { es: "Facturación y cobranza", en: "Billing and collections" }, { es: "Facturas enviadas y pagos cobrados.", en: "Invoices sent and payments collected." }, 18, "h"),
+  rem("r-para", "fin", { es: "Paralegal", en: "Paralegal" }, { es: "Contratos, documentos y trámites.", en: "Contracts, documents and paperwork." }, 35, "h"),
+  rem("r-cfo", "fin", { es: "CFO fraccional", en: "Fractional CFO" }, { es: "Finanzas estratégicas sin contratar tiempo completo.", en: "Strategic finance without a full-time hire." }, 120, "h"),
+  rem("r-cons", "lead", { es: "Consultor de negocios", en: "Business consultant" }, { es: "Diagnóstico y plan para crecer.", en: "Diagnosis and a growth plan." }, 80, "h"),
+  rem("r-cmo", "lead", { es: "CMO fraccional", en: "Fractional CMO" }, { es: "Dirige tu marketing y a tu equipo.", en: "Leads your marketing and your team." }, 120, "h"),
+  rem("r-coo", "lead", { es: "COO fraccional", en: "Fractional COO" }, { es: "Ordena operaciones y equipos.", en: "Organizes operations and teams." }, 110, "h"),
+  rem("r-scoach", "lead", { es: "Coach de ventas", en: "Sales coach" }, { es: "Entrena a tu equipo para cerrar más.", en: "Trains your team to close more." }, 60, "h"),
+  rem("r-recr", "lead", { es: "Reclutador", en: "Recruiter" }, { es: "Encuentra y filtra a tu próximo empleado.", en: "Finds and screens your next hire." }, 35, "h"),
+  rem("r-hr", "lead", { es: "Recursos humanos", en: "Human resources" }, { es: "Contratos, políticas y clima laboral.", en: "Contracts, policies and workplace culture." }, 35, "h"),
+  rem("r-tutor", "edu", { es: "Tutor académico", en: "Academic tutor" }, { es: "Clases particulares por videollamada.", en: "Private lessons by video call." }, 25, "h"),
+  rem("r-lang", "edu", { es: "Profesor de idiomas", en: "Language teacher" }, { es: "Inglés, español, portugués y más.", en: "English, Spanish, Portuguese and more." }, 25, "h"),
+  rem("r-life", "edu", { es: "Coach de vida", en: "Life coach" }, { es: "Metas claras y hábitos que duran.", en: "Clear goals and habits that last." }, 60, "h"),
+  rem("r-nutri", "edu", { es: "Nutricionista online", en: "Online nutritionist" }, { es: "Plan de alimentación con profesional certificado.", en: "Meal plan with a certified professional." }, 70, "h"),
+  rem("r-fit", "edu", { es: "Entrenador personal online", en: "Online personal trainer" }, { es: "Rutinas y seguimiento por video.", en: "Routines and video check-ins." }, 40, "h"),
+  rem("r-yoga", "edu", { es: "Instructor de yoga y meditación", en: "Yoga and meditation instructor" }, { es: "Clases privadas en vivo.", en: "Live private classes." }, 35, "h"),
+  rem("r-therapy", "edu", { es: "Terapeuta online", en: "Online therapist" }, { es: "Sesiones con profesional licenciado.", en: "Sessions with a licensed professional." }, 90, "h"),
+  rem("r-event", "life", { es: "Planificador de eventos", en: "Event planner" }, { es: "Diseña y coordina tu evento a distancia.", en: "Designs and coordinates your event remotely." }, 40, "h"),
+  rem("r-trip", "life", { es: "Concierge de viajes de lujo", en: "Luxury travel concierge" }, { es: "Experiencias, reservas y accesos exclusivos.", en: "Experiences, reservations and exclusive access." }, 50, "h"),
+  rem("r-shopper", "life", { es: "Personal shopper virtual", en: "Virtual personal shopper" }, { es: "Compra por ti moda, regalos o artículos de lujo.", en: "Shops fashion, gifts or luxury items for you." }, 45, "h"),
+  rem("r-style", "life", { es: "Estilista virtual", en: "Virtual stylist" }, { es: "Asesoría de imagen por videollamada.", en: "Image consulting by video call." }, 50, "h"),
+  rem("r-interior", "life", { es: "Diseñador de interiores virtual", en: "Virtual interior designer" }, { es: "Diseño de espacios con planos y lista de compras.", en: "Space design with plans and a shopping list." }, 60, "h"),
+];
+
+// Tres candidatos de ejemplo por posición (como en el prototipo): mismo resultado siempre.
+const NAMES = ["Mariana", "Diego", "Lucía", "Andrés", "Paula", "Tomás", "Camila", "Javier", "Sofía", "Nicolás", "Valeria", "Mateo", "Daniela", "Samuel", "Isabela", "Gabriel"];
+const LAST = ["R.", "M.", "G.", "P.", "L.", "S.", "C.", "T."];
+const REMOTE_PLACES = ["Bogotá", "Ciudad de México", "Buenos Aires", "Caracas", "Madrid", "Lima", "Santo Domingo", "Medellín", "Santiago"];
+const HOODS = ["Brickell", "Miami Beach", "Wynwood", "Coral Gables", "Doral", "Key Biscayne", "Downtown", "Coconut Grove"];
+
+export type Candidate = { name: string; place: string; rating: string; years: number; mult: number; langs: string };
+
+export function candidates(p: Position): Candidate[] {
+  const h = [...p.id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const places = p.mode === "remote" ? REMOTE_PLACES : HOODS;
+  return [0, 1, 2].map((i) => {
+    const k = (h >> (i * 5)) + i * 7;
+    return {
+      name: `${NAMES[k % NAMES.length]} ${LAST[(k >> 3) % LAST.length]}`,
+      place: places[(k >> 2) % places.length],
+      rating: (4.7 + ((k >> 4) % 4) / 10).toFixed(1),
+      years: 2 + (k % 8),
+      mult: [1, 1.2, 1.45][i],
+      langs: k % 3 ? "ES / EN" : "ES",
+    };
+  });
+}
+
+export const HOURS = [5, 10, 20, 40];
+// Costo mensual de una posición por hora: tarifa × horas por semana × 4.33 semanas.
+export const monthly = (rate: number, hoursPerWeek: number) => Math.round(rate * hoursPerWeek * 4.33);

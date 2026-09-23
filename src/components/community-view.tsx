@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { bundle, courses, events, groups, teamMonthly, teams } from "@/lib/community";
 import { dict } from "@/lib/dict";
@@ -164,7 +165,9 @@ function Teams({ locale }: { locale: Locale }) {
             <span className="text-base font-bold text-white tabular-nums">
               {money(teamMonthly(team))} <span className="text-sm font-normal text-mute">{t.perMonth}</span>
             </span>
-            <SoonButton className="h-10 rounded-full bg-cream px-4 text-sm font-bold text-ink">{t.buildTeam}</SoonButton>
+            <Link href="/talento" className="flex h-10 items-center rounded-full bg-cream px-4 text-sm font-bold text-ink">
+              {t.buildTeam}
+            </Link>
           </div>
         </div>
       ))}
