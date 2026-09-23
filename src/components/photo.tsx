@@ -19,7 +19,7 @@ export function Photo({ src, name, sizes, priority, className = "object-cover" }
       style={{ fontSize: "clamp(12px, 38cqw, 140px)", containerType: "size" }}
     >
       {letters || (
-        <svg viewBox="0 0 24 24" width="45%" height="45%" fill="none" stroke="#EBD3A0" strokeWidth="1.6" strokeLinecap="round">
+        <svg viewBox="0 0 24 24" width="45%" height="45%" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
           <circle cx="12" cy="8" r="4" />
           <path d="M4 21a8 8 0 0 1 16 0" />
         </svg>

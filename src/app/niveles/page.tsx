@@ -65,6 +65,26 @@ export default async function LevelsPage() {
         );
       })}
 
+      <section className="mt-4 flex flex-col gap-3">
+        <div>
+          <h2 className="font-display text-[28px] leading-tight font-semibold text-white">{t.money.feesTitle}</h2>
+          <p className="text-sm text-mute">{t.money.feesSub}</p>
+        </div>
+        {(["lifestyle", "business"] as const).map((side) => (
+          <div key={side} className="rounded-[22px] border border-white/10 bg-white/[0.035] p-4">
+            <p className={`mb-2 text-[11px] font-bold tracking-[0.14em] uppercase ${side === "business" ? "text-[#8FB0D0]" : "text-[#D8B170]"}`}>{t.money[side]}</p>
+            <ul className="flex flex-col">
+              {t.money.fees[side].map(([what, how]) => (
+                <li key={what} className="flex justify-between gap-3 border-b border-white/[0.06] py-2 text-[14px] last:border-0">
+                  <span className="text-cream">{what}</span>
+                  <span className="shrink-0 text-right text-mute">{how}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+
       <p className="px-2 text-center text-[12px] text-mute">{l.demoNote}</p>
     </div>
   );

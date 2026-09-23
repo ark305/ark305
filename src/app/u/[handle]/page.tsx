@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PageProps<"/u/[handle]">): Pr
 export default async function PublicProfilePage({ params }: PageProps<"/u/[handle]">) {
   const { handle } = await params;
   const profile = await findProfile(handle);
-  const { locale, t, level, mode } = await getContext();
+  const { locale, t, level, mode, exp } = await getContext();
   // Perfil oculto: los proveedores de ARK Private solo los ve el nivel VIP.
   if (!profile || (profile.private && level !== "vip")) notFound();
 
@@ -39,6 +39,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/u/[handl
       t={t}
       mode={mode}
       level={level}
+      exp={exp}
       steps={r ? { photo: !!r.photo_url, service: viewer.services.length > 0, bio: r.bio_link, shared: r.shared } : undefined}
     />
   );

@@ -11,8 +11,11 @@ import { useToast } from "./toast";
 type Action = "post" | "reply" | "price";
 
 // ARK IA en modo Ofrecer: escribe con los datos de tu perfil (vista previa; la IA completa llega en la Fase 5).
-export function SellerAi({ locale, name, handle, services }: { locale: Locale; name: string; handle: string; services: { title: string; price: number }[] }) {
-  const t = dict(locale).panel;
+// Con tone="business" escribe como agencia: propuestas, seguimiento y márgenes.
+export function SellerAi({ locale, name, handle, services, tone = "lifestyle" }: { locale: Locale; name: string; handle: string; services: { title: string; price: number }[]; tone?: "lifestyle" | "business" }) {
+  const base = dict(locale).panel;
+  const biz = dict(locale).biz.panel;
+  const t = tone === "business" ? { ...base, aiOutputs: biz.aiOutputs, aiActions: biz.aiActions } : base;
   const { show } = useToast();
   const [out, setOut] = useState<string | null>(null);
   const [first, second = services[0]] = services;

@@ -212,6 +212,11 @@ function HireSheet({ p, locale, canHire, onClose }: { p: Position; locale: Local
           ))}
         </div>
 
+        {p.unit === "h" && (
+          <p className="mt-3 text-[12px] text-mute">
+            {dict(locale).money.talentSplit(formatPrice(Math.round(rate / 1.2), locale), formatPrice(Math.round(rate - rate / 1.2), locale))}
+          </p>
+        )}
         {hourly && (
           <>
             <p className="mt-5 mb-2 text-[11px] font-bold tracking-[0.14em] text-mute uppercase">{t.hours}</p>

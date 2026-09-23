@@ -20,3 +20,24 @@ export const LEVEL_COLOR: Record<Level, string> = {
   business: "#8FB0D0",
   vip: "#D8B170",
 };
+
+// Experiencia: qué le interesa a la persona. Lifestyle (vivir experiencias), Business (talento,
+// equipos y reventa) o las dos. Con "las dos", el lente elige qué se ve ahora mismo.
+export type Experience = "lifestyle" | "business" | "both";
+export type Lens = "all" | "lifestyle" | "business";
+export type View = "lifestyle" | "business";
+
+export function parseExperience(v: string | undefined | null): Experience | null {
+  return v === "lifestyle" || v === "business" || v === "both" ? v : null;
+}
+
+export function parseLens(v: string | undefined): Lens {
+  return v === "lifestyle" || v === "business" ? v : "all";
+}
+
+// Qué experiencia se está mostrando (define colores, pantallas y el tono de la IA).
+export function viewOf(exp: Experience | null, lens: Lens): View {
+  if (exp === "business") return "business";
+  if (exp === "both" && lens === "business") return "business";
+  return "lifestyle";
+}

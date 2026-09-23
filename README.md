@@ -30,6 +30,9 @@ Por ahora el modo y el nivel se guardan en el navegador y cambiar de nivel no co
 | `/descubrir` | Buscar personas por tipo de perfil |
 | `/panel` | Panel (Ofrecer): reservas, ventas, ARK IA para vender y herramientas |
 | `/crear` · `/ganar` | Crear y Gana dinero (Ofrecer) |
+| `/equipo` | Armar equipo con ARK IA (Business) |
+| `/revender` | Revender paquetes con tu margen y tu marca (Business · Ofrecer) |
+| `/documentos` | Presupuestos, contratos, facturas y reportes (Business) |
 | `/talento` | Talento (Business): 138 posiciones presenciales y remotas |
 | `/comunidad` | Academia, Equipos, Grupos y Eventos |
 | `/niveles` | Personal, Business y Súper Premium VIP |
@@ -55,6 +58,18 @@ Inicio de sesión con enlace al correo y perfiles reales en Supabase.
 3. En Vercel agrega las mismas dos variables.
 
 Sin esas variables la app funciona en modo demo, con el perfil de ejemplo.
+
+## Experiencias
+
+- **Lifestyle** (dorado): experiencias, Mi día con IA, reservar.
+- **Business** (azul acero): talento, equipos, revender paquetes, documentos.
+- **Las dos**: feed mixto con selector Todo · Lifestyle · Business.
+
+La persona elige al registrarse (o la primera vez que abre la app) y lo cambia en su perfil.
+El feed aprende de lo que ves, guardas, reservas y ocultas (`src/lib/taste.ts`).
+Para guardar la experiencia y los gustos en la cuenta, corre también `supabase/002_experiences.sql`.
+
+Niveles: **Gratis**, **Pro** ($79/mes) y **Súper Premium VIP** ($2,500/mes). Las tarifas de ARK están en `/niveles`.
 
 ## Idioma
 

@@ -15,6 +15,7 @@ const TEAL = "#7FC2B7";
 // Mi día: ARK IA arma el plan, lo agregas a tu día y lo reservas completo.
 export function DayPlanner({ locale, discount, levelName }: { locale: Locale; discount: number; levelName: string }) {
   const t = dict(locale).day;
+  const m = dict(locale).money;
   const money = (n: number) => formatPrice(n, locale);
   const { show } = useToast();
   const entries = useDay();
@@ -24,6 +25,7 @@ export function DayPlanner({ locale, discount, levelName }: { locale: Locale; di
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [booking, setBooking] = useState<{ code: string; step: number } | null>(null);
+  const [priority, setPriority] = useState(false);
   const dayRef = useRef<HTMLElement>(null);
 
   // La reserva avanza sola, como en el prototipo: Confirmado → … → En curso.
@@ -57,7 +59,7 @@ export function DayPlanner({ locale, discount, levelName }: { locale: Locale; di
   const subtotal = entries.reduce((s, e) => s + entryPrice(e), 0);
   const off = Math.round((subtotal * discount) / 100);
   const fee = Math.round((subtotal - off) * 0.05);
-  const total = subtotal - off + fee;
+  const total = subtotal - off + fee + (priority ? 49 : 0);
   const planTotal = plan ? plan.items.reduce((s, i) => s + entryPrice({ ...i, uid: "" }), 0) : 0;
 
   return (
@@ -228,6 +230,13 @@ export function DayPlanner({ locale, discount, levelName }: { locale: Locale; di
               <Row label={t.subtotal} value={money(subtotal)} />
               {discount > 0 ? <Row label={t.levelDiscount(levelName, discount)} value={`−${money(off)}`} accent /> : <p className="text-[13px] text-gold-soft">{t.upsell}</p>}
               <Row label={t.concierge} value={money(fee)} />
+              <label className="flex items-center justify-between gap-3 py-1 text-cream">
+                <span className="flex items-center gap-2">
+                  <input type="checkbox" checked={priority} disabled={!!booking} onChange={(e) => setPriority(e.target.checked)} className="size-4 accent-[var(--accent)]" />
+                  {m.priority}
+                </span>
+                <span className="text-gold-soft tabular-nums">{m.priorityPrice}</span>
+              </label>
               <div className="mt-1 flex justify-between border-t border-white/10 pt-2.5 text-base font-bold text-white">
                 <span>{t.total}</span>
                 <span className="tabular-nums">{money(total)}</span>
@@ -242,7 +251,7 @@ export function DayPlanner({ locale, discount, levelName }: { locale: Locale; di
                 <button
                   type="button"
                   onClick={() => setBooking({ code: `ARK-${Math.floor(1000 + Math.random() * 9000)}`, step: 0 })}
-                  className="gold-grad h-[52px] rounded-full text-base font-bold text-ink shadow-[0_14px_40px_-16px_#d8b170cc]"
+                  className="gold-grad h-[52px] rounded-full text-base font-bold text-ink shadow-[0_14px_40px_-16px_var(--accent)]"
                 >
                   {t.bookAll}
                 </button>

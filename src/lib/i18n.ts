@@ -3,7 +3,8 @@ import { cookies, headers } from "next/headers";
 import { es } from "./dictionaries/es";
 import { en } from "./dictionaries/en";
 import type { Locale } from "./locale";
-import { parseLevel, parseMode } from "./mode";
+import { parseExperience, parseLens, parseLevel, parseMode, viewOf } from "./mode";
+import { getViewer } from "./profiles-db";
 
 export type { Locale } from "./locale";
 export type Dictionary = typeof es;
@@ -28,5 +29,17 @@ export async function getDictionary() {
 export async function getContext() {
   const jar = await cookies();
   const { locale, t } = await getDictionary();
-  return { locale, t, mode: parseMode(jar.get("mode")?.value), level: parseLevel(jar.get("nivel")?.value) };
+  // La experiencia se guarda en la cuenta; en el teléfono (cookie) para invitados.
+  const viewer = await getViewer();
+  const exp = parseExperience(viewer.row?.experience) ?? parseExperience(jar.get("exp")?.value);
+  const lens = exp === "both" ? parseLens(jar.get("lens")?.value) : exp === "business" ? "business" : "lifestyle";
+  return {
+    locale,
+    t,
+    mode: parseMode(jar.get("mode")?.value),
+    level: parseLevel(jar.get("nivel")?.value),
+    exp,
+    lens,
+    view: viewOf(exp, lens),
+  };
 }

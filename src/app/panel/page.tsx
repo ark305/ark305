@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FeaturesFeed, type FeatureGroup, type FeatureKey } from "@/components/features-feed";
 import { IconChevron } from "@/components/icons";
 import { Photo } from "@/components/photo";
+import { BusinessPanel } from "@/components/business-panel";
 import { SellerAi } from "@/components/seller-ai";
 import { getItem } from "@/lib/catalog";
 import { formatTime } from "@/lib/dict";
@@ -41,7 +42,8 @@ const UPCOMING = [
 
 // Inicio del modo Ofrecer.
 export default async function PanelPage() {
-  const { locale, t, level } = await getContext();
+  const { locale, t, level, view } = await getContext();
+  const business = view === "business";
   const p = t.panel;
   // Tu perfil real si entraste; si no, el de ejemplo para que el Panel se pueda recorrer.
   const me = (await getViewer()).profile ?? getProfile(CURRENT_HANDLE)!;
@@ -69,11 +71,15 @@ export default async function PanelPage() {
             </span>
           </span>
           <div>
-            <h1 className="font-display text-[30px] leading-tight font-semibold text-white">{p.hello(me.name)}</h1>
-            <p className="text-sm text-mute">{p.sub}</p>
+            <h1 className="font-display text-[30px] leading-tight font-semibold text-white">{business ? t.biz.panel.hello(me.name) : p.hello(me.name)}</h1>
+            <p className="text-sm text-mute">{business ? t.biz.panel.sub : p.sub}</p>
           </div>
         </header>
 
+        {business ? (
+          <BusinessPanel locale={locale} />
+        ) : (
+          <>
         <div className="grid grid-cols-3 gap-2">
           {stats.map((s) => (
             <div key={s.label} className="flex flex-col gap-1 rounded-[20px] border border-white/10 bg-white/[0.035] p-3">
@@ -85,7 +91,7 @@ export default async function PanelPage() {
 
         <Link href="/niveles" className="flex items-center justify-between rounded-full border border-gold/30 bg-gold/[0.07] px-4 py-2.5 text-[13px] font-semibold text-gold-soft">
           {p.commission(lvl.commission, lvl.name[locale])}
-          <IconChevron size={16} stroke="#EBD3A0" />
+          <IconChevron size={16} className="text-gold-soft" />
         </Link>
 
         <section className="flex flex-col gap-2">
@@ -111,7 +117,10 @@ export default async function PanelPage() {
           })}
         </section>
 
-        <SellerAi locale={locale} name={me.name} handle={me.handle} services={me.services.map((s) => ({ title: s.title[locale], price: s.price }))} />
+          </>
+        )}
+
+        <SellerAi tone={business ? "business" : "lifestyle"} locale={locale} name={me.name} handle={me.handle} services={me.services.map((s) => ({ title: s.title[locale], price: s.price }))} />
       </div>
 
       <FeaturesFeed

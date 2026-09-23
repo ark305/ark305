@@ -18,12 +18,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MyProfilePage() {
-  const { locale, t, mode, level } = await getContext();
+  const { locale, t, mode, level, exp } = await getContext();
 
   // Sin base de datos conectada: perfil de ejemplo (Lente 305), como antes.
   if (!supabaseReady) {
     const me = getProfile(CURRENT_HANDLE)!;
-    return <ProfileView profile={me} isOwner locale={locale} t={t} mode={mode} level={level} />;
+    return <ProfileView profile={me} isOwner locale={locale} t={t} mode={mode} level={level} exp={exp} />;
   }
 
   const viewer = await getViewer();
@@ -41,6 +41,7 @@ export default async function MyProfilePage() {
         t={t}
         mode={mode}
         level={level}
+      exp={exp}
         steps={{ photo: !!r.photo_url, service: viewer.services.length > 0, bio: r.bio_link, shared: r.shared }}
       />
     );

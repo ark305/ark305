@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DiscoverGrid } from "@/components/discover-grid";
 import { getContext, getDictionary } from "@/lib/i18n";
-import { profiles } from "@/lib/mock-data";
+import { formatPrice, profiles } from "@/lib/mock-data";
 import { recentProfiles } from "@/lib/profiles-db";
 import { positions } from "@/lib/talent";
 
@@ -25,5 +25,14 @@ export default async function DiscoverPage() {
     near: p.near,
     photo: p.photo,
   }));
-  return <DiscoverGrid items={items} text={{ ...t.discover, talentTitle: t.talent.discoverTitle, talentSub: t.talent.discoverSub(positions.length) }} vip={level === "vip"} />;
+  return <DiscoverGrid items={items} text={{ ...t.discover, talentTitle: t.talent.discoverTitle, talentSub: t.talent.discoverSub(positions.length) }} vip={level === "vip"}
+      promo={{
+        title: t.money.promoteTitle,
+        sub: t.money.promoteSub,
+        rate: t.money.promoteRate,
+        cta: t.money.promoteCta,
+        done: t.money.promoteDone,
+        options: [3, 7, 30].map((days) => ({ days, label: t.money.promotePrice(days, formatPrice(days * 9, locale)) })),
+      }}
+    />;
 }

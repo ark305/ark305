@@ -5,7 +5,9 @@ import { checkHandle, createProfile } from "@/lib/actions";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import type { Kind } from "@/lib/mock-data";
+import { ExperienceCards } from "./experience-picker";
 import { PhotoPicker } from "./photo-picker";
+import type { Experience } from "@/lib/mode";
 
 const KINDS: Kind[] = ["member", "provider", "creator", "remote", "brand"];
 const suggest = (s: string) =>
@@ -86,11 +88,12 @@ export function KindPicker({ locale, initial }: { locale: Locale; initial: Kind 
   );
 }
 
-export function OnboardingForm({ locale, uid, email }: { locale: Locale; uid: string; email: string | null }) {
+export function OnboardingForm({ locale, uid, email, initialExp }: { locale: Locale; uid: string; email: string | null; initialExp: Experience | null }) {
   const t = dict(locale);
   const o = t.onboarding;
   const [state, action, pending] = useActionState(createProfile, undefined);
   const [name, setName] = useState("");
+  const [exp, setExp] = useState<Experience | null>(initialExp);
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -107,6 +110,11 @@ export function OnboardingForm({ locale, uid, email }: { locale: Locale; uid: st
         <input name="name" required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} className={field} />
       </label>
       <HandleField locale={locale} initial={suggest(email?.split("@")[0] ?? "")} />
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1.5 text-sm font-semibold text-mute">{t.exp.question}</legend>
+        <ExperienceCards locale={locale} value={exp} onPick={setExp} />
+        <input type="hidden" name="experience" value={exp ?? ""} />
+      </fieldset>
       <KindPicker locale={locale} initial="member" />
       <label className="flex flex-col gap-1.5">
         <span className="text-sm font-semibold text-mute">{o.role}</span>

@@ -11,8 +11,6 @@
   --color-line: #26282e;
   --color-line-2: #2c2e35;
   --color-cream: #efe6d8;
-  --color-gold: #d8b170;
-  --color-gold-soft: #ebd3a0;
   --color-gold-deep: #3a3226;
   --color-mute: #9a9ea6;
   --color-dim: #6e727a;
@@ -22,8 +20,32 @@
 }
 
 @theme inline {
-  --font-display: var(--font-fraunces), Georgia, serif;
+  /* El acento cambia según la experiencia: dorado en Lifestyle, azul acero en Business. */
+  --color-gold: var(--accent);
+  --color-gold-soft: var(--accent-soft);
+  --font-display: var(--display-font);
   --font-sans: var(--font-manrope), "Helvetica Neue", sans-serif;
+}
+
+:root {
+  --accent: #d8b170;
+  --accent-soft: #ebd3a0;
+  --accent-hi: #f3dba6;
+  --accent-lo: #b48746;
+  --display-font: var(--font-fraunces), Georgia, serif;
+}
+
+/* Business: azul acero, títulos rectos y firmes. */
+[data-exp="business"] {
+  --accent: #8fb0d0;
+  --accent-soft: #c9dcec;
+  --accent-hi: #d9e7f3;
+  --accent-lo: #5f86ad;
+  --display-font: var(--font-manrope), "Helvetica Neue", sans-serif;
+}
+[data-exp="business"] .font-display {
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 
 html {
@@ -59,7 +81,7 @@ a {
 
 /* Dorado ARK con brillo */
 .gold-grad {
-  background: linear-gradient(135deg, #f3dba6 0%, #d8b170 45%, #b48746 100%);
+  background: linear-gradient(135deg, var(--accent-hi) 0%, var(--accent) 45%, var(--accent-lo) 100%);
 }
 
 /* Ícono "de app": degradado del color + reflejo arriba */

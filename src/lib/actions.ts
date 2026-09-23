@@ -3,9 +3,11 @@
 // Acciones que guardan en Supabase. Cada una revisa primero quién está conectado:
 // estas funciones se pueden llamar desde fuera de la app, así que nunca confiamos en el formulario.
 import { refresh, revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { profiles as demoProfiles, type Kind } from "./mock-data";
-import { mediaPrefix } from "./supabase/config";
+import { parseExperience } from "./mode";
+import { mediaPrefix, supabaseReady } from "./supabase/config";
 import { createClient } from "./supabase/server";
 
 export type FormState = { error?: string; ok?: boolean } | undefined;
@@ -72,6 +74,8 @@ export async function createProfile(_: FormState, form: FormData): Promise<FormS
     photo_url: photo,
   });
   if (error) return fail(error.code === "23505" ? "handle" : "generic");
+  const exp = parseExperience(text(form, "experience", 10));
+  if (exp) await saveExperience(exp);
   revalidatePath("/", "layout");
   redirect("/perfil");
 }
@@ -165,4 +169,31 @@ export async function signOut() {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+// Lifestyle, Business o las dos. Se guarda en el teléfono y, si entraste, en tu cuenta.
+export async function saveExperience(value: string) {
+  const exp = parseExperience(value);
+  if (!exp) return;
+  const jar = await cookies();
+  jar.set("exp", exp, { path: "/", maxAge: 31536000, sameSite: "lax" });
+  jar.set("lens", "all", { path: "/", maxAge: 31536000, sameSite: "lax" });
+  if (!supabaseReady) return revalidatePath("/", "layout");
+  const { supabase, user } = await currentUser();
+  // Si todavía no corrieron supabase/002_experiences.sql, la columna no existe y solo queda la cookie.
+  if (user) await supabase.from("profiles").update({ experience: exp }).eq("id", user.id);
+  revalidatePath("/", "layout");
+}
+
+// Gustos del feed (tema → puntos), para que el feed te conozca en cualquier teléfono.
+export async function saveTaste(taste: Record<string, number>) {
+  const clean = Object.fromEntries(
+    Object.entries(taste)
+      .filter(([k, v]) => /^[a-z-]{2,20}$/.test(k) && Number.isFinite(v))
+      .slice(0, 40)
+      .map(([k, v]) => [k, Math.max(-50, Math.min(200, Math.round(v)))]),
+  );
+  if (!supabaseReady) return;
+  const { supabase, user } = await currentUser();
+  if (user) await supabase.from("profiles").update({ taste: clean }).eq("id", user.id);
 }

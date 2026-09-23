@@ -18,9 +18,9 @@ export type LevelInfo = {
 export const levels: LevelInfo[] = [
   {
     id: "personal",
-    name: { es: "Personal", en: "Personal" },
-    price: { es: "Gratis", en: "Free" },
-    tagline: { es: "Planes, salidas, chef, delivery y tu hogar.", en: "Plans, outings, chefs, delivery and your home." },
+    name: { es: "Gratis", en: "Free" },
+    price: { es: "$0", en: "$0" },
+    tagline: { es: "Todo lo básico para buscar, reservar y ofrecer tus servicios.", en: "Everything you need to explore, book and offer your services." },
     discount: 0,
     commission: 18,
     buscar: [
@@ -36,9 +36,9 @@ export const levels: LevelInfo[] = [
   },
   {
     id: "business",
-    name: { es: "Business", en: "Business" },
+    name: { es: "Pro", en: "Pro" },
     price: { es: "$79 / mes", en: "$79 / month" },
-    tagline: { es: "Talento remoto, contenido, remodelación y CRM.", en: "Remote talent, content, remodeling and CRM." },
+    tagline: { es: "Para negocios y revendedores: talento, contratos, facturas y reventa.", en: "For businesses and resellers: talent, contracts, invoices and resale." },
     discount: 10,
     commission: 12,
     buscar: [
@@ -48,6 +48,8 @@ export const levels: LevelInfo[] = [
     ],
     ofrecer: [
       { es: "Comisión de 12% en vez de 18%", en: "12% commission instead of 18%" },
+      { es: "Revende paquetes con tu margen y tu marca", en: "Resell bundles with your margin and your brand" },
+      { es: "Presupuestos, contratos, facturas y reportes", en: "Quotes, contracts, invoices and reports" },
       { es: "CRM y automatizaciones con GoHighLevel", en: "CRM and automations with GoHighLevel" },
       { es: "ARK IA sin límite para vender", en: "Unlimited ARK AI for selling" },
       { es: "Posición destacada en Descubrir y analítica", en: "Featured in Discover, plus analytics" },
@@ -57,7 +59,7 @@ export const levels: LevelInfo[] = [
     id: "vip",
     name: { es: "Súper Premium VIP", en: "Super Premium VIP" },
     price: { es: "$2,500 / mes", en: "$2,500 / month" },
-    tagline: { es: "Todo lo de Business, más ARK Private.", en: "Everything in Business, plus ARK Private." },
+    tagline: { es: "Todo lo de Pro, más ARK Private.", en: "Everything in Pro, plus ARK Private." },
     discount: 20,
     commission: 10,
     buscar: [

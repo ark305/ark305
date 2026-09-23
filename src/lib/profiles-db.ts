@@ -20,6 +20,8 @@ export type ProfileRow = {
   facebook: string | null;
   bio_link: boolean;
   shared: boolean;
+  experience?: "lifestyle" | "business" | "both" | null; // columna nueva (supabase/002_experiences.sql)
+  taste?: Record<string, number> | null;
 };
 
 export type ServiceRow = {

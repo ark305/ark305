@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Kind } from "@/lib/mock-data";
 import { IconChevron, IconCrown, IconLock, IconMegaphone, IconPeople, IconSearch } from "./icons";
-import { SoonButton, useToast } from "./toast";
+import { useToast } from "./toast";
 
 export type DiscoverItem = { handle: string; name: string; role: string; area: string; kind: Kind; kindLabel: string; near: boolean; private: boolean; photo: string | null };
+type Promo = { title: string; sub: string; rate: string; cta: string; done: string; options: { days: number; label: string }[] };
 type Chip = "forYou" | "near" | "provider" | "creator" | "remote" | "brand" | "private";
 
 type Text = {
@@ -24,10 +25,11 @@ type Text = {
 
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text: Text; vip: boolean }) {
+export function DiscoverGrid({ items, text, vip, promo }: { items: DiscoverItem[]; text: Text; vip: boolean; promo: Promo }) {
   const { show } = useToast();
   const [chip, setChip] = useState<Chip>("forYou");
   const [query, setQuery] = useState("");
+  const [promote, setPromote] = useState(false);
 
   const q = normalize(query.trim().replace(/^[#@]/, ""));
   const shown = items.filter((p) => {
@@ -53,7 +55,7 @@ export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text
             className="min-w-0 grow bg-transparent text-[15px] text-cream outline-none placeholder:text-mute"
           />
         </label>
-        <SoonButton className="gold-grad flex h-[76px] items-center gap-3.5 rounded-[22px] px-[18px] text-left text-ink shadow-[0_14px_40px_-16px_#d8b170cc]">
+        <button type="button" onClick={() => setPromote(true)} className="gold-grad flex h-[76px] items-center gap-3.5 rounded-[22px] px-[18px] text-left text-ink shadow-[0_14px_40px_-16px_var(--accent)]">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/30">
             <IconMegaphone size={22} stroke="#08090B" weight={1.9} />
           </span>
@@ -62,7 +64,7 @@ export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text
             <span className="text-[13px]">{text.promoteSub}</span>
           </span>
           <IconChevron size={20} stroke="#08090B" weight={2} />
-        </SoonButton>
+        </button>
         <Link href="/talento" className="flex h-[68px] items-center gap-3.5 rounded-[22px] border border-[#8FB0D0]/35 bg-[#8FB0D0]/[0.08] px-[18px]">
           <span className="gloss flex size-10 shrink-0 items-center justify-center rounded-[13px]" style={{ "--c": "#8FB0D0" } as React.CSSProperties}>
             <IconPeople size={20} stroke="#FFFFFF" weight={2} />
@@ -104,6 +106,34 @@ export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text
               <span className="relative text-[11px] text-cream/70">{p.role}</span>
             </Link>
           ))}
+        </div>
+      )}
+      {promote && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setPromote(false)}>
+          <div
+            role="dialog"
+            aria-label={promo.title}
+            className="flex w-full max-w-[430px] flex-col gap-3 rounded-t-[28px] border-t border-line bg-card px-5 pt-5"
+            style={{ paddingBottom: "calc(28px + env(safe-area-inset-bottom))" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-extrabold text-white">{promo.title}</h2>
+            <p className="text-[15px] text-mute">{promo.sub}</p>
+            <p className="text-sm font-bold text-gold">{promo.rate}</p>
+            {promo.options.map((o) => (
+              <button
+                key={o.days}
+                type="button"
+                onClick={() => {
+                  setPromote(false);
+                  show(promo.done);
+                }}
+                className="h-12 rounded-full border border-white/15 text-[15px] font-semibold text-cream"
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

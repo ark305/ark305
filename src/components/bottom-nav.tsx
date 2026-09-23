@@ -3,24 +3,33 @@
 import { Photo } from "./photo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Level, Mode } from "@/lib/mode";
+import type { Level, Mode, View } from "@/lib/mode";
 import { IconCrown, IconDollar, IconPeople, IconPlus, IconSearch, IconSparkle } from "./icons";
 
-type Labels = { label: string; profile: string; home: string; panel: string; day: string; create: string; discover: string; earn: string; community: string };
-type Tab = "profile" | "home" | "panel" | "day" | "create" | "discover" | "earn" | "community";
+type Labels = { label: string; profile: string; home: string; panel: string; day: string; create: string; discover: string; earn: string; community: string; team: string; talent: string; resell: string };
+type Tab = "profile" | "home" | "panel" | "day" | "create" | "discover" | "earn" | "community" | "team" | "talent" | "resell";
 
 function activeTab(path: string, handle: string | null): Tab | null {
   if (path === "/") return "home";
   if (path.startsWith("/perfil") || (handle && path === `/@${handle}`)) return "profile";
   const first = path.split("/")[1];
-  const map: Record<string, Tab> = { panel: "panel", "mi-dia": "day", crear: "create", descubrir: "discover", ganar: "earn", comunidad: "community" };
+  const map: Record<string, Tab> = { panel: "panel", "mi-dia": "day", crear: "create", descubrir: "discover", ganar: "earn", comunidad: "community", equipo: "team", talento: "talent", revender: "resell", documentos: "panel" };
   return map[first] ?? null; // el perfil de otra persona no marca ninguna pestaña
 }
 
-// Barra de abajo: cambia según el modo. Buscar en crema, Ofrecer en dorado.
-export function BottomNav({ labels, avatar, name, handle, mode, level }: { labels: Labels; avatar: string | null; name: string; handle: string | null; mode: Mode; level: Level }) {
+// Barra de abajo: cambia según el modo (Buscar en crema, Ofrecer con el acento)
+// y según la experiencia (Lifestyle: Mi día y Descubrir · Business: Armar equipo y Talento).
+export function BottomNav({ labels, avatar, name, handle, mode, level, view }: { labels: Labels; avatar: string | null; name: string; handle: string | null; mode: Mode; level: Level; view: View }) {
   const active = activeTab(usePathname(), handle);
   const offer = mode === "ofrecer";
+  const biz = view === "business";
+  const center: { tab: Tab; href: string; label: string } = offer
+    ? biz
+      ? { tab: "resell", href: "/revender", label: labels.resell }
+      : { tab: "create", href: "/crear", label: labels.create }
+    : biz
+      ? { tab: "team", href: "/equipo", label: labels.team }
+      : { tab: "day", href: "/mi-dia", label: labels.day };
 
   const slot = (on: boolean) =>
     `flex h-14 items-center justify-center rounded-[28px] transition-[width,background-color] duration-200 ${on ? "w-[84px] bg-white/[0.12]" : "w-14"}`;
@@ -57,19 +66,16 @@ export function BottomNav({ labels, avatar, name, handle, mode, level }: { label
         offer ? labels.panel : labels.home,
         <span className={`flex size-8 items-center justify-center rounded-[9px] font-display text-[17px] font-semibold text-ink ${offer ? "gold-grad" : "bg-cream"}`}>A</span>,
       )}
-      <Link
-        href={offer ? "/crear" : "/mi-dia"}
-        aria-label={offer ? labels.create : labels.day}
-        aria-current={active === (offer ? "create" : "day") ? "page" : undefined}
-        className="flex size-14 items-center justify-center"
-      >
-        <span className={`flex size-[50px] items-center justify-center rounded-full shadow-[0_8px_24px_-8px_rgb(0_0_0/0.6)] ${offer ? "gold-grad" : "bg-cream"}`}>
-          {offer ? <IconPlus stroke="#08090B" weight={2.2} /> : <IconSparkle stroke="#08090B" weight={2} />}
+      <Link href={center.href} aria-label={center.label} aria-current={active === center.tab ? "page" : undefined} className="flex size-14 items-center justify-center">
+        <span className={`flex size-[50px] items-center justify-center rounded-full shadow-[0_8px_24px_-8px_rgb(0_0_0/0.6)] ${offer || biz ? "gold-grad" : "bg-cream"}`}>
+          {offer ? <IconPlus stroke="#08090B" weight={2.2} /> : biz ? <IconPeople stroke="#08090B" weight={2} /> : <IconSparkle stroke="#08090B" weight={2} />}
         </span>
       </Link>
       {offer
         ? link("earn", "/ganar", labels.earn, <IconDollar size={26} stroke="#EFE6D8" />)
-        : link("discover", "/descubrir", labels.discover, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)}
+        : biz
+          ? link("talent", "/talento", labels.talent, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)
+          : link("discover", "/descubrir", labels.discover, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)}
       {link("community", "/comunidad", labels.community, <IconPeople size={26} stroke="#EFE6D8" />)}
     </nav>
   );

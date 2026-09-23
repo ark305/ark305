@@ -3,8 +3,9 @@ import Link from "next/link";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
 import { formatCount, formatPrice, type Profile } from "@/lib/mock-data";
-import { LEVEL_COLOR, type Level, type Mode } from "@/lib/mode";
+import { LEVEL_COLOR, type Experience, type Level, type Mode } from "@/lib/mode";
 import { IconCheck, IconChevron, IconCrown, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
+import { ExperienceSetting, ResetTaste } from "./experience-picker";
 import { ModeSwitch } from "./mode-switch";
 import { CopyLinkButton, Dismissible, ProfileMenu, StepButton } from "./profile-actions";
 import { Photo } from "./photo";
@@ -25,6 +26,7 @@ export function ProfileView({
   real = false,
   signedIn = false,
   steps: realSteps,
+  exp = null,
 }: {
   profile: Profile;
   isOwner: boolean;
@@ -35,6 +37,7 @@ export function ProfileView({
   real?: boolean; // perfil real en Supabase (se puede editar)
   signedIn?: boolean;
   steps?: Steps;
+  exp?: Experience | null;
 }) {
   const p = t.profile;
   const followers = p.followers(formatCount(profile.followers, locale));
@@ -90,11 +93,11 @@ export function ProfileView({
               {isOwner &&
                 offer &&
                 (editable ? (
-                  <Link href="/perfil/editar" aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
+                  <Link href="/perfil/editar" aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_var(--accent)]">
                     <IconPlus stroke="#08090B" weight={2.2} />
                   </Link>
                 ) : (
-                  <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
+                  <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_var(--accent)]">
                     <IconPlus stroke="#08090B" weight={2.2} />
                   </SoonButton>
                 ))}
@@ -138,6 +141,8 @@ export function ProfileView({
             <span className="text-[13px] font-semibold text-cream/80">{t.levels.see}</span>
             <IconChevron size={18} stroke="#9A9EA6" />
           </Link>
+          <ExperienceSetting locale={locale} value={exp} />
+          <ResetTaste locale={locale} />
         </section>
       )}
 
@@ -148,7 +153,7 @@ export function ProfileView({
             <h2 className="font-display text-2xl font-semibold text-white">{p.visibleTitle}</h2>
             <p className="mt-0.5 text-sm text-mute">{p.visibleProgress(done, steps.length)}</p>
             <div className="mt-4 mb-1.5 h-1.5 rounded-full bg-white/10">
-              <div className="gold-grad h-1.5 rounded-full shadow-[0_0_14px_#d8b17099]" style={{ width: `${(done / steps.length) * 100}%` }} />
+              <div className="gold-grad h-1.5 rounded-full shadow-[0_0_14px_var(--accent)]" style={{ width: `${(done / steps.length) * 100}%` }} />
             </div>
             {steps.map((s, i) => {
               const body = (

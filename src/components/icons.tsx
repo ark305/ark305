@@ -221,3 +221,18 @@ export const IconPlay = (p: IconProps) => (
     <path d="M8 5v14l11-7z" />
   </Icon>
 );
+export const IconBookmark = (p: IconProps & { filled?: boolean }) => {
+  const { filled, ...rest } = p;
+  return (
+    <Icon {...rest} fill={filled ? "currentColor" : "none"}>
+      <path d="M6 3h12v18l-6-4.5L6 21z" />
+    </Icon>
+  );
+};
+export const IconDots = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="5" cy="12" r="1" />
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="19" cy="12" r="1" />
+  </Icon>
+);
