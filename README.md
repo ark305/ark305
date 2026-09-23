@@ -28,6 +28,7 @@ Luego abre http://localhost:3000.
 - `src/components/` — piezas que se repiten (barra de abajo, perfil, íconos).
 - `src/lib/dictionaries/` — todos los textos en español (`es.ts`) e inglés (`en.ts`).
 - `src/lib/mock-data.ts` — perfiles y servicios de ejemplo. En la Fase 2 se cambian por datos reales de Supabase.
+  Las fotos de ejemplo son de Unsplash (licencia libre) y se reemplazan por las fotos reales de cada proveedor.
 - `src/proxy.ts` — hace que `ark305.com/@usuario` abra el perfil.
 
 ## Idioma

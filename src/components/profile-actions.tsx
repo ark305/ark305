@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Locale } from "@/lib/locale";
-import { IconCopy, IconMenu } from "./icons";
+import { IconClose, IconCopy, IconMenu } from "./icons";
 import { useToast } from "./toast";
 
-const pill = "flex h-11 items-center gap-2 rounded-full bg-ink/72 px-3.5 text-sm text-cream backdrop-blur-sm";
+const pill = "glass flex h-11 min-w-0 items-center gap-2 rounded-full px-3.5 text-sm text-cream";
 
 // Botón con el enlace del perfil: al tocarlo lo copia.
 export function CopyLinkButton({ handle, copied, failed, label }: { handle: string; copied: string; failed: string; label: string }) {
@@ -21,7 +21,7 @@ export function CopyLinkButton({ handle, copied, failed, label }: { handle: stri
   }
   return (
     <button type="button" onClick={copy} className={pill} aria-label={`${label}: ark305.com/@${handle}`}>
-      ark305.com/@{handle} <IconCopy size={17} stroke="#EFE6D8" />
+      <span className="truncate">ark305.com/@{handle}</span> <IconCopy size={17} stroke="#EFE6D8" className="shrink-0" />
     </button>
   );
 }
@@ -43,7 +43,7 @@ export function ProfileMenu({ locale, labels }: { locale: Locale; labels: { menu
 
   return (
     <>
-      <button type="button" aria-label={labels.menu} aria-expanded={open} onClick={() => setOpen(true)} className="flex size-11 items-center justify-center rounded-full bg-ink/72 backdrop-blur-sm">
+      <button type="button" aria-label={labels.menu} aria-expanded={open} onClick={() => setOpen(true)} className="glass flex size-11 shrink-0 items-center justify-center rounded-full">
         <IconMenu size={20} stroke="#EFE6D8" />
       </button>
       {open && (
@@ -77,5 +77,24 @@ export function ProfileMenu({ locale, labels }: { locale: Locale; labels: { menu
         </div>
       )}
     </>
+  );
+}
+
+// Tarjeta que se puede cerrar con la X (por ahora solo mientras la página está abierta).
+export function Dismissible({ label, className, children }: { label: string; className?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  if (!open) return null;
+  return (
+    <div className={`relative ${className ?? ""}`}>
+      {children}
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => setOpen(false)}
+        className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full bg-white/10"
+      >
+        <IconClose size={18} stroke="#EFE6D8" />
+      </button>
+    </div>
   );
 }

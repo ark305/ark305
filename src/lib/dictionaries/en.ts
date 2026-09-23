@@ -27,6 +27,7 @@ export const en: typeof es = {
     addNetwork: "Add network",
     followers: (n: string) => ({ strong: n, rest: "total followers" }),
     visibleTitle: "Get seen",
+    hide: "Hide",
     visibleProgress: (done: number, total: number) => `${done} of ${total} done`,
     steps: {
       photo: { title: "Add your photo", sub: "So people recognize you instantly" },
@@ -45,19 +46,63 @@ export const en: typeof es = {
     notFound: "This profile doesn't exist yet.",
   },
   home: {
-    functionsCount: (n: number) => `${n} features`,
-    doIt: "Let ARK do it",
+    groups: {
+      doIt: "Let ARK do it",
+      grow: "Grow with ARK",
+      learn: "Learn and measure",
+    },
+    count: (n: number) => (n === 1 ? "1 feature" : `${n} features`),
     features: {
-      bookings: "Bookings",
-      myDay: "My day",
-      concierge: "AI Concierge",
-      delivery: "Delivery",
-      talent: "Talent",
-      academy: "Academy",
-      teams: "Teams",
-      pass: "Pass",
-      events: "Events",
-      analytics: "Analytics",
+      concierge: {
+        label: "AI Concierge",
+        tagline: "Ask in one sentence. ARK puts it together.",
+        body: "Combines services, checks availability, charges and notifies every provider. No calls, no ten WhatsApp chats.",
+      },
+      bookings: {
+        label: "Bookings",
+        tagline: "A full calendar, without chasing anyone.",
+        body: "Every service on your profile gets a book button, a deposit and automatic reminders. You just show up.",
+      },
+      myDay: {
+        label: "My day",
+        tagline: "Your whole plan, on one timeline.",
+        body: "Yacht, dinner and driver in order, with times and live status for each booking: confirmed, on the way, in progress.",
+      },
+      delivery: {
+        label: "Delivery",
+        tagline: "The best of Miami, delivered to you.",
+        body: "Handpicked restaurants and liquor stores, delivered wherever you are: home, the yacht or the villa.",
+      },
+      talent: {
+        label: "Talent",
+        tagline: "Your remote team, bilingual and vetted.",
+        body: "Assistants, editors, setters and community managers from Latin America, hourly or per project.",
+      },
+      teams: {
+        label: "Teams",
+        tagline: "Team up. Sell bigger.",
+        body: "Build bundles with other providers, charge once and ARK splits the earnings with each one.",
+      },
+      events: {
+        label: "Events",
+        tagline: "Your events. Your people. One link.",
+        body: "Post your upcoming events on your profile, sell tickets and tables, and see who's coming.",
+      },
+      pass: {
+        label: "Pass",
+        tagline: "Miami, upgraded every month.",
+        body: "A membership with discounts, priority access and a dedicated concierge for your plans.",
+      },
+      academy: {
+        label: "Academy",
+        tagline: "Learn, get certified and charge more.",
+        body: "Short courses, ARK certificates and license verification so clients trust you.",
+      },
+      analytics: {
+        label: "Analytics",
+        tagline: "Real data. Real decisions.",
+        body: "Profile views, clicks, bookings and sales in one place, so you know what works.",
+      },
     },
     chatUser: "Yacht on Saturday for 8, with a chef and someone to film it for Instagram.",
     chatArk: (total: string) => ({
@@ -67,9 +112,6 @@ export const en: typeof es = {
     }),
     bookAll: "Book it all",
     changeChef: "Change chef",
-    conciergeTagline: "Ask in one sentence. ARK puts it together.",
-    conciergeBody:
-      "Combines services, checks availability, charges and notifies every provider. No calls, no ten WhatsApp chats.",
     howItWorks: "See how it works",
   },
   discover: {

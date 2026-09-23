@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { Category } from "@/lib/mock-data";
 import { IconChevron, IconMegaphone, IconSearch } from "./icons";
 import { SoonButton } from "./toast";
 
-export type DiscoverItem = { handle: string; name: string; role: string; area: string; category: Category; near: boolean; tone: string };
+export type DiscoverItem = { handle: string; name: string; role: string; area: string; category: Category; near: boolean; photo: string };
 type Chip = "forYou" | "near" | "yachts" | "food" | "content";
 
 type Text = {
@@ -16,10 +17,9 @@ type Text = {
   promoteSub: string;
   chips: Record<Chip, string>;
   empty: string;
-  photo: string;
 };
 
-const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Text }) {
   const [chip, setChip] = useState<Chip>("forYou");
@@ -36,7 +36,7 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
   return (
     <div>
       <div className="flex flex-col gap-3.5 px-3.5 pt-[22px]">
-        <label className="flex h-[54px] items-center gap-3 rounded-full border border-line bg-card px-[18px]">
+        <label className="glass flex h-[54px] items-center gap-3 rounded-full px-[18px]">
           <IconSearch size={22} stroke="#EFE6D8" weight={2} />
           <input
             type="search"
@@ -47,8 +47,8 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
             className="min-w-0 grow bg-transparent text-[15px] text-cream outline-none placeholder:text-mute"
           />
         </label>
-        <SoonButton className="flex h-[76px] items-center gap-3.5 rounded-[22px] bg-gold px-[18px] text-left text-ink">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink/12">
+        <SoonButton className="gold-grad flex h-[76px] items-center gap-3.5 rounded-[22px] px-[18px] text-left text-ink shadow-[0_14px_40px_-16px_#d8b170cc]">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/30">
             <IconMegaphone size={22} stroke="#08090B" weight={1.9} />
           </span>
           <span className="flex grow flex-col">
@@ -64,7 +64,7 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
               type="button"
               aria-pressed={chip === c}
               onClick={() => setChip(c)}
-              className={`h-9 shrink-0 rounded-full px-3.5 text-[13px] font-semibold ${chip === c ? "bg-cream text-ink" : "border border-line text-cream"}`}
+              className={`h-9 shrink-0 rounded-full px-4 text-[13px] font-semibold transition-colors ${chip === c ? "bg-cream text-ink" : "border border-white/10 bg-white/[0.04] text-cream"}`}
             >
               {text.chips[c]}
             </button>
@@ -76,11 +76,12 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
         <p className="px-6 pt-10 text-center text-[15px] text-mute">{text.empty}</p>
       ) : (
         <div className="mt-3.5 grid grid-cols-3 gap-[3px]">
-          {shown.map((p) => (
-            <Link key={p.handle} href={`/@${p.handle}`} className="relative flex h-[168px] flex-col justify-end p-2.5 text-white" style={{ background: p.tone }}>
-              <span className="absolute inset-x-0 top-16 text-center text-[9px] tracking-[0.12em] text-[#5e6269]">[{text.photo}]</span>
-              <span className="text-[13px] font-bold">{p.name}</span>
-              <span className="text-[11px] text-mute">{p.role}</span>
+          {shown.map((p, i) => (
+            <Link key={p.handle} href={`/@${p.handle}`} className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden bg-raised p-2.5 text-white">
+              <Image src={p.photo} alt="" fill loading={i < 9 ? "eager" : "lazy"} sizes="(max-width: 430px) 33vw, 143px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent" />
+              <span className="relative text-[13px] font-bold">{p.name}</span>
+              <span className="relative text-[11px] text-cream/70">{p.role}</span>
             </Link>
           ))}
         </div>

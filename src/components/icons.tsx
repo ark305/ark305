@@ -151,3 +151,50 @@ export const IconImage = (p: IconProps) => (
     <path d="m21 16-5-5-9 9" />
   </Icon>
 );
+export const IconClose = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </Icon>
+);
+export const IconCalendar = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="15" rx="3" />
+    <path d="M8 3v4M16 3v4M3.5 10h17" />
+    <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01" />
+  </Icon>
+);
+export const IconSun = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" />
+  </Icon>
+);
+export const IconScooter = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="6" cy="17" r="2.5" />
+    <circle cx="18" cy="17" r="2.5" />
+    <path d="M8.5 17h7M15 6h2.5l2 8.5M15 6l-3 8.5M4 11h6" />
+  </Icon>
+);
+export const IconTicket = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 6h16a1 1 0 0 1 1 1v3a2 2 0 0 0 0 4v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-4V7a1 1 0 0 1 1-1z" />
+    <path d="M14 5v2M14 11v2M14 17v2" />
+  </Icon>
+);
+export const IconCrown = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 7l4.5 4L12 5l4.5 6L21 7l-2 11H5z" />
+  </Icon>
+);
+export const IconCap = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M2 9.5 12 5l10 4.5L12 14z" />
+    <path d="M6 11.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5M22 9.5V15" />
+  </Icon>
+);
+export const IconChart = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+  </Icon>
+);

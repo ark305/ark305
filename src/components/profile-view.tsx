@@ -1,20 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { formatPrice, type Profile } from "@/lib/mock-data";
 import { IconCheck, IconChevron, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
-import { CopyLinkButton, ProfileMenu } from "./profile-actions";
+import { CopyLinkButton, Dismissible, ProfileMenu } from "./profile-actions";
 import { SoonButton } from "./toast";
 
 const socialIcon = { instagram: IconInstagram, tiktok: IconTikTok, facebook: IconFacebook };
 const socialName = { instagram: "Instagram", tiktok: "TikTok", facebook: "Facebook" };
-
-function Placeholder({ label, className = "" }: { label: string; className?: string }) {
-  return (
-    <span className={`flex items-center justify-center text-center text-[10px] tracking-[0.12em] text-dim ${className}`}>
-      [{label}]
-    </span>
-  );
-}
 
 export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile; isOwner: boolean; locale: Locale; t: Dictionary }) {
   const p = t.profile;
@@ -28,142 +21,162 @@ export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile;
     { ...p.steps.share, done: false, href: "/ganar" },
   ];
   const done = steps.filter((s) => s.done).length;
+  const findMe = profile.socials.filter((s) => s.photo);
 
   return (
     <div>
-      {/* Portada */}
-      <div className="relative">
-        <div className="flex h-[400px] items-center justify-center" style={{ background: profile.handle === "lente305" ? "#1B1D22" : profile.tone }}>
-          <Placeholder label={p.coverPhoto} />
-        </div>
-        <div className="absolute inset-x-3.5 top-4 flex items-center justify-between gap-2">
+      {/* Portada a pantalla completa con el nombre encima */}
+      <section className="relative h-[min(80dvh,640px)] min-h-[520px]">
+        <Image src={profile.photo} alt="" fill priority sizes="430px" className="object-cover" />
+        <div className="fade-top absolute inset-x-0 top-0 h-36" />
+        <div className="fade-bottom absolute inset-x-0 bottom-0 h-[60%]" />
+
+        <div className="absolute inset-x-3.5 flex items-center justify-between gap-2" style={{ top: "calc(16px + env(safe-area-inset-top))" }}>
           <CopyLinkButton handle={profile.handle} copied={t.common.copied} failed={t.common.copyFailed} label={p.copyLink} />
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             {isOwner && (
-              <SoonButton className="flex h-11 items-center gap-1.5 rounded-full bg-ink/72 px-3.5 text-sm font-semibold text-cream backdrop-blur-sm">
+              <SoonButton className="glass flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-cream">
                 <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
               </SoonButton>
             )}
             <ProfileMenu locale={locale} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close }} />
           </div>
         </div>
-      </div>
 
-      {/* Nombre y redes */}
-      <div className="mt-3 flex flex-col items-center gap-1.5 px-4 text-center">
-        <h1 className="font-display text-[40px] leading-none font-semibold text-white">{profile.name}</h1>
-        <p className="text-[15px] text-mute">
-          @{profile.handle} · {profile.role[locale]} · {profile.area}
-        </p>
-        <div className="mt-2.5 flex items-center gap-2.5">
-          {isOwner && (
-            <SoonButton aria-label={p.addNetwork} className="flex size-[52px] items-center justify-center rounded-full bg-gold">
-              <IconPlus stroke="#08090B" weight={2.2} />
-            </SoonButton>
-          )}
-          {profile.socials.map((s) => {
-            const Icon = socialIcon[s];
-            return (
-              <SoonButton key={s} aria-label={socialName[s]} className="flex size-12 items-center justify-center rounded-xl bg-cream">
-                <Icon stroke="#08090B" weight={1.9} />
-              </SoonButton>
-            );
-          })}
-        </div>
-        {followers && (
-          <p className="mt-1.5 text-[15px] text-mute">
-            <strong className="text-cream">{followers.strong}</strong> {followers.rest}
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 px-4 pb-2 text-center">
+          <h1 className="font-display text-[44px] leading-none font-semibold text-white [text-shadow:0_2px_24px_rgb(0_0_0/0.5)]">{profile.name}</h1>
+          <p className="text-[15px] text-cream/75">
+            @{profile.handle} · {profile.role[locale]} · {profile.area}
           </p>
-        )}
-      </div>
+          {(isOwner || profile.socials.length > 0) && (
+            <div className="mt-3 flex items-center gap-2.5">
+              {isOwner && (
+                <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
+                  <IconPlus stroke="#08090B" weight={2.2} />
+                </SoonButton>
+              )}
+              {profile.socials.map(({ network }) => {
+                const Icon = socialIcon[network];
+                return (
+                  <SoonButton key={network} aria-label={socialName[network]} className="glass flex size-12 items-center justify-center rounded-2xl">
+                    <Icon stroke="#FFFFFF" weight={1.9} />
+                  </SoonButton>
+                );
+              })}
+            </div>
+          )}
+          {followers && (
+            <p className="mt-2 text-[15px] text-mute">
+              <strong className="text-cream">{followers.strong}</strong> {followers.rest}
+            </p>
+          )}
+        </div>
+      </section>
 
       {/* Hazte visible (solo lo ves tú) */}
       {isOwner && (
-        <section className="mx-3.5 mt-6 rounded-[26px] border border-line bg-card px-[22px] py-5">
-          <h2 className="font-display text-2xl font-semibold text-white">{p.visibleTitle}</h2>
-          <p className="mt-0.5 text-sm text-mute">{p.visibleProgress(done, steps.length)}</p>
-          <div className="mt-3.5 mb-1.5 h-1.5 rounded-full bg-line-2">
-            <div className="h-1.5 rounded-full bg-gold" style={{ width: `${(done / steps.length) * 100}%` }} />
-          </div>
-          {steps.map((s, i) => {
-            const body = (
-              <>
-                {s.done ? (
-                  <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full bg-gold">
-                    <IconCheck size={18} stroke="#08090B" weight={2.4} />
+        <Dismissible label={p.hide} className="mx-3.5 mt-6">
+          <section className="rounded-[26px] border border-white/10 bg-white/[0.035] px-[22px] py-5">
+            <h2 className="font-display text-2xl font-semibold text-white">{p.visibleTitle}</h2>
+            <p className="mt-0.5 text-sm text-mute">{p.visibleProgress(done, steps.length)}</p>
+            <div className="mt-4 mb-1.5 h-1.5 rounded-full bg-white/10">
+              <div className="gold-grad h-1.5 rounded-full shadow-[0_0_14px_#d8b17099]" style={{ width: `${(done / steps.length) * 100}%` }} />
+            </div>
+            {steps.map((s, i) => {
+              const body = (
+                <>
+                  {s.done ? (
+                    <span className="gold-grad flex size-[34px] shrink-0 items-center justify-center rounded-full">
+                      <IconCheck size={18} stroke="#08090B" weight={2.4} />
+                    </span>
+                  ) : (
+                    <span className="size-[34px] shrink-0 rounded-full border-2 border-gold/80" />
+                  )}
+                  <span className="flex grow flex-col gap-0.5">
+                    <span className={`text-base font-bold ${s.done ? "text-mute line-through" : "text-cream"}`}>{s.title}</span>
+                    <span className="text-[13px] text-mute">{s.sub}</span>
                   </span>
-                ) : (
-                  <span className="size-[34px] shrink-0 rounded-full border-2 border-gold" />
-                )}
-                <span className="flex grow flex-col gap-0.5">
-                  <span className={`text-base font-bold ${s.done ? "text-mute line-through" : "text-cream"}`}>{s.title}</span>
-                  <span className="text-[13px] text-mute">{s.sub}</span>
-                </span>
-                {!s.done && <IconChevron size={20} stroke="#9A9EA6" />}
-              </>
-            );
-            const cls = `flex items-center gap-3.5 py-3 ${i < steps.length - 1 ? "border-b border-line" : ""}`;
-            return s.href ? (
-              <Link key={s.title} href={s.href} className={cls}>
-                {body}
-              </Link>
-            ) : (
-              <div key={s.title} className={cls}>
-                {body}
-              </div>
-            );
-          })}
-        </section>
+                  {!s.done && <IconChevron size={20} stroke="#9A9EA6" />}
+                </>
+              );
+              const cls = `flex items-center gap-3.5 py-3 ${i < steps.length - 1 ? "border-b border-white/[0.07]" : ""}`;
+              return s.href ? (
+                <Link key={s.title} href={s.href} className={cls}>
+                  {body}
+                </Link>
+              ) : (
+                <div key={s.title} className={cls}>
+                  {body}
+                </div>
+              );
+            })}
+          </section>
+        </Dismissible>
       )}
 
-      {/* Enlaces: servicios y redes */}
+      {/* Enlaces: servicios, redes y publicaciones */}
       {profile.services.length > 0 && (
-        <>
-          <div className="relative mt-6 flex h-[150px] items-end justify-center bg-raised pb-[18px]">
-            <Placeholder label={p.cover} className="absolute inset-x-0 top-[60px]" />
-            <span className="font-display text-[26px] font-semibold text-white">{profile.tagline[locale]}</span>
-          </div>
-          <div className="flex flex-col gap-3 px-3.5 pt-[22px]">
-            <h2 className="text-center text-[15px] font-extrabold tracking-[0.18em] text-white">{p.book}</h2>
-            {profile.services.map((s) => (
-              <div key={s.id} className="flex items-center gap-3.5 rounded-[22px] border border-line bg-raised p-3">
-                <Placeholder label={p.photo} className="size-[76px] shrink-0 rounded-[14px] bg-raised-2" />
-                <div className="flex grow flex-col gap-[3px]">
-                  <span className="text-[10px] font-bold tracking-[0.14em] text-gold">{s.kicker[locale]}</span>
-                  <span className="text-[17px] leading-tight font-bold text-white">{s.title[locale]}</span>
-                  <span className="text-[13px] text-mute">
-                    {s.detail[locale]} {formatPrice(s.price, locale)}
-                  </span>
-                </div>
-                <SoonButton className="flex h-11 shrink-0 items-center rounded-full bg-gold px-3.5 text-sm font-bold text-ink">
-                  {p.actions[s.action]}
-                </SoonButton>
-              </div>
-            ))}
+        <div className="mt-6 flex flex-col gap-3 px-3.5">
+          {profile.banner && (
+            <div className="relative flex h-[190px] items-end justify-center overflow-hidden rounded-[26px] pb-5">
+              <Image src={profile.banner} alt="" fill sizes="430px" className="object-cover" />
+              <div className="fade-bottom absolute inset-0" />
+              <span className="relative font-display text-[28px] font-semibold text-white">{profile.tagline[locale]}</span>
+            </div>
+          )}
 
-            <h2 className="mt-2.5 text-center text-[15px] font-extrabold tracking-[0.18em] text-white">{p.findMe}</h2>
-            <div className="flex gap-3">
-              {profile.socials
-                .filter((s) => s !== "facebook")
-                .map((s) => {
-                  const Icon = socialIcon[s];
+          <h2 className="mt-3 text-center text-[15px] font-extrabold tracking-[0.18em] text-white">{p.book}</h2>
+          {profile.services.map((s) => (
+            <div key={s.id} className="relative flex items-center gap-3.5 overflow-hidden rounded-[24px] border border-white/10 p-3">
+              <Image src={s.photo} alt="" fill sizes="200px" className="scale-150 object-cover opacity-70 blur-2xl" />
+              <div className="absolute inset-0 bg-ink/45" />
+              <div className="relative size-[76px] shrink-0 overflow-hidden rounded-[14px]">
+                <Image src={s.photo} alt="" fill sizes="76px" className="object-cover" />
+              </div>
+              <div className="relative flex grow flex-col gap-[3px]">
+                <span className="text-[10px] font-bold tracking-[0.14em] text-gold-soft">{s.kicker[locale]}</span>
+                <span className="text-[17px] leading-tight font-bold text-white">{s.title[locale]}</span>
+                <span className="text-[13px] text-cream/70">
+                  {s.detail[locale]} {formatPrice(s.price, locale)}
+                </span>
+              </div>
+              <SoonButton className="gold-grad relative flex h-11 shrink-0 items-center rounded-full px-4 text-sm font-bold text-ink">
+                {p.actions[s.action]}
+              </SoonButton>
+            </div>
+          ))}
+
+          {findMe.length > 0 && (
+            <>
+              <h2 className="mt-5 text-center text-[15px] font-extrabold tracking-[0.18em] text-white">{p.findMe}</h2>
+              <div className="flex gap-3">
+                {findMe.map(({ network, photo }) => {
+                  const Icon = socialIcon[network];
                   return (
-                    <SoonButton key={s} className="relative flex h-[150px] grow items-end rounded-[22px] bg-raised p-3.5 text-left text-white">
-                      <span className="absolute top-3 left-3 flex size-8 items-center justify-center rounded-[9px] bg-cream">
-                        <Icon size={18} stroke="#08090B" weight={2} />
+                    <SoonButton key={network} className="relative flex h-[180px] grow basis-0 items-end overflow-hidden rounded-[24px] p-3.5 text-left text-white">
+                      <Image src={photo!} alt="" fill sizes="215px" className="object-cover" />
+                      <div className="fade-bottom absolute inset-0" />
+                      <span className="glass absolute top-3 left-3 flex size-9 items-center justify-center rounded-[11px]">
+                        <Icon size={18} stroke="#FFFFFF" weight={2} />
                       </span>
-                      <span className="text-xl font-bold">{socialName[s]}</span>
+                      <span className="relative text-xl font-bold">{socialName[network]}</span>
                     </SoonButton>
                   );
                 })}
-            </div>
-            <div className="mt-1 grid grid-cols-3 gap-2">
-              {[p.post, p.reel, p.post].map((label, i) => (
-                <Placeholder key={i} label={label} className="h-[118px] rounded-2xl bg-raised" />
+              </div>
+            </>
+          )}
+
+          {profile.posts.length > 0 && (
+            <div className="no-scrollbar -mx-3.5 mt-3 flex snap-x gap-2.5 overflow-x-auto px-3.5">
+              {profile.posts.map((src, i) => (
+                <div key={src} className="relative aspect-[4/5] w-[46%] shrink-0 snap-start overflow-hidden rounded-[20px]">
+                  <Image src={src} alt={`${i % 2 ? p.reel : p.post} ${i + 1}`} fill sizes="200px" className="object-cover" />
+                </div>
               ))}
             </div>
-          </div>
-        </>
+          )}
+        </div>
       )}
     </div>
   );

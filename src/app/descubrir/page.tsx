@@ -17,7 +17,7 @@ export default async function DiscoverPage() {
     area: p.area,
     category: p.category,
     near: p.near,
-    tone: p.tone,
+    photo: p.photo,
   }));
-  return <DiscoverGrid items={items} text={{ ...t.discover, photo: t.profile.photo }} />;
+  return <DiscoverGrid items={items} text={t.discover} />;
 }

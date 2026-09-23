@@ -1,45 +1,42 @@
-import { FeaturesStrip } from "@/components/features-strip";
+import { FeaturesFeed, type FeatureGroup, type FeatureKey } from "@/components/features-feed";
 import { getDictionary } from "@/lib/i18n";
 import { formatPrice } from "@/lib/mock-data";
 
 // Colores de cada función, tomados del diseño.
-const FEATURE_COLORS = {
+const COLORS: Record<FeatureKey, string> = {
+  concierge: "#7FC2B7",
   bookings: "#D8B170",
   myDay: "#EA9272",
-  concierge: "#7FC2B7",
   delivery: "#D3A468",
   talent: "#C49BD0",
-  academy: "#9FC08A",
   teams: "#E07A8F",
-  pass: "#8FB0D0",
   events: "#B7A58A",
+  pass: "#8FB0D0",
+  academy: "#9FC08A",
   analytics: "#6FA8C9",
-} as const;
+};
+
+const GROUPS: { title: "doIt" | "grow" | "learn"; keys: FeatureKey[] }[] = [
+  { title: "doIt", keys: ["concierge", "bookings", "myDay", "delivery"] },
+  { title: "grow", keys: ["talent", "teams", "events", "pass"] },
+  { title: "learn", keys: ["academy", "analytics"] },
+];
 
 export default async function HomePage() {
   const { locale, t } = await getDictionary();
   const h = t.home;
-  const features = (Object.keys(FEATURE_COLORS) as (keyof typeof FEATURE_COLORS)[]).map((key) => ({
-    key,
-    label: h.features[key],
-    color: FEATURE_COLORS[key],
+
+  const groups: FeatureGroup[] = GROUPS.map((g) => ({
+    title: h.groups[g.title],
+    count: h.count(g.keys.length),
+    items: g.keys.map((key) => ({ key, color: COLORS[key], ...h.features[key] })),
   }));
 
   return (
-    <FeaturesStrip
-      features={features}
-      text={{
-        doIt: h.doIt,
-        count: h.functionsCount(3),
-        chatUser: h.chatUser,
-        chatArk: h.chatArk(formatPrice(3850, locale)),
-        bookAll: h.bookAll,
-        changeChef: h.changeChef,
-        tagline: h.conciergeTagline,
-        body: h.conciergeBody,
-        howItWorks: h.howItWorks,
-        soon: t.common.soon,
-      }}
+    <FeaturesFeed
+      groups={groups}
+      howItWorks={h.howItWorks}
+      demo={{ chatUser: h.chatUser, chatArk: h.chatArk(formatPrice(3850, locale)), bookAll: h.bookAll, changeChef: h.changeChef }}
     />
   );
 }

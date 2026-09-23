@@ -13,10 +13,10 @@ export function OptionList({ title, intro, options }: { title: string; intro: st
       <p className="mt-2.5 mb-3.5 text-base leading-normal text-mute">{intro}</p>
       {options.map(({ key, title, sub, color, Icon }) => (
         <SoonButton key={key} className="flex items-center gap-4 py-3 text-left text-cream">
-          <span className="flex size-[60px] shrink-0 items-center justify-center rounded-[17px]" style={{ background: color }}>
-            <Icon size={28} stroke="#08090B" weight={1.9} />
+          <span className="gloss flex size-[60px] shrink-0 items-center justify-center rounded-[18px]" style={{ "--c": color } as React.CSSProperties}>
+            <Icon size={28} stroke="#FFFFFF" weight={2} />
           </span>
-          <span className="flex grow flex-col gap-[3px] border-b border-line pb-3.5">
+          <span className="flex grow flex-col gap-[3px] border-b border-white/[0.07] pb-3.5">
             <span className="text-lg font-bold text-white">{title}</span>
             <span className="text-sm leading-[1.4] text-mute">{sub}</span>
           </span>

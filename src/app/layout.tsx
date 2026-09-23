@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh font-sans">
         <ToastProvider soonMessage={t.common.soon}>
           <main className="relative mx-auto min-h-dvh w-full max-w-[430px] pb-[120px]">{children}</main>
-          <BottomNav labels={t.nav} initials={me.initials} handle={me.handle} />
+          <BottomNav labels={t.nav} avatar={me.photo} handle={me.handle} />
         </ToastProvider>
       </body>
     </html>
