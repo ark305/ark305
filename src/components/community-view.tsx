@@ -7,6 +7,7 @@ import { bundle, courses, events, groups, teamMonthly, teams } from "@/lib/commu
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { formatCount, formatPrice, getProfile } from "@/lib/mock-data";
+import { Photo } from "./photo";
 import { IconCap, IconCheck, IconChevron, IconPeople } from "./icons";
 import { SoonButton } from "./toast";
 
@@ -127,7 +128,7 @@ function Teams({ locale }: { locale: Locale }) {
             return (
               <div key={m.handle} className="flex items-center gap-3">
                 <span className="relative size-9 overflow-hidden rounded-full">
-                  <Image src={p.photo} alt="" fill sizes="36px" className="object-cover" />
+                  <Photo src={p.photo} name={p.name} sizes="36px" />
                 </span>
                 <span className="grow text-sm font-semibold text-cream">{p.name}</span>
                 <span className="text-sm text-gold-soft tabular-nums">

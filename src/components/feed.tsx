@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { Photo } from "./photo";
 import Link from "next/link";
 import { Fragment, useState } from "react";
 import { defaultEntry, getItem } from "@/lib/catalog";
 import { day } from "@/lib/day-store";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
-import { CURRENT_HANDLE, FOLLOWING, formatCount, formatPrice, getProfile, posts, profiles, type Post } from "@/lib/mock-data";
+import { FOLLOWING, formatCount, formatPrice, getProfile, posts, profiles, type Post } from "@/lib/mock-data";
 import { LEVEL_COLOR, type Level } from "@/lib/mode";
 import { IconArrow, IconChevron, IconComment, IconCrown, IconHeart, IconPlay, IconPlus, IconShare, IconSparkle } from "./icons";
 import { useToast } from "./toast";
@@ -15,10 +16,11 @@ import { useToast } from "./toast";
 type Tab = "forYou" | "following" | "near";
 
 // Inicio en modo Buscar: la red social de ARK305.
-export function Feed({ locale, level, levelName }: { locale: Locale; level: Level; levelName: string }) {
+export type StoryPerson = { handle: string; name: string; photo: string | null };
+
+export function Feed({ locale, level, levelName, me, people }: { locale: Locale; level: Level; levelName: string; me: StoryPerson | null; people: StoryPerson[] }) {
   const t = dict(locale);
   const [tab, setTab] = useState<Tab>("forYou");
-  const me = getProfile(CURRENT_HANDLE)!;
   const vip = level === "vip";
 
   const shown = posts.filter((p) => {
@@ -28,7 +30,8 @@ export function Feed({ locale, level, levelName }: { locale: Locale; level: Leve
     if (tab === "near") return author.near;
     return true;
   });
-  const stories = profiles.filter((p) => !p.private && p.handle !== CURRENT_HANDLE).slice(0, 10);
+  // Primero los perfiles reales más nuevos, después los de ejemplo.
+  const stories = [...people, ...profiles.filter((p) => !p.private)].filter((p, i, all) => p.handle !== me?.handle && all.findIndex((x) => x.handle === p.handle) === i).slice(0, 14);
 
   return (
     <div className="flex flex-col gap-5 pt-5">
@@ -45,23 +48,23 @@ export function Feed({ locale, level, levelName }: { locale: Locale; level: Leve
 
       {/* Historias */}
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4">
-        <div className="flex w-[70px] shrink-0 flex-col items-center gap-1.5">
+        <Link href={me ? "/perfil/editar" : "/entrar"} className="flex w-[70px] shrink-0 flex-col items-center gap-1.5">
           <span className="relative size-[66px] rounded-full border border-white/15 p-[3px]">
             <span className="relative block size-full overflow-hidden rounded-full">
-              <Image src={me.photo} alt="" fill sizes="66px" className="object-cover" />
+              <Photo src={me?.photo} name={me?.name ?? ""} sizes="66px" />
             </span>
             <span className="absolute -right-0.5 -bottom-0.5 flex size-[22px] items-center justify-center rounded-full bg-cream ring-2 ring-ink">
               <IconPlus size={13} stroke="#08090B" weight={2.6} />
             </span>
           </span>
           <span className="w-full truncate text-center text-[11px] text-mute">{t.feed.yourStory}</span>
-        </div>
+        </Link>
         {stories.map((p) => (
           <Link key={p.handle} href={`/@${p.handle}`} className="flex w-[70px] shrink-0 flex-col items-center gap-1.5">
             <span className="gold-grad size-[66px] rounded-full p-[2.5px]">
               <span className="block size-full rounded-full bg-ink p-[2px]">
                 <span className="relative block size-full overflow-hidden rounded-full">
-                  <Image src={p.photo} alt="" fill sizes="60px" className="object-cover" />
+                  <Photo src={p.photo} name={p.name} sizes="60px" />
                 </span>
               </span>
             </span>
@@ -174,7 +177,7 @@ function PostCard({ post, locale }: { post: Post; locale: Locale }) {
     <article className="flex flex-col gap-3">
       <Link href={`/@${author.handle}`} className="flex items-center gap-3 px-4">
         <span className="relative size-10 shrink-0 overflow-hidden rounded-full ring-1 ring-white/15">
-          <Image src={author.photo} alt="" fill sizes="40px" className="object-cover" />
+          <Photo src={author.photo} name={author.name} sizes="40px" />
         </span>
         <span className="flex min-w-0 flex-col">
           <span className="flex items-center gap-2 text-[15px] font-bold text-white">

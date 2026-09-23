@@ -46,6 +46,16 @@ Por ahora el modo y el nivel se guardan en el navegador y cambiar de nivel no co
   Las fotos de ejemplo son de Unsplash (licencia libre) y se reemplazan por las fotos reales de cada proveedor.
 - `src/proxy.ts` — hace que `ark305.com/@usuario` abra el perfil.
 
+## Cuentas (Fase 2)
+
+Inicio de sesión con enlace al correo y perfiles reales en Supabase.
+
+1. En Supabase → SQL Editor, corre `supabase/schema.sql` (tablas, reglas de privacidad y carpeta de fotos).
+2. Copia `.env.example` a `.env.local` y pon la URL y la llave pública del proyecto.
+3. En Vercel agrega las mismas dos variables.
+
+Sin esas variables la app funciona en modo demo, con el perfil de ejemplo.
+
 ## Idioma
 
 La app se abre en inglés si el teléfono está en inglés y en español en los demás casos. Se cambia en el menú (☰) del perfil.

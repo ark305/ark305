@@ -14,7 +14,7 @@ export type Service = {
   detail: Localized;
   price: number; // en dólares
   action: "book" | "request" | "view";
-  photo: string;
+  photo: string | null;
 };
 
 export type Profile = {
@@ -25,11 +25,11 @@ export type Profile = {
   role: Localized;
   area: string;
   near: boolean;
-  photo: string;
+  photo: string | null; // null = sin foto todavía (se ven sus iniciales)
   followers: number;
   tagline: Localized;
   banner: string | null;
-  socials: { network: "instagram" | "tiktok" | "facebook"; photo: string | null }[];
+  socials: { network: "instagram" | "tiktok" | "facebook"; photo: string | null; url?: string }[];
   services: Service[];
   posts: string[];
 };

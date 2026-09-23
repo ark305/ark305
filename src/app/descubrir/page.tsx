@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DiscoverGrid } from "@/components/discover-grid";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { profiles } from "@/lib/mock-data";
+import { recentProfiles } from "@/lib/profiles-db";
 import { positions } from "@/lib/talent";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -11,7 +12,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DiscoverPage() {
   const { locale, t, level } = await getContext();
-  const items = profiles.map((p) => ({
+  const real = await recentProfiles(30);
+  const all = [...real, ...profiles.filter((p) => !real.some((r) => r.handle === p.handle))];
+  const items = all.map((p) => ({
     handle: p.handle,
     name: p.name,
     role: p.role[locale],

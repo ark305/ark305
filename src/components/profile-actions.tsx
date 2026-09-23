@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Locale } from "@/lib/locale";
 import type { Mode } from "@/lib/mode";
+import { markStep, signOut } from "@/lib/actions";
 import { savePref } from "@/lib/prefs";
 import { IconChevron, IconClose, IconCopy, IconMenu } from "./icons";
 import { ModeSwitch } from "./mode-switch";
@@ -13,12 +14,13 @@ import { useToast } from "./toast";
 const pill = "glass flex h-11 min-w-0 items-center gap-2 rounded-full px-3.5 text-sm text-cream";
 
 // Botón con el enlace del perfil: al tocarlo lo copia.
-export function CopyLinkButton({ handle, copied, failed, label }: { handle: string; copied: string; failed: string; label: string }) {
+export function CopyLinkButton({ handle, copied, failed, label, markShared }: { handle: string; copied: string; failed: string; label: string; markShared?: boolean }) {
   const { show } = useToast();
   async function copy() {
     try {
       await navigator.clipboard.writeText(`${location.origin}/@${handle}`);
       show(copied);
+      if (markShared) await markStep("shared"); // paso "Comparte tu perfil" de Hazte visible
     } catch {
       show(failed);
     }
@@ -30,10 +32,10 @@ export function CopyLinkButton({ handle, copied, failed, label }: { handle: stri
   );
 }
 
-type MenuLabels = { menu: string; language: string; close: string; levels: string; label: string; buscar: string; ofrecer: string };
+type MenuLabels = { menu: string; language: string; close: string; levels: string; signOut: string; label: string; buscar: string; ofrecer: string };
 
 // Menú: modo (solo en tu perfil), niveles e idioma.
-export function ProfileMenu({ locale, mode, labels }: { locale: Locale; mode: Mode | null; labels: MenuLabels }) {
+export function ProfileMenu({ locale, mode, signedIn = false, labels }: { locale: Locale; mode: Mode | null; signedIn?: boolean; labels: MenuLabels }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -82,6 +84,13 @@ export function ProfileMenu({ locale, mode, labels }: { locale: Locale; mode: Mo
                 </button>
               ))}
             </div>
+            {signedIn && (
+              <form action={signOut}>
+                <button type="submit" className="mt-5 h-12 w-full rounded-full border border-white/10 text-[15px] font-semibold text-[#E07A8F]">
+                  {labels.signOut}
+                </button>
+              </form>
+            )}
             <button type="button" onClick={() => setOpen(false)} className="mt-4 h-11 w-full text-sm font-semibold text-mute">
               {labels.close}
             </button>
@@ -106,6 +115,24 @@ export function Dismissible({ label, className, children }: { label: string; cla
         className="absolute top-4 right-4 flex size-9 items-center justify-center rounded-full bg-white/10"
       >
         <IconClose size={18} stroke="#EFE6D8" />
+      </button>
+    </div>
+  );
+}
+
+// Marca un paso de "Hazte visible" (por ejemplo "Ya puse mi ARK en la bio").
+export function StepButton({ step, className, label, children }: { step: "bio_link" | "shared"; className: string; label: string; children: React.ReactNode }) {
+  const [pending, start] = useTransition();
+  return (
+    <div className={className}>
+      {children}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => start(() => markStep(step))}
+        className="shrink-0 rounded-full bg-cream px-3 py-1.5 text-[12px] font-bold text-ink disabled:opacity-60"
+      >
+        {label}
       </button>
     </div>
   );

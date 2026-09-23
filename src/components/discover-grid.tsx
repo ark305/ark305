@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
+import { Photo } from "./photo";
 import Link from "next/link";
 import { useState } from "react";
 import type { Kind } from "@/lib/mock-data";
 import { IconChevron, IconCrown, IconLock, IconMegaphone, IconPeople, IconSearch } from "./icons";
 import { SoonButton, useToast } from "./toast";
 
-export type DiscoverItem = { handle: string; name: string; role: string; area: string; kind: Kind; kindLabel: string; near: boolean; private: boolean; photo: string };
+export type DiscoverItem = { handle: string; name: string; role: string; area: string; kind: Kind; kindLabel: string; near: boolean; private: boolean; photo: string | null };
 type Chip = "forYou" | "near" | "provider" | "creator" | "remote" | "brand" | "private";
 
 type Text = {
@@ -97,7 +97,7 @@ export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text
         <div className="mt-3.5 grid grid-cols-3 gap-[3px]">
           {shown.map((p, i) => (
             <Link key={p.handle} href={`/@${p.handle}`} className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden bg-raised p-2.5 text-white">
-              <Image src={p.photo} alt="" fill loading={i < 9 ? "eager" : "lazy"} sizes="(max-width: 430px) 33vw, 143px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+              <Photo src={p.photo} name={p.name} sizes="(max-width: 430px) 33vw, 143px" priority={i < 6} className="object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent" />
               <span className="glass absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide text-cream/90">{p.kindLabel}</span>
               <span className="relative text-[13px] font-bold">{p.name}</span>

@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { IconCrown, IconLock } from "@/components/icons";
+import { Photo } from "@/components/photo";
 import { PrivateGate } from "@/components/private-gate";
 import { ToastButton } from "@/components/toast";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
 import { CURRENT_HANDLE, getProfile, profiles } from "@/lib/mock-data";
+import { getViewer } from "@/lib/profiles-db";
 import { privateServices, residences } from "@/lib/private";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,7 +22,7 @@ const HERO = "https://images.unsplash.com/photo-1774423864869-702b21c2490a";
 export default async function PrivatePage() {
   const { locale, t, level } = await getContext();
   const p = t.private;
-  const me = getProfile(CURRENT_HANDLE)!;
+  const me = (await getViewer()).profile ?? getProfile(CURRENT_HANDLE)!;
 
   if (level !== "vip") {
     const perks = getLevel("vip").extra!;
@@ -126,7 +128,7 @@ export default async function PrivatePage() {
         <div className="grid grid-cols-2 gap-2.5">
           {team.map((x) => (
             <Link key={x.handle} href={`/@${x.handle}`} className="relative flex h-[170px] flex-col justify-end overflow-hidden rounded-[22px] p-3">
-              <Image src={x.photo} alt="" fill sizes="200px" className="object-cover" />
+              <Photo src={x.photo} name={x.name} sizes="200px" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
               <span className="relative text-[15px] font-bold text-white">{x.name}</span>
               <span className="relative text-[12px] text-gold-soft">{x.role[locale]}</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Photo } from "./photo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Level, Mode } from "@/lib/mode";
@@ -9,16 +9,16 @@ import { IconCrown, IconDollar, IconPeople, IconPlus, IconSearch, IconSparkle } 
 type Labels = { label: string; profile: string; home: string; panel: string; day: string; create: string; discover: string; earn: string; community: string };
 type Tab = "profile" | "home" | "panel" | "day" | "create" | "discover" | "earn" | "community";
 
-function activeTab(path: string, handle: string): Tab | null {
+function activeTab(path: string, handle: string | null): Tab | null {
   if (path === "/") return "home";
-  if (path === "/perfil" || path === `/@${handle}`) return "profile";
+  if (path.startsWith("/perfil") || (handle && path === `/@${handle}`)) return "profile";
   const first = path.split("/")[1];
   const map: Record<string, Tab> = { panel: "panel", "mi-dia": "day", crear: "create", descubrir: "discover", ganar: "earn", comunidad: "community" };
   return map[first] ?? null; // el perfil de otra persona no marca ninguna pestaña
 }
 
 // Barra de abajo: cambia según el modo. Buscar en crema, Ofrecer en dorado.
-export function BottomNav({ labels, avatar, handle, mode, level }: { labels: Labels; avatar: string; handle: string; mode: Mode; level: Level }) {
+export function BottomNav({ labels, avatar, name, handle, mode, level }: { labels: Labels; avatar: string | null; name: string; handle: string | null; mode: Mode; level: Level }) {
   const active = activeTab(usePathname(), handle);
   const offer = mode === "ofrecer";
 
@@ -42,7 +42,7 @@ export function BottomNav({ labels, avatar, handle, mode, level }: { labels: Lab
         labels.profile,
         <span className={`relative size-[36px] rounded-full p-[2px] ${offer || level === "vip" ? "gold-grad" : "bg-cream"}`}>
           <span className="relative block size-full overflow-hidden rounded-full">
-            <Image src={avatar} alt="" fill sizes="36px" className="object-cover" />
+            <Photo src={avatar} name={name} sizes="36px" />
           </span>
           {level === "vip" && (
             <span className="gold-grad absolute -top-1.5 -right-1.5 flex size-[18px] items-center justify-center rounded-full ring-2 ring-ink">

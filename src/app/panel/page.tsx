@@ -3,12 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { FeaturesFeed, type FeatureGroup, type FeatureKey } from "@/components/features-feed";
 import { IconChevron } from "@/components/icons";
+import { Photo } from "@/components/photo";
 import { SellerAi } from "@/components/seller-ai";
 import { getItem } from "@/lib/catalog";
 import { formatTime } from "@/lib/dict";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
 import { CURRENT_HANDLE, formatCount, formatPrice, getProfile } from "@/lib/mock-data";
+import { getViewer } from "@/lib/profiles-db";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -41,7 +43,8 @@ const UPCOMING = [
 export default async function PanelPage() {
   const { locale, t, level } = await getContext();
   const p = t.panel;
-  const me = getProfile(CURRENT_HANDLE)!;
+  // Tu perfil real si entraste; si no, el de ejemplo para que el Panel se pueda recorrer.
+  const me = (await getViewer()).profile ?? getProfile(CURRENT_HANDLE)!;
   const lvl = getLevel(level);
 
   const groups: FeatureGroup[] = GROUPS.map((g) => ({
@@ -62,7 +65,7 @@ export default async function PanelPage() {
         <header className="flex items-center gap-3.5">
           <span className="gold-grad relative size-14 shrink-0 rounded-full p-[2px]">
             <span className="relative block size-full overflow-hidden rounded-full">
-              <Image src={me.photo} alt="" fill sizes="56px" className="object-cover" />
+              <Photo src={me.photo} name={me.name} sizes="56px" />
             </span>
           </span>
           <div>
@@ -108,13 +111,13 @@ export default async function PanelPage() {
           })}
         </section>
 
-        <SellerAi locale={locale} handle={me.handle} />
+        <SellerAi locale={locale} name={me.name} handle={me.handle} services={me.services.map((s) => ({ title: s.title[locale], price: s.price }))} />
       </div>
 
       <FeaturesFeed
         groups={groups}
         howItWorks={p.howItWorks}
-        demo={{ chatUser: p.chatUser, chatArk: p.chatArk(formatPrice(me.services[1].price, locale)), primary: p.seeReplies, secondary: p.changeTone }}
+        demo={{ chatUser: p.chatUser, chatArk: p.chatArk(formatPrice(me.services[1]?.price ?? me.services[0]?.price ?? 250, locale)), primary: p.seeReplies, secondary: p.changeTone }}
       />
     </div>
   );

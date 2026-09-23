@@ -6,13 +6,36 @@ import { formatCount, formatPrice, type Profile } from "@/lib/mock-data";
 import { LEVEL_COLOR, type Level, type Mode } from "@/lib/mode";
 import { IconCheck, IconChevron, IconCrown, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
 import { ModeSwitch } from "./mode-switch";
-import { CopyLinkButton, Dismissible, ProfileMenu } from "./profile-actions";
+import { CopyLinkButton, Dismissible, ProfileMenu, StepButton } from "./profile-actions";
+import { Photo } from "./photo";
 import { SoonButton } from "./toast";
 
 const socialIcon = { instagram: IconInstagram, tiktok: IconTikTok, facebook: IconFacebook };
 const socialName = { instagram: "Instagram", tiktok: "TikTok", facebook: "Facebook" };
 
-export function ProfileView({ profile, isOwner, locale, t, mode, level }: { profile: Profile; isOwner: boolean; locale: Locale; t: Dictionary; mode: Mode; level: Level }) {
+export type Steps = { photo: boolean; service: boolean; bio: boolean; shared: boolean };
+
+export function ProfileView({
+  profile,
+  isOwner,
+  locale,
+  t,
+  mode,
+  level,
+  real = false,
+  signedIn = false,
+  steps: realSteps,
+}: {
+  profile: Profile;
+  isOwner: boolean;
+  locale: Locale;
+  t: Dictionary;
+  mode: Mode;
+  level: Level;
+  real?: boolean; // perfil real en Supabase (se puede editar)
+  signedIn?: boolean;
+  steps?: Steps;
+}) {
   const p = t.profile;
   const followers = p.followers(formatCount(profile.followers, locale));
   const offer = mode === "ofrecer";
@@ -20,11 +43,13 @@ export function ProfileView({ profile, isOwner, locale, t, mode, level }: { prof
   const modeLabels = { label: t.mode.label, buscar: t.mode.buscar, ofrecer: t.mode.ofrecer };
 
   // Lista "Hazte visible" (datos de ejemplo: 2 de 4 listos).
-  const steps: { title: string; sub: string; done: boolean; href?: string }[] = [
-    { ...p.steps.photo, done: true },
-    { ...p.steps.service, done: true },
-    { ...p.steps.bio, done: false, href: "/ganar" },
-    { ...p.steps.share, done: false, href: "/ganar" },
+  const flags = realSteps ?? { photo: true, service: true, bio: false, shared: false };
+  const editable = isOwner && real;
+  const steps: { key: string; title: string; sub: string; done: boolean; href?: string }[] = [
+    { key: "photo", ...p.steps.photo, done: flags.photo, href: editable ? "/perfil/editar" : undefined },
+    { key: "service", ...p.steps.service, done: flags.service, href: editable ? "/perfil/editar" : undefined },
+    { key: "bio", ...p.steps.bio, done: flags.bio, href: editable ? undefined : "/ganar" },
+    { key: "share", ...p.steps.share, done: flags.shared, href: editable ? undefined : "/ganar" },
   ];
   const done = steps.filter((s) => s.done).length;
   const findMe = profile.socials.filter((s) => s.photo);
@@ -33,19 +58,25 @@ export function ProfileView({ profile, isOwner, locale, t, mode, level }: { prof
     <div>
       {/* Portada a pantalla completa con el nombre encima */}
       <section className="relative h-[min(80dvh,640px)] min-h-[520px]">
-        <Image src={profile.photo} alt="" fill priority sizes="430px" className="object-cover" />
+        <Photo src={profile.photo} name={profile.name} priority sizes="430px" />
         <div className="fade-top absolute inset-x-0 top-0 h-36" />
         <div className="fade-bottom absolute inset-x-0 bottom-0 h-[60%]" />
 
         <div className="absolute inset-x-3.5 flex items-center justify-between gap-2" style={{ top: "calc(16px + env(safe-area-inset-top))" }}>
-          <CopyLinkButton handle={profile.handle} copied={t.common.copied} failed={t.common.copyFailed} label={p.copyLink} />
+          <CopyLinkButton handle={profile.handle} copied={t.common.copied} failed={t.common.copyFailed} label={p.copyLink} markShared={editable && !flags.shared} />
           <div className="flex shrink-0 gap-2">
-            {isOwner && offer && (
-              <SoonButton className="glass flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-cream">
-                <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
-              </SoonButton>
-            )}
-            <ProfileMenu locale={locale} mode={isOwner ? mode : null} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, ...modeLabels }} />
+            {isOwner &&
+              (offer || editable) &&
+              (editable ? (
+                <Link href="/perfil/editar" className="glass flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-cream">
+                  <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
+                </Link>
+              ) : (
+                <SoonButton className="glass flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-cream">
+                  <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
+                </SoonButton>
+              ))}
+            <ProfileMenu locale={locale} mode={isOwner ? mode : null} signedIn={signedIn} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, signOut: t.auth.signOut, ...modeLabels }} />
           </div>
         </div>
 
@@ -56,15 +87,26 @@ export function ProfileView({ profile, isOwner, locale, t, mode, level }: { prof
           </p>
           {((isOwner && offer) || profile.socials.length > 0) && (
             <div className="mt-3 flex items-center gap-2.5">
-              {isOwner && offer && (
-                <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
-                  <IconPlus stroke="#08090B" weight={2.2} />
-                </SoonButton>
-              )}
-              {profile.socials.map(({ network }) => {
+              {isOwner &&
+                offer &&
+                (editable ? (
+                  <Link href="/perfil/editar" aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
+                    <IconPlus stroke="#08090B" weight={2.2} />
+                  </Link>
+                ) : (
+                  <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
+                    <IconPlus stroke="#08090B" weight={2.2} />
+                  </SoonButton>
+                ))}
+              {profile.socials.map(({ network, url }) => {
                 const Icon = socialIcon[network];
-                return (
-                  <SoonButton key={network} aria-label={socialName[network]} className="glass flex size-12 items-center justify-center rounded-2xl">
+                const cls = "glass flex size-12 items-center justify-center rounded-2xl";
+                return url ? (
+                  <a key={network} href={url} target="_blank" rel="noopener noreferrer" aria-label={socialName[network]} className={cls}>
+                    <Icon stroke="#FFFFFF" weight={1.9} />
+                  </a>
+                ) : (
+                  <SoonButton key={network} aria-label={socialName[network]} className={cls}>
                     <Icon stroke="#FFFFFF" weight={1.9} />
                   </SoonButton>
                 );
@@ -122,10 +164,12 @@ export function ProfileView({ profile, isOwner, locale, t, mode, level }: { prof
                     <span className={`text-base font-bold ${s.done ? "text-mute line-through" : "text-cream"}`}>{s.title}</span>
                     <span className="text-[13px] text-mute">{s.sub}</span>
                   </span>
-                  {!s.done && <IconChevron size={20} stroke="#9A9EA6" />}
+                  {!s.done && s.href && <IconChevron size={20} stroke="#9A9EA6" />}
                 </>
               );
               const cls = `flex items-center gap-3.5 py-3 ${i < steps.length - 1 ? "border-b border-white/[0.07]" : ""}`;
+              if (editable && s.key === "bio" && !s.done)
+                return <StepButton key={s.key} step="bio_link" className={cls} label={p.bioDone}>{body}</StepButton>;
               return s.href ? (
                 <Link key={s.title} href={s.href} className={cls}>
                   {body}
@@ -154,10 +198,10 @@ export function ProfileView({ profile, isOwner, locale, t, mode, level }: { prof
           <h2 className="mt-3 text-center text-[15px] font-extrabold tracking-[0.18em] text-white">{p.book}</h2>
           {profile.services.map((s) => (
             <div key={s.id} className="relative flex items-center gap-3.5 overflow-hidden rounded-[24px] border border-white/10 p-3">
-              <Image src={s.photo} alt="" fill sizes="200px" className="scale-150 object-cover opacity-70 blur-2xl" />
+              <Photo src={s.photo} name={s.title[locale]} sizes="200px" className="scale-150 object-cover opacity-70 blur-2xl" />
               <div className="absolute inset-0 bg-ink/45" />
               <div className="relative size-[76px] shrink-0 overflow-hidden rounded-[14px]">
-                <Image src={s.photo} alt="" fill sizes="76px" className="object-cover" />
+                <Photo src={s.photo} name={s.title[locale]} sizes="76px" />
               </div>
               <div className="relative flex grow flex-col gap-[3px]">
                 <span className="text-[10px] font-bold tracking-[0.14em] text-gold-soft">{s.kicker[locale]}</span>
