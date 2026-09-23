@@ -6,6 +6,7 @@ import { IconChevron } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import { BusinessPanel } from "@/components/business-panel";
 import { SellerAi } from "@/components/seller-ai";
+import { SidePill } from "@/components/side-switch";
 import { getItem } from "@/lib/catalog";
 import { formatTime } from "@/lib/dict";
 import { getContext, getDictionary } from "@/lib/i18n";
@@ -64,6 +65,10 @@ export default async function PanelPage() {
   return (
     <div>
       <div className="flex flex-col gap-5 px-4 pt-8 pb-10">
+        <div className="-mb-2 flex items-center justify-between">
+          <span className="text-[13px] font-semibold text-mute">{business ? t.side.businessTag : t.side.personalTag}</span>
+          <SidePill side={business ? "business" : "personal"} label={business ? t.side.personal : t.side.business} />
+        </div>
         <header className="flex items-center gap-3.5">
           <span className="gold-grad relative size-14 shrink-0 rounded-full p-[2px]">
             <span className="relative block size-full overflow-hidden rounded-full">

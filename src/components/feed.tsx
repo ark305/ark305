@@ -2,18 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { defaultEntry, getItem } from "@/lib/catalog";
 import { day } from "@/lib/day-store";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { FOLLOWING, formatCount, formatPrice, getProfile, posts, profiles, type Post } from "@/lib/mock-data";
-import { LEVEL_COLOR, type Experience, type Lens, type Level, type View } from "@/lib/mode";
-import { savePref } from "@/lib/prefs";
+import { LEVEL_COLOR, type Level, type Side } from "@/lib/mode";
 import { taste, useTaste } from "@/lib/taste";
 import { IconArrow, IconBookmark, IconChevron, IconComment, IconCrown, IconDots, IconHeart, IconPeople, IconPlay, IconPlus, IconShare, IconSparkle } from "./icons";
+import { NextStep } from "./next-step";
 import { Photo } from "./photo";
+import { SidePill } from "./side-switch";
 import { useToast } from "./toast";
 
 type Tab = "forYou" | "following" | "near";
@@ -22,8 +22,8 @@ type Ranked = { post: Post; explore: boolean };
 
 // Orden de "Para ti": primero lo que más te gusta (según lo que ves, guardas y reservas),
 // sin olvidar lo nuevo. Uno de cada 6 posts es de un tema distinto, para descubrir.
-function rank(list: Post[], scores: Partial<Record<Post["topic"], number>>): Ranked[] {
-  const scored = list.map((post, i) => ({ post, score: (scores[post.topic] ?? 0) + (list.length - i) * 0.3 }));
+function rank(list: Post[], scores: Partial<Record<Post["topic"], number>>, home: Post["exp"]): Ranked[] {
+  const scored = list.map((post, i) => ({ post, score: (scores[post.topic] ?? 0) + (list.length - i) * 0.3 - (post.exp === home ? 0 : 12) }));
   scored.sort((a, b) => b.score - a.score);
   const out: Ranked[] = [];
   const pool = [...scored];
@@ -42,9 +42,8 @@ export function Feed({
   levelName,
   me,
   people,
-  exp,
-  lens,
-  view,
+  side,
+  labels,
   initialTaste,
   signedIn,
 }: {
@@ -53,9 +52,8 @@ export function Feed({
   levelName: string;
   me: StoryPerson | null;
   people: StoryPerson[];
-  exp: Experience | null;
-  lens: Lens;
-  view: View;
+  side: Side;
+  labels: { other: string; tag: string };
   initialTaste: Record<string, number> | null;
   signedIn: boolean;
 }) {
@@ -63,19 +61,22 @@ export function Feed({
   const [tab, setTab] = useState<Tab>("forYou");
   const state = useTaste();
   const vip = level === "vip";
-  const business = view === "business";
+  const business = side === "business";
+  const home: Post["exp"] = business ? "business" : "lifestyle";
 
-  useEffect(() => taste.init(initialTaste, signedIn), [initialTaste, signedIn]);
+  useEffect(() => {
+    taste.init(initialTaste, signedIn);
+  }, [initialTaste, signedIn]);
 
-  // Qué experiencias entran en el feed.
-  const allowedKey = exp === "lifestyle" ? "lifestyle" : exp === "business" ? "business" : lens === "all" ? "lifestyle,business" : lens;
+  // Tu lado primero; el otro lado solo aparece de vez en cuando, para descubrir.
   const ranked = useMemo(() => {
-    const allowed = allowedKey.split(",");
-    const base = posts.filter((p) => allowed.includes(p.exp) && !state.hidden.includes(p.id) && getProfile(p.author));
-    if (tab === "following") return base.filter((p) => FOLLOWING.includes(p.author)).map((post) => ({ post, explore: false }));
-    if (tab === "near") return base.filter((p) => getProfile(p.author)!.near).map((post) => ({ post, explore: false }));
-    return rank(base, state.taste);
-  }, [allowedKey, state.hidden, state.taste, tab]);
+    const base = posts.filter((p) => !state.hidden.includes(p.id) && getProfile(p.author));
+    const mine = base.filter((p) => p.exp === home);
+    if (tab === "following") return mine.filter((p) => FOLLOWING.includes(p.author)).map((post) => ({ post, explore: false }));
+    if (tab === "near") return mine.filter((p) => getProfile(p.author)!.near).map((post) => ({ post, explore: false }));
+    const others = base.filter((p) => p.exp !== home).slice(0, Math.ceil(mine.length / 5));
+    return rank([...mine, ...others], state.taste, home);
+  }, [home, state.hidden, state.taste, tab]);
 
   const stories = [...people, ...profiles.filter((p) => !p.private)]
     .filter((p, i, all) => p.handle !== me?.handle && all.findIndex((x) => x.handle === p.handle) === i)
@@ -86,16 +87,19 @@ export function Feed({
       <header className="flex items-center justify-between px-4">
         <span className="font-display text-[30px] leading-none font-semibold text-white">
           ARK<span className="text-gold">305</span>
-          {business && <span className="ml-2 align-middle text-[12px] font-bold tracking-[0.14em] text-gold uppercase">Business</span>}
         </span>
+        <div className="flex items-center gap-2">
+          <SidePill side={side} label={labels.other} />
         <Link href="/niveles" className="glass flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] font-semibold text-cream">
           {vip ? <IconCrown size={14} stroke="#D8B170" weight={2} /> : <span className="size-2 rounded-full" style={{ background: LEVEL_COLOR[level] }} />}
           {levelName}
           <IconChevron size={14} stroke="#9A9EA6" />
         </Link>
+        </div>
       </header>
+      <p className="-mt-3 px-4 text-[13px] text-mute">{labels.tag}</p>
 
-      {exp === "both" && <LensSwitch locale={locale} lens={lens} />}
+      <NextStep locale={locale} />
 
       {/* Historias */}
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4">
@@ -176,7 +180,7 @@ export function Feed({
         {ranked.length === 0 && <p className="px-6 py-10 text-center text-mute">{t.feed.empty}</p>}
         {ranked.map(({ post, explore }, i) => (
           <Fragment key={post.id}>
-            <PostCard post={post} locale={locale} explore={explore} saved={state.saved.includes(post.id)} expName={t.exp[post.exp].title} score={state.taste[post.topic] ?? 0} />
+            <PostCard post={post} locale={locale} explore={explore} saved={state.saved.includes(post.id)} expName={post.exp === "business" ? t.side.business : t.side.personal} score={state.taste[post.topic] ?? 0} />
             {i === 2 && !vip && (
               <Link href="/niveles" className="mx-4 flex items-center gap-3.5 rounded-[24px] border border-[#D8B170]/35 bg-gradient-to-br from-[#241e15] via-[#141210] to-ink p-4">
                 <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f3dba6] via-[#d8b170] to-[#b48746]">
@@ -193,32 +197,6 @@ export function Feed({
         ))}
         {ranked.length > 0 && <p className="px-6 text-center text-[12px] text-mute">{t.feed.learned}</p>}
       </div>
-    </div>
-  );
-}
-
-// Con "Las dos": Todo · Lifestyle · Business. Cambia colores y pantallas al instante.
-function LensSwitch({ locale, lens }: { locale: Locale; lens: Lens }) {
-  const t = dict(locale).exp;
-  const router = useRouter();
-  const [pending, start] = useTransition();
-  return (
-    <div role="radiogroup" aria-label={t.yours} className={`glass mx-4 grid h-11 grid-cols-3 rounded-full p-1 ${pending ? "opacity-70" : ""}`}>
-      {(["all", "lifestyle", "business"] as Lens[]).map((l) => (
-        <button
-          key={l}
-          type="button"
-          role="radio"
-          aria-checked={lens === l}
-          onClick={() => {
-            savePref("lens", l);
-            start(() => router.refresh());
-          }}
-          className={`rounded-full text-[13px] font-bold transition-colors ${lens === l ? (l === "business" ? "bg-[#8FB0D0] text-ink" : l === "lifestyle" ? "bg-[#D8B170] text-ink" : "bg-cream text-ink") : "text-cream/80"}`}
-        >
-          {t.lens[l]}
-        </button>
-      ))}
     </div>
   );
 }
@@ -247,7 +225,7 @@ function PostCard({ post, locale, explore, saved, expName, score }: { post: Post
   const ref = useRef<HTMLElement>(null);
   const author = getProfile(post.author)!;
   const service = post.service ? getItem(post.service) : undefined;
-  const tag = post.exp === "business" ? "#8FB0D0" : "#D8B170";
+  const tag = post.exp === "business" ? "#D8B170" : "#7FC2B7";
 
   // Si te quedas mirando el post un rato, cuenta como interés (una vez por post).
   useEffect(() => {

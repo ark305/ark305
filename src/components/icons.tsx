@@ -236,3 +236,67 @@ export const IconDots = (p: IconProps) => (
     <circle cx="19" cy="12" r="1" />
   </Icon>
 );
+export const IconCar = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M5 16V11l2-5h10l2 5v5M3 16h18v3H3zM5 11h14" />
+    <circle cx="7.5" cy="16" r="0.6" />
+    <circle cx="16.5" cy="16" r="0.6" />
+  </Icon>
+);
+export const IconBoat = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M12 3v10M12 4l6 8H12M3 15h18l-2 4H5z" />
+  </Icon>
+);
+export const IconChef = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M7 14a4 4 0 1 1 1.5-7.7A4 4 0 0 1 16 5.5a3.5 3.5 0 1 1 1 8.5V20H7z" />
+    <path d="M7 17h10" />
+  </Icon>
+);
+export const IconHome = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 11 12 4l9 7M5 10v10h14V10M10 20v-6h4v6" />
+  </Icon>
+);
+export const IconCamera = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </Icon>
+);
+export const IconWrench = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14.5 5.5a4 4 0 0 0 5 5L12 18a2.1 2.1 0 1 1-3-3l7.5-7.5a4 4 0 0 1-2-2z" />
+  </Icon>
+);
+export const IconMonitor = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="12" rx="2" />
+    <path d="M8 20h8M12 16v4" />
+  </Icon>
+);
+export const IconHeadset = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+    <rect x="3" y="14" width="4" height="6" rx="1.5" />
+    <rect x="17" y="14" width="4" height="6" rx="1.5" />
+  </Icon>
+);
+export const IconBriefcase = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="7" width="18" height="13" rx="2" />
+    <path d="M9 7V5h6v2M3 12h18" />
+  </Icon>
+);
+export const IconCode = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14" />
+  </Icon>
+);
+export const IconMic = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+  </Icon>
+);

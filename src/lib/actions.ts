@@ -6,7 +6,8 @@ import { refresh, revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { profiles as demoProfiles, type Kind } from "./mock-data";
-import { parseExperience } from "./mode";
+import { buildSnapshot, sanitize } from "./diagnosis";
+import { parseSide, sideToExperience } from "./mode";
 import { mediaPrefix, supabaseReady } from "./supabase/config";
 import { createClient } from "./supabase/server";
 
@@ -74,8 +75,6 @@ export async function createProfile(_: FormState, form: FormData): Promise<FormS
     photo_url: photo,
   });
   if (error) return fail(error.code === "23505" ? "handle" : "generic");
-  const exp = parseExperience(text(form, "experience", 10));
-  if (exp) await saveExperience(exp);
   revalidatePath("/", "layout");
   redirect("/perfil");
 }
@@ -171,20 +170,6 @@ export async function signOut() {
   redirect("/");
 }
 
-// Lifestyle, Business o las dos. Se guarda en el teléfono y, si entraste, en tu cuenta.
-export async function saveExperience(value: string) {
-  const exp = parseExperience(value);
-  if (!exp) return;
-  const jar = await cookies();
-  jar.set("exp", exp, { path: "/", maxAge: 31536000, sameSite: "lax" });
-  jar.set("lens", "all", { path: "/", maxAge: 31536000, sameSite: "lax" });
-  if (!supabaseReady) return revalidatePath("/", "layout");
-  const { supabase, user } = await currentUser();
-  // Si todavía no corrieron supabase/002_experiences.sql, la columna no existe y solo queda la cookie.
-  if (user) await supabase.from("profiles").update({ experience: exp }).eq("id", user.id);
-  revalidatePath("/", "layout");
-}
-
 // Gustos del feed (tema → puntos), para que el feed te conozca en cualquier teléfono.
 export async function saveTaste(taste: Record<string, number>) {
   const clean = Object.fromEntries(
@@ -196,4 +181,36 @@ export async function saveTaste(taste: Record<string, number>) {
   if (!supabaseReady) return;
   const { supabase, user } = await currentUser();
   if (user) await supabase.from("profiles").update({ taste: clean }).eq("id", user.id);
+}
+
+// Personal o Business. En el teléfono (cookie) y, si entraste, en tu cuenta.
+export async function saveSide(value: string) {
+  const side = parseSide(value);
+  if (!side) return;
+  const jar = await cookies();
+  jar.set("side", side, { path: "/", maxAge: 31536000, sameSite: "lax" });
+  if (supabaseReady) {
+    const { supabase, user } = await currentUser();
+    if (user) await supabase.from("profiles").update({ experience: sideToExperience(side) }).eq("id", user.id);
+  }
+  revalidatePath("/", "layout");
+}
+
+// Guarda el Diagnóstico ARK y aplica su resultado (Personal o Business).
+export async function saveDiagnosis(raw: unknown, applySide = true) {
+  const answers = sanitize(raw);
+  const snap = buildSnapshot(answers);
+  if (applySide && snap) await saveSide(snap.side);
+  if (!supabaseReady) return;
+  const { supabase, user } = await currentUser();
+  if (user) await supabase.from("profiles").update({ diagnosis: { answers, at: new Date().toISOString() } }).eq("id", user.id);
+  revalidatePath("/", "layout");
+}
+
+// "Lo que ARK sabe de mí": borrar el diagnóstico de la cuenta.
+export async function clearDiagnosis() {
+  if (!supabaseReady) return;
+  const { supabase, user } = await currentUser();
+  if (user) await supabase.from("profiles").update({ diagnosis: null, taste: {} }).eq("id", user.id);
+  revalidatePath("/", "layout");
 }

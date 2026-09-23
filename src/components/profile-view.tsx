@@ -3,10 +3,10 @@ import Link from "next/link";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
 import { formatCount, formatPrice, type Profile } from "@/lib/mock-data";
-import { LEVEL_COLOR, type Experience, type Level, type Mode } from "@/lib/mode";
+import { LEVEL_COLOR, type Level, type Mode } from "@/lib/mode";
 import { IconCheck, IconChevron, IconCrown, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
-import { ExperienceSetting, ResetTaste } from "./experience-picker";
-import { ModeSwitch } from "./mode-switch";
+import { IconSparkle } from "./icons";
+import { SideSwitch } from "./side-switch";
 import { CopyLinkButton, Dismissible, ProfileMenu, StepButton } from "./profile-actions";
 import { Photo } from "./photo";
 import { SoonButton } from "./toast";
@@ -26,7 +26,6 @@ export function ProfileView({
   real = false,
   signedIn = false,
   steps: realSteps,
-  exp = null,
 }: {
   profile: Profile;
   isOwner: boolean;
@@ -37,13 +36,13 @@ export function ProfileView({
   real?: boolean; // perfil real en Supabase (se puede editar)
   signedIn?: boolean;
   steps?: Steps;
-  exp?: Experience | null;
+  exp?: unknown;
 }) {
   const p = t.profile;
   const followers = p.followers(formatCount(profile.followers, locale));
   const offer = mode === "ofrecer";
   const lvl = getLevel(level);
-  const modeLabels = { label: t.mode.label, buscar: t.mode.buscar, ofrecer: t.mode.ofrecer };
+  const menuLabels = { label: t.side.label, personal: t.side.personal, business: t.side.business };
 
   // Lista "Hazte visible" (datos de ejemplo: 2 de 4 listos).
   const flags = realSteps ?? { photo: true, service: true, bio: false, shared: false };
@@ -79,7 +78,7 @@ export function ProfileView({
                   <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
                 </SoonButton>
               ))}
-            <ProfileMenu locale={locale} mode={isOwner ? mode : null} signedIn={signedIn} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, signOut: t.auth.signOut, ...modeLabels }} />
+            <ProfileMenu locale={locale} mode={isOwner ? mode : null} signedIn={signedIn} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, signOut: t.auth.signOut, ...menuLabels }} side={offer ? "business" : "personal"} />
           </div>
         </div>
 
@@ -125,8 +124,15 @@ export function ProfileView({
       {/* Tu cuenta: modo y nivel (solo lo ves tú) */}
       {isOwner && (
         <section className="mx-3.5 mt-6 flex flex-col gap-3">
-          <ModeSwitch mode={mode} labels={modeLabels} />
-          <p className="text-center text-[13px] text-mute">{offer ? t.mode.ofrecerHint : t.mode.buscarHint}</p>
+          <SideSwitch side={offer ? "business" : "personal"} labels={{ label: t.side.label, personal: t.side.personal, business: t.side.business }} />
+          <p className="text-center text-[13px] text-mute">{offer ? t.side.businessTag : t.side.personalTag}</p>
+          <Link href="/snapshot" className="flex items-center gap-3 rounded-[22px] border border-gold/30 bg-gold/[0.06] p-3.5">
+            <span className="gold-grad flex size-10 shrink-0 items-center justify-center rounded-full">
+              <IconSparkle size={18} stroke="#08090B" weight={2} />
+            </span>
+            <span className="grow text-base font-bold text-white">{t.diag.cardTitle}</span>
+            <IconChevron size={18} stroke="#9A9EA6" />
+          </Link>
           <Link
             href="/niveles"
             className={`flex items-center gap-3 rounded-[22px] border p-3.5 ${level === "vip" ? "border-gold/40 bg-gradient-to-br from-[#241e15] to-ink" : "border-white/10 bg-white/[0.035]"}`}
@@ -141,8 +147,9 @@ export function ProfileView({
             <span className="text-[13px] font-semibold text-cream/80">{t.levels.see}</span>
             <IconChevron size={18} stroke="#9A9EA6" />
           </Link>
-          <ExperienceSetting locale={locale} value={exp} />
-          <ResetTaste locale={locale} />
+          <Link href="/perfil/datos" className="flex h-11 items-center justify-center text-[13px] font-semibold text-mute">
+            {t.snap.knows}
+          </Link>
         </section>
       )}
 

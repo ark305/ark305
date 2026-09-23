@@ -7,7 +7,48 @@ import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
 import { candidates, groups, HOURS, monthly, positions, type Position } from "@/lib/talent";
 import { team, useTeam } from "@/lib/team-store";
-import { IconChevron, IconClose, IconLock, IconPeople, IconSearch, IconShare } from "./icons";
+import {
+  IconBoat,
+  IconBriefcase,
+  IconCamera,
+  IconCap,
+  IconCar,
+  IconChart,
+  IconChef,
+  IconChevron,
+  IconClose,
+  IconCode,
+  IconHeadset,
+  IconHome,
+  IconImage,
+  IconLock,
+  IconMegaphone,
+  IconMonitor,
+  IconSearch,
+  IconSparkle,
+  IconWallet,
+  IconWrench,
+} from "./icons";
+
+// Un ícono por categoría para distinguir los grupos de un vistazo.
+const GROUP_ICON: Record<string, typeof IconCar> = {
+  move: IconCar,
+  marine: IconBoat,
+  food: IconChef,
+  home: IconHome,
+  media: IconCamera,
+  reno: IconWrench,
+  tech: IconMonitor,
+  cont: IconImage,
+  mkt: IconMegaphone,
+  sales: IconHeadset,
+  ops: IconBriefcase,
+  "tech-r": IconCode,
+  fin: IconWallet,
+  lead: IconChart,
+  edu: IconCap,
+  life: IconSparkle,
+};
 import { useToast } from "./toast";
 
 type Filter = "all" | "inperson" | "remote";
@@ -101,11 +142,12 @@ export function TalentView({ locale, canHire }: { locale: Locale; canHire: boole
       <ul className="flex flex-col">
         {shown.map((p) => {
           const g = groupOf(p.group);
+          const GroupIcon = GROUP_ICON[p.group] ?? IconBriefcase;
           return (
             <li key={p.id}>
               <button type="button" onClick={() => setOpen(p)} className="flex w-full items-center gap-3.5 border-b border-white/[0.07] py-3 text-left">
                 <span className="gloss flex size-12 shrink-0 items-center justify-center rounded-[15px]" style={{ "--c": g.color } as React.CSSProperties}>
-                  {p.mode === "remote" ? <IconShare size={20} stroke="#FFFFFF" weight={2} /> : <IconPeople size={22} stroke="#FFFFFF" weight={2} />}
+                  <GroupIcon size={22} stroke="#FFFFFF" weight={2} />
                 </span>
                 <span className="flex min-w-0 grow flex-col">
                   <span className="truncate text-[15px] font-bold text-white">{p.name[locale]}</span>

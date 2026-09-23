@@ -41,3 +41,16 @@ export function viewOf(exp: Experience | null, lens: Lens): View {
   if (exp === "both" && lens === "business") return "business";
   return "lifestyle";
 }
+
+// Un solo interruptor: Personal ("Vive Miami", turquesa) o Business ("Construye en Miami", dorado).
+// Enterprise es un tipo de cuenta dentro de Business (lo decide el Diagnóstico).
+export type Side = "personal" | "business";
+
+export function parseSide(v: string | undefined | null): Side | null {
+  return v === "personal" || v === "business" ? v : null;
+}
+
+// En la base de datos Personal se guarda como 'lifestyle' (columna experience de 002).
+export const sideToExperience = (s: Side) => (s === "business" ? "business" : "lifestyle");
+export const experienceToSide = (e: string | null | undefined): Side | null => (e === "business" ? "business" : e === "lifestyle" || e === "both" ? "personal" : null);
+export const SIDE_HOME: Record<Side, string> = { personal: "/", business: "/panel" };

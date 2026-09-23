@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { es } from "./dictionaries/es";
 import { en } from "./dictionaries/en";
 import type { Locale } from "./locale";
-import { parseExperience, parseLens, parseLevel, parseMode, viewOf } from "./mode";
+import { experienceToSide, parseLevel, parseSide } from "./mode";
 import { getViewer } from "./profiles-db";
 
 export type { Locale } from "./locale";
@@ -29,17 +29,24 @@ export async function getDictionary() {
 export async function getContext() {
   const jar = await cookies();
   const { locale, t } = await getDictionary();
-  // La experiencia se guarda en la cuenta; en el teléfono (cookie) para invitados.
+  // Personal o Business: se guarda en la cuenta; en el teléfono (cookie) para invitados.
+  // (Las cookies "exp" y "mode" son de la versión anterior y solo se usan si no hay otra cosa.)
   const viewer = await getViewer();
-  const exp = parseExperience(viewer.row?.experience) ?? parseExperience(jar.get("exp")?.value);
-  const lens = exp === "both" ? parseLens(jar.get("lens")?.value) : exp === "business" ? "business" : "lifestyle";
+  const side =
+    parseSide(jar.get("side")?.value) ??
+    experienceToSide(viewer.row?.experience) ??
+    experienceToSide(jar.get("exp")?.value) ??
+    (jar.get("mode")?.value === "ofrecer" ? "business" : null);
+  const current = side ?? "personal";
   return {
     locale,
     t,
-    mode: parseMode(jar.get("mode")?.value),
+    side,
     level: parseLevel(jar.get("nivel")?.value),
-    exp,
-    lens,
-    view: viewOf(exp, lens),
+    // Nombres de antes, derivados del interruptor, para las pantallas que ya existían.
+    mode: current === "business" ? ("ofrecer" as const) : ("buscar" as const),
+    view: current === "business" ? ("business" as const) : ("lifestyle" as const),
+    exp: current === "business" ? ("business" as const) : ("lifestyle" as const),
+    diagnosis: (viewer.row?.diagnosis ?? null) as Record<string, unknown> | null,
   };
 }

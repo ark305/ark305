@@ -19,7 +19,7 @@ const RULES: { words: string[]; roles: [string, number][] }[] = [
   { words: ["remodel", "cocina", "bano", "kitchen", "bathroom"], roles: [["estimate", 0], ["kitchen", 0]] },
 ];
 
-const norm = (s: string) => ` ${s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")} `;
+const norm = (s: string) => ` ${s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")} `;
 
 export type TeamLine = { id: string; hours: number; monthly: number };
 export type TeamPlan = { lines: TeamLine[]; hoursPerWeek: number; total: number; understood: boolean };

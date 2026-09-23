@@ -13,14 +13,14 @@ import { SoonButton, useToast } from "./toast";
 const TEAL = "#7FC2B7";
 
 // Mi día: ARK IA arma el plan, lo agregas a tu día y lo reservas completo.
-export function DayPlanner({ locale, discount, levelName }: { locale: Locale; discount: number; levelName: string }) {
+export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: { locale: Locale; discount: number; levelName: string; initialPrompt?: string }) {
   const t = dict(locale).day;
   const m = dict(locale).money;
   const money = (n: number) => formatPrice(n, locale);
   const { show } = useToast();
   const entries = useDay();
 
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialPrompt);
   const [guests, setGuests] = useState(4);
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);

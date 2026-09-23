@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Locale } from "@/lib/locale";
-import type { Mode } from "@/lib/mode";
+import type { Mode, Side } from "@/lib/mode";
 import { markStep, signOut } from "@/lib/actions";
 import { savePref } from "@/lib/prefs";
 import { IconChevron, IconClose, IconCopy, IconMenu } from "./icons";
-import { ModeSwitch } from "./mode-switch";
+import { SideSwitch } from "./side-switch";
 import { useToast } from "./toast";
 
 const pill = "glass flex h-11 min-w-0 items-center gap-2 rounded-full px-3.5 text-sm text-cream";
@@ -32,10 +32,10 @@ export function CopyLinkButton({ handle, copied, failed, label, markShared }: { 
   );
 }
 
-type MenuLabels = { menu: string; language: string; close: string; levels: string; signOut: string; label: string; buscar: string; ofrecer: string };
+type MenuLabels = { menu: string; language: string; close: string; levels: string; signOut: string; label: string; personal: string; business: string };
 
 // Menú: modo (solo en tu perfil), niveles e idioma.
-export function ProfileMenu({ locale, mode, signedIn = false, labels }: { locale: Locale; mode: Mode | null; signedIn?: boolean; labels: MenuLabels }) {
+export function ProfileMenu({ locale, mode, side = "personal", signedIn = false, labels }: { locale: Locale; mode: Mode | null; side?: Side; signedIn?: boolean; labels: MenuLabels }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -63,7 +63,7 @@ export function ProfileMenu({ locale, mode, signedIn = false, labels }: { locale
             {mode && (
               <>
                 <p className="mb-3 text-sm font-semibold text-mute">{labels.label}</p>
-                <ModeSwitch mode={mode} labels={labels} />
+                <SideSwitch side={side} labels={labels} />
                 <Link href="/niveles" onClick={() => setOpen(false)} className="mt-3 flex h-12 items-center justify-between rounded-full border border-white/10 px-5 text-[15px] font-semibold text-cream">
                   {labels.levels} <IconChevron size={18} stroke="#9A9EA6" />
                 </Link>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IconChevron, IconCrown } from "@/components/icons";
-import { ModeSwitch } from "@/components/mode-switch";
+import { SideSwitch } from "@/components/side-switch";
 import { ProfileView } from "@/components/profile-view";
 import { SignIn } from "@/components/sign-in";
 import { getContext, getDictionary } from "@/lib/i18n";
@@ -55,8 +55,11 @@ export default async function MyProfilePage() {
         ARK<span className="text-gold">305</span>
       </p>
       <SignIn locale={locale} />
-      <ModeSwitch mode={mode} labels={{ label: t.mode.label, buscar: t.mode.buscar, ofrecer: t.mode.ofrecer }} />
-      <p className="text-center text-[13px] text-mute">{mode === "ofrecer" ? t.mode.ofrecerHint : t.mode.buscarHint}</p>
+      <SideSwitch side={mode === "ofrecer" ? "business" : "personal"} labels={{ label: t.side.label, personal: t.side.personal, business: t.side.business }} />
+      <p className="text-center text-[13px] text-mute">{mode === "ofrecer" ? t.side.businessTag : t.side.personalTag}</p>
+      <Link href="/snapshot" className="flex h-12 items-center justify-center rounded-full border border-gold/30 text-[15px] font-bold text-gold">
+        {t.diag.cardTitle}
+      </Link>
       <Link href="/niveles" className="flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/[0.035] p-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ background: `${LEVEL_COLOR[level]}22` }}>
           {level === "vip" ? <IconCrown size={20} stroke="#D8B170" weight={1.9} /> : <span className="size-3 rounded-full" style={{ background: LEVEL_COLOR[level] }} />}

@@ -28,19 +28,20 @@
 }
 
 :root {
+  /* Personal ("Vive Miami"): turquesa, títulos con serifa. */
+  --accent: #7fc2b7;
+  --accent-soft: #bfe3dc;
+  --accent-hi: #cdeee7;
+  --accent-lo: #4f9a8e;
+  --display-font: var(--font-fraunces), Georgia, serif;
+}
+
+/* Business ("Construye en Miami"): dorado, títulos rectos y firmes. */
+[data-exp="business"] {
   --accent: #d8b170;
   --accent-soft: #ebd3a0;
   --accent-hi: #f3dba6;
   --accent-lo: #b48746;
-  --display-font: var(--font-fraunces), Georgia, serif;
-}
-
-/* Business: azul acero, títulos rectos y firmes. */
-[data-exp="business"] {
-  --accent: #8fb0d0;
-  --accent-soft: #c9dcec;
-  --accent-hi: #d9e7f3;
-  --accent-lo: #5f86ad;
   --display-font: var(--font-manrope), "Helvetica Neue", sans-serif;
 }
 [data-exp="business"] .font-display {
@@ -66,6 +67,9 @@ a {
 
 .no-scrollbar {
   scrollbar-width: none;
+  /* Difuminado a la derecha: se nota que hay más para deslizar. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;

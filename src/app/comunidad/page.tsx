@@ -1,13 +1,6 @@
-import type { Metadata } from "next";
-import { CommunityView } from "@/components/community-view";
-import { getDictionary } from "@/lib/i18n";
+import { redirect } from "next/navigation";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getDictionary();
-  return { title: t.nav.community };
-}
-
-export default async function CommunityPage() {
-  const { locale } = await getDictionary();
-  return <CommunityView locale={locale} />;
+// Comunidad ahora vive dentro de Academia.
+export default function CommunityPage() {
+  redirect("/academia");
 }

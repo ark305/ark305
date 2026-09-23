@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 // Primera vez que alguien entra: crea su perfil.
 export default async function WelcomePage() {
-  const { locale, t, exp } = await getContext();
+  const { locale, t } = await getContext();
   const viewer = await getViewer();
   if (!viewer.userId) redirect("/entrar");
   if (viewer.row) redirect("/perfil");
@@ -21,7 +21,7 @@ export default async function WelcomePage() {
         <h1 className="font-display text-[40px] leading-[1.05] font-semibold text-white">{t.onboarding.title}</h1>
         <p className="mt-2 text-[15px] leading-normal text-mute">{t.onboarding.sub}</p>
       </header>
-      <OnboardingForm locale={locale} uid={viewer.userId} email={viewer.email} initialExp={exp} />
+      <OnboardingForm locale={locale} uid={viewer.userId} email={viewer.email} />
     </div>
   );
 }

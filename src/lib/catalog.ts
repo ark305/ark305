@@ -109,7 +109,7 @@ const RULES: { id: string; words: string[]; time: string; qty?: number }[] = [
   { id: "suv", words: ["chofer", "driver", "transporte", "suv", "carro"], time: "10:00", qty: 2 },
 ];
 
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const toMin = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3));
 const toTime = (m: number) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 

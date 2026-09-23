@@ -1,38 +1,37 @@
 "use client";
 
-import { Photo } from "./photo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Level, Mode, View } from "@/lib/mode";
-import { IconCrown, IconDollar, IconPeople, IconPlus, IconSearch, IconSparkle } from "./icons";
+import type { Level, Side } from "@/lib/mode";
+import { IconCap, IconCrown, IconSearch, IconSparkle } from "./icons";
+import { Photo } from "./photo";
 
-type Labels = { label: string; profile: string; home: string; panel: string; day: string; create: string; discover: string; earn: string; community: string; team: string; talent: string; resell: string };
-type Tab = "profile" | "home" | "panel" | "day" | "create" | "discover" | "earn" | "community" | "team" | "talent" | "resell";
+type Labels = { label: string; profile: string; home: string; panel: string; discover: string; talent: string; academy: string; ai: string };
+type Tab = "profile" | "home" | "ai" | "search" | "academy";
 
-function activeTab(path: string, handle: string | null): Tab | null {
-  if (path === "/") return "home";
-  if (path.startsWith("/perfil") || (handle && path === `/@${handle}`)) return "profile";
+// Barra de abajo:
+// Personal → Perfil · Inicio · ARK IA (Mi día) · Descubrir · Academia (turquesa)
+// Business → Perfil · Inicio del negocio · ARK IA (equipo) · Talento · Academia (dorado)
+export function BottomNav({ labels, avatar, name, handle, side, level }: { labels: Labels; avatar: string | null; name: string; handle: string | null; side: Side; level: Level }) {
+  const path = usePathname();
+  const biz = side === "business";
   const first = path.split("/")[1];
-  const map: Record<string, Tab> = { panel: "panel", "mi-dia": "day", crear: "create", descubrir: "discover", ganar: "earn", comunidad: "community", equipo: "team", talento: "talent", revender: "resell", documentos: "panel" };
-  return map[first] ?? null; // el perfil de otra persona no marca ninguna pestaña
-}
 
-// Barra de abajo: cambia según el modo (Buscar en crema, Ofrecer con el acento)
-// y según la experiencia (Lifestyle: Mi día y Descubrir · Business: Armar equipo y Talento).
-export function BottomNav({ labels, avatar, name, handle, mode, level, view }: { labels: Labels; avatar: string | null; name: string; handle: string | null; mode: Mode; level: Level; view: View }) {
-  const active = activeTab(usePathname(), handle);
-  const offer = mode === "ofrecer";
-  const biz = view === "business";
-  const center: { tab: Tab; href: string; label: string } = offer
-    ? biz
-      ? { tab: "resell", href: "/revender", label: labels.resell }
-      : { tab: "create", href: "/crear", label: labels.create }
-    : biz
-      ? { tab: "team", href: "/equipo", label: labels.team }
-      : { tab: "day", href: "/mi-dia", label: labels.day };
+  const active: Tab | null =
+    path === "/" || first === "panel" || first === "documentos" || first === "revender" || first === "ganar" || first === "crear"
+      ? "home"
+      : first === "perfil" || first === "snapshot" || (handle && path === `/@${handle}`)
+        ? "profile"
+        : first === "mi-dia" || first === "equipo" || first === "diagnostico"
+          ? "ai"
+          : first === "descubrir" || first === "talento"
+            ? "search"
+            : first === "academia"
+              ? "academy"
+              : null;
 
   const slot = (on: boolean) =>
-    `flex h-14 items-center justify-center rounded-[28px] transition-[width,background-color] duration-200 ${on ? "w-[84px] bg-white/[0.12]" : "w-14"}`;
+    `flex h-14 items-center justify-center rounded-[28px] transition-[width,background-color] duration-300 ${on ? "w-[84px] bg-white/[0.12]" : "w-14"}`;
   const link = (tab: Tab, href: string, label: string, children: React.ReactNode) => (
     <Link href={href} aria-label={label} aria-current={active === tab ? "page" : undefined} className={slot(active === tab)}>
       {children}
@@ -49,34 +48,30 @@ export function BottomNav({ labels, avatar, name, handle, mode, level, view }: {
         "profile",
         "/perfil",
         labels.profile,
-        <span className={`relative size-[36px] rounded-full p-[2px] ${offer || level === "vip" ? "gold-grad" : "bg-cream"}`}>
+        <span className="gold-grad relative size-[36px] rounded-full p-[2px]">
           <span className="relative block size-full overflow-hidden rounded-full">
             <Photo src={avatar} name={name} sizes="36px" />
           </span>
           {level === "vip" && (
-            <span className="gold-grad absolute -top-1.5 -right-1.5 flex size-[18px] items-center justify-center rounded-full ring-2 ring-ink">
+            <span className="absolute -top-1.5 -right-1.5 flex size-[18px] items-center justify-center rounded-full bg-[#D8B170] ring-2 ring-ink">
               <IconCrown size={11} stroke="#08090B" weight={2.2} />
             </span>
           )}
         </span>,
       )}
       {link(
-        offer ? "panel" : "home",
-        offer ? "/panel" : "/",
-        offer ? labels.panel : labels.home,
-        <span className={`flex size-8 items-center justify-center rounded-[9px] font-display text-[17px] font-semibold text-ink ${offer ? "gold-grad" : "bg-cream"}`}>A</span>,
+        "home",
+        biz ? "/panel" : "/",
+        biz ? labels.panel : labels.home,
+        <span className="gold-grad flex size-8 items-center justify-center rounded-[9px] font-display text-[17px] font-semibold text-ink">A</span>,
       )}
-      <Link href={center.href} aria-label={center.label} aria-current={active === center.tab ? "page" : undefined} className="flex size-14 items-center justify-center">
-        <span className={`flex size-[50px] items-center justify-center rounded-full shadow-[0_8px_24px_-8px_rgb(0_0_0/0.6)] ${offer || biz ? "gold-grad" : "bg-cream"}`}>
-          {offer ? <IconPlus stroke="#08090B" weight={2.2} /> : biz ? <IconPeople stroke="#08090B" weight={2} /> : <IconSparkle stroke="#08090B" weight={2} />}
+      <Link href={biz ? "/equipo" : "/mi-dia"} aria-label={labels.ai} aria-current={active === "ai" ? "page" : undefined} className="flex size-14 items-center justify-center">
+        <span className="gold-grad flex size-[50px] items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--accent)]">
+          <IconSparkle stroke="#08090B" weight={2} />
         </span>
       </Link>
-      {offer
-        ? link("earn", "/ganar", labels.earn, <IconDollar size={26} stroke="#EFE6D8" />)
-        : biz
-          ? link("talent", "/talento", labels.talent, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)
-          : link("discover", "/descubrir", labels.discover, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)}
-      {link("community", "/comunidad", labels.community, <IconPeople size={26} stroke="#EFE6D8" />)}
+      {link("search", biz ? "/talento" : "/descubrir", biz ? labels.talent : labels.discover, <IconSearch size={26} stroke="#EFE6D8" weight={1.9} />)}
+      {link("academy", "/academia", labels.academy, <IconCap size={26} stroke="#EFE6D8" weight={1.7} />)}
     </nav>
   );
 }

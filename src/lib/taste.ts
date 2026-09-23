@@ -77,6 +77,12 @@ export const taste = {
     const s = read();
     write({ ...s, hidden: [...s.hidden, id], taste: { ...s.taste, [topic]: (s.taste[topic] ?? 0) + WEIGHTS.hide } }, true);
   },
+  forget(topic: Topic) {
+    const s = read();
+    const next = { ...s.taste };
+    delete next[topic];
+    write({ ...s, taste: next }, true);
+  },
   reset() {
     write(EMPTY, true);
   },

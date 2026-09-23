@@ -2,7 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { ToastProvider } from "@/components/toast";
-import { ExperienceGate } from "@/components/experience-picker";
+import { DiagnosisGate } from "@/components/diagnosis-chat";
+import { DiagnosisSync } from "@/components/diagnosis-sync";
+import { SideFade } from "@/components/side-switch";
+import { sanitize } from "@/lib/diagnosis";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { CURRENT_HANDLE, getProfile } from "@/lib/mock-data";
 import { getViewer } from "@/lib/profiles-db";
@@ -23,17 +26,20 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { locale, t, mode, level, exp, view } = await getContext();
+  const { locale, t, level, side, view, diagnosis } = await getContext();
   // Con base de datos: tu perfil real (o invitado). Sin base de datos: el perfil de ejemplo.
-  const me = supabaseReady ? (await getViewer()).profile : getProfile(CURRENT_HANDLE)!;
+  const viewer = await getViewer();
+  const me = supabaseReady ? viewer.profile : getProfile(CURRENT_HANDLE)!;
 
   return (
     <html lang={locale} data-exp={view} className={`${fraunces.variable} ${manrope.variable} antialiased`}>
       <body className="min-h-dvh font-sans">
         <ToastProvider soonMessage={t.common.soon}>
-          <main className="relative mx-auto min-h-dvh w-full max-w-[430px] pb-[120px]">{children}</main>
-          {!exp && <ExperienceGate locale={locale} />}
-          <BottomNav labels={t.nav} avatar={me?.photo ?? null} name={me?.name ?? ""} handle={me?.handle ?? null} mode={mode} level={level} view={view} />
+          <main className="relative mx-auto min-h-dvh w-full max-w-[430px] pb-[calc(124px+env(safe-area-inset-bottom))]">{children}</main>
+          {!side && <DiagnosisGate locale={locale} />}
+          {viewer.userId && <DiagnosisSync fromAccount={diagnosis && "answers" in diagnosis ? sanitize(diagnosis.answers) : null} />}
+          <SideFade side={side ?? "personal"} />
+          <BottomNav labels={t.nav} avatar={me?.photo ?? null} name={me?.name ?? ""} handle={me?.handle ?? null} side={side ?? "personal"} level={level} />
         </ToastProvider>
       </body>
     </html>

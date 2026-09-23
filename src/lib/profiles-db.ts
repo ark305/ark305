@@ -22,6 +22,7 @@ export type ProfileRow = {
   shared: boolean;
   experience?: "lifestyle" | "business" | "both" | null; // columna nueva (supabase/002_experiences.sql)
   taste?: Record<string, number> | null;
+  diagnosis?: Record<string, unknown> | null;
 };
 
 export type ServiceRow = {
