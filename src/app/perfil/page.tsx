@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ProfileView } from "@/components/profile-view";
-import { getDictionary } from "@/lib/i18n";
+import { getContext, getDictionary } from "@/lib/i18n";
 import { CURRENT_HANDLE, getProfile } from "@/lib/mock-data";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,7 +9,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MyProfilePage() {
-  const { locale, t } = await getDictionary();
+  const { locale, t, mode, level } = await getContext();
   const me = getProfile(CURRENT_HANDLE)!;
-  return <ProfileView profile={me} isOwner locale={locale} t={t} />;
+  return <ProfileView profile={me} isOwner locale={locale} t={t} mode={mode} level={level} />;
 }

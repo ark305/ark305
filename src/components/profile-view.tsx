@@ -1,17 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatPrice, type Profile } from "@/lib/mock-data";
-import { IconCheck, IconChevron, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
+import { getLevel } from "@/lib/levels";
+import { formatCount, formatPrice, type Profile } from "@/lib/mock-data";
+import { LEVEL_COLOR, type Level, type Mode } from "@/lib/mode";
+import { IconCheck, IconChevron, IconCrown, IconFacebook, IconInstagram, IconPen, IconPlus, IconTikTok } from "./icons";
+import { ModeSwitch } from "./mode-switch";
 import { CopyLinkButton, Dismissible, ProfileMenu } from "./profile-actions";
 import { SoonButton } from "./toast";
 
 const socialIcon = { instagram: IconInstagram, tiktok: IconTikTok, facebook: IconFacebook };
 const socialName = { instagram: "Instagram", tiktok: "TikTok", facebook: "Facebook" };
 
-export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile; isOwner: boolean; locale: Locale; t: Dictionary }) {
+export function ProfileView({ profile, isOwner, locale, t, mode, level }: { profile: Profile; isOwner: boolean; locale: Locale; t: Dictionary; mode: Mode; level: Level }) {
   const p = t.profile;
-  const followers = profile.followers ? p.followers(profile.followers[locale]) : null;
+  const followers = p.followers(formatCount(profile.followers, locale));
+  const offer = mode === "ofrecer";
+  const lvl = getLevel(level);
+  const modeLabels = { label: t.mode.label, buscar: t.mode.buscar, ofrecer: t.mode.ofrecer };
 
   // Lista "Hazte visible" (datos de ejemplo: 2 de 4 listos).
   const steps: { title: string; sub: string; done: boolean; href?: string }[] = [
@@ -34,12 +40,12 @@ export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile;
         <div className="absolute inset-x-3.5 flex items-center justify-between gap-2" style={{ top: "calc(16px + env(safe-area-inset-top))" }}>
           <CopyLinkButton handle={profile.handle} copied={t.common.copied} failed={t.common.copyFailed} label={p.copyLink} />
           <div className="flex shrink-0 gap-2">
-            {isOwner && (
+            {isOwner && offer && (
               <SoonButton className="glass flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold text-cream">
                 <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
               </SoonButton>
             )}
-            <ProfileMenu locale={locale} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close }} />
+            <ProfileMenu locale={locale} mode={isOwner ? mode : null} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, ...modeLabels }} />
           </div>
         </div>
 
@@ -48,9 +54,9 @@ export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile;
           <p className="text-[15px] text-cream/75">
             @{profile.handle} · {profile.role[locale]} · {profile.area}
           </p>
-          {(isOwner || profile.socials.length > 0) && (
+          {((isOwner && offer) || profile.socials.length > 0) && (
             <div className="mt-3 flex items-center gap-2.5">
-              {isOwner && (
+              {isOwner && offer && (
                 <SoonButton aria-label={p.addNetwork} className="gold-grad flex size-[52px] items-center justify-center rounded-full shadow-[0_8px_24px_-6px_#d8b170aa]">
                   <IconPlus stroke="#08090B" weight={2.2} />
                 </SoonButton>
@@ -65,16 +71,36 @@ export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile;
               })}
             </div>
           )}
-          {followers && (
-            <p className="mt-2 text-[15px] text-mute">
-              <strong className="text-cream">{followers.strong}</strong> {followers.rest}
-            </p>
-          )}
+          <p className="mt-2 text-[15px] text-mute">
+            <strong className="text-cream">{followers.strong}</strong> {followers.rest}
+          </p>
         </div>
       </section>
 
-      {/* Hazte visible (solo lo ves tú) */}
+      {/* Tu cuenta: modo y nivel (solo lo ves tú) */}
       {isOwner && (
+        <section className="mx-3.5 mt-6 flex flex-col gap-3">
+          <ModeSwitch mode={mode} labels={modeLabels} />
+          <p className="text-center text-[13px] text-mute">{offer ? t.mode.ofrecerHint : t.mode.buscarHint}</p>
+          <Link
+            href="/niveles"
+            className={`flex items-center gap-3 rounded-[22px] border p-3.5 ${level === "vip" ? "border-gold/40 bg-gradient-to-br from-[#241e15] to-ink" : "border-white/10 bg-white/[0.035]"}`}
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full" style={{ background: `${LEVEL_COLOR[level]}22` }}>
+              {level === "vip" ? <IconCrown size={20} stroke="#D8B170" weight={1.9} /> : <span className="size-3 rounded-full" style={{ background: LEVEL_COLOR[level] }} />}
+            </span>
+            <span className="flex grow flex-col">
+              <span className="text-[12px] text-mute">{t.levels.yourLevel}</span>
+              <span className={`text-base font-bold ${level === "vip" ? "text-gold-soft" : "text-white"}`}>{lvl.name[locale]}</span>
+            </span>
+            <span className="text-[13px] font-semibold text-cream/80">{t.levels.see}</span>
+            <IconChevron size={18} stroke="#9A9EA6" />
+          </Link>
+        </section>
+      )}
+
+      {/* Hazte visible (solo en modo Ofrecer) */}
+      {isOwner && offer && (
         <Dismissible label={p.hide} className="mx-3.5 mt-6">
           <section className="rounded-[26px] border border-white/10 bg-white/[0.035] px-[22px] py-5">
             <h2 className="font-display text-2xl font-semibold text-white">{p.visibleTitle}</h2>
@@ -168,7 +194,7 @@ export function ProfileView({ profile, isOwner, locale, t }: { profile: Profile;
           )}
 
           {profile.posts.length > 0 && (
-            <div className="no-scrollbar -mx-3.5 mt-3 flex snap-x gap-2.5 overflow-x-auto px-3.5">
+            <div className="no-scrollbar -mx-3.5 mt-3 flex snap-x scroll-px-3.5 gap-2.5 overflow-x-auto px-3.5">
               {profile.posts.map((src, i) => (
                 <div key={src} className="relative aspect-[4/5] w-[46%] shrink-0 snap-start overflow-hidden rounded-[20px]">
                   <Image src={src} alt={`${i % 2 ? p.reel : p.post} ${i + 1}`} fill sizes="200px" className="object-cover" />

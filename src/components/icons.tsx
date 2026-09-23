@@ -198,3 +198,26 @@ export const IconChart = (p: IconProps) => (
     <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
   </Icon>
 );
+export const IconHeart = (p: IconProps & { filled?: boolean }) => {
+  const { filled, ...rest } = p;
+  return (
+    <Icon {...rest} fill={filled ? rest.stroke : "none"}>
+      <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
+    </Icon>
+  );
+};
+export const IconComment = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z" />
+  </Icon>
+);
+export const IconShare = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M21 4 10 14M21 4l-7 17-4-7-7-4z" />
+  </Icon>
+);
+export const IconPlay = (p: IconProps) => (
+  <Icon {...p} fill={p.stroke}>
+    <path d="M8 5v14l11-7z" />
+  </Icon>
+);

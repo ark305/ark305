@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { ToastProvider } from "@/components/toast";
-import { getDictionary } from "@/lib/i18n";
+import { getContext, getDictionary } from "@/lib/i18n";
 import { CURRENT_HANDLE, getProfile } from "@/lib/mock-data";
 import "./globals.css";
 
@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { locale, t } = await getDictionary();
+  const { locale, t, mode, level } = await getContext();
   const me = getProfile(CURRENT_HANDLE)!;
 
   return (
@@ -28,7 +28,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh font-sans">
         <ToastProvider soonMessage={t.common.soon}>
           <main className="relative mx-auto min-h-dvh w-full max-w-[430px] pb-[120px]">{children}</main>
-          <BottomNav labels={t.nav} avatar={me.photo} handle={me.handle} />
+          <BottomNav labels={t.nav} avatar={me.photo} handle={me.handle} mode={mode} level={level} />
         </ToastProvider>
       </body>
     </html>

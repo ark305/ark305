@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { es } from "./dictionaries/es";
 import { en } from "./dictionaries/en";
 import type { Locale } from "./locale";
+import { parseLevel, parseMode } from "./mode";
 
 export type { Locale } from "./locale";
 export type Dictionary = typeof es;
@@ -21,4 +22,11 @@ export async function getLocale(): Promise<Locale> {
 export async function getDictionary() {
   const locale = await getLocale();
   return { locale, t: dictionaries[locale] };
+}
+
+// Todo lo que una pantalla necesita saber de la persona: idioma, modo y nivel.
+export async function getContext() {
+  const jar = await cookies();
+  const { locale, t } = await getDictionary();
+  return { locale, t, mode: parseMode(jar.get("mode")?.value), level: parseLevel(jar.get("nivel")?.value) };
 }

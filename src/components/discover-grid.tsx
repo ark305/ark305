@@ -3,12 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import type { Category } from "@/lib/mock-data";
-import { IconChevron, IconMegaphone, IconSearch } from "./icons";
-import { SoonButton } from "./toast";
+import type { Kind } from "@/lib/mock-data";
+import { IconChevron, IconCrown, IconLock, IconMegaphone, IconSearch } from "./icons";
+import { SoonButton, useToast } from "./toast";
 
-export type DiscoverItem = { handle: string; name: string; role: string; area: string; category: Category; near: boolean; photo: string };
-type Chip = "forYou" | "near" | "yachts" | "food" | "content";
+export type DiscoverItem = { handle: string; name: string; role: string; area: string; kind: Kind; kindLabel: string; near: boolean; private: boolean; photo: string };
+type Chip = "forYou" | "near" | "provider" | "creator" | "remote" | "brand" | "private";
 
 type Text = {
   searchLabel: string;
@@ -17,18 +17,22 @@ type Text = {
   promoteSub: string;
   chips: Record<Chip, string>;
   empty: string;
+  privateLocked: string;
 };
 
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Text }) {
+export function DiscoverGrid({ items, text, vip }: { items: DiscoverItem[]; text: Text; vip: boolean }) {
+  const { show } = useToast();
   const [chip, setChip] = useState<Chip>("forYou");
   const [query, setQuery] = useState("");
 
   const q = normalize(query.trim().replace(/^[#@]/, ""));
   const shown = items.filter((p) => {
+    // Los perfiles de ARK Private solo aparecen en su pestaña, y solo para VIP.
+    if (p.private !== (chip === "private")) return false;
     if (chip === "near" && !p.near) return false;
-    if ((chip === "yachts" || chip === "food" || chip === "content") && p.category !== chip) return false;
+    if (chip !== "forYou" && chip !== "near" && chip !== "private" && p.kind !== chip) return false;
     if (!q) return true;
     return [p.name, p.handle, p.role, p.area].some((f) => normalize(f).includes(q));
   });
@@ -63,9 +67,12 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
               key={c}
               type="button"
               aria-pressed={chip === c}
-              onClick={() => setChip(c)}
-              className={`h-9 shrink-0 rounded-full px-4 text-[13px] font-semibold transition-colors ${chip === c ? "bg-cream text-ink" : "border border-white/10 bg-white/[0.04] text-cream"}`}
+              onClick={() => (c === "private" && !vip ? show(text.privateLocked) : setChip(c))}
+              className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold transition-colors ${
+                chip === c ? (c === "private" ? "gold-grad text-ink" : "bg-cream text-ink") : c === "private" ? "border border-gold/40 text-gold-soft" : "border border-white/10 bg-white/[0.04] text-cream"
+              }`}
             >
+              {c === "private" && (vip ? <IconCrown size={13} stroke={chip === c ? "#08090B" : "#EBD3A0"} weight={2} /> : <IconLock size={13} stroke="#EBD3A0" weight={2} />)}
               {text.chips[c]}
             </button>
           ))}
@@ -80,6 +87,7 @@ export function DiscoverGrid({ items, text }: { items: DiscoverItem[]; text: Tex
             <Link key={p.handle} href={`/@${p.handle}`} className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden bg-raised p-2.5 text-white">
               <Image src={p.photo} alt="" fill loading={i < 9 ? "eager" : "lazy"} sizes="(max-width: 430px) 33vw, 143px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 to-transparent" />
+              <span className="glass absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide text-cream/90">{p.kindLabel}</span>
               <span className="relative text-[13px] font-bold">{p.name}</span>
               <span className="relative text-[11px] text-cream/70">{p.role}</span>
             </Link>

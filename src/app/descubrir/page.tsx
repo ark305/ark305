@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DiscoverGrid } from "@/components/discover-grid";
-import { getDictionary } from "@/lib/i18n";
+import { getContext, getDictionary } from "@/lib/i18n";
 import { profiles } from "@/lib/mock-data";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,15 +9,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DiscoverPage() {
-  const { locale, t } = await getDictionary();
+  const { locale, t, level } = await getContext();
   const items = profiles.map((p) => ({
     handle: p.handle,
     name: p.name,
     role: p.role[locale],
     area: p.area,
-    category: p.category,
+    kind: p.kind,
+    kindLabel: t.kinds[p.kind],
+    private: !!p.private,
     near: p.near,
     photo: p.photo,
   }));
-  return <DiscoverGrid items={items} text={t.discover} />;
+  return <DiscoverGrid items={items} text={t.discover} vip={level === "vip"} />;
 }

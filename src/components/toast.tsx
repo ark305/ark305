@@ -55,3 +55,18 @@ export function SoonButton({
     </button>
   );
 }
+
+// Botón que solo muestra un aviso (por ejemplo, "Su concierge le escribe en breve").
+export function ToastButton({
+  message,
+  className,
+  children,
+  ...rest
+}: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick" | "type"> & { message: string }) {
+  const { show } = useToast();
+  return (
+    <button type="button" className={className} onClick={() => show(message)} {...rest}>
+      {children}
+    </button>
+  );
+}

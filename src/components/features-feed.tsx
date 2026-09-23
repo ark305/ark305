@@ -1,39 +1,24 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  IconArrow,
-  IconCalendar,
-  IconCap,
-  IconChart,
-  IconCrown,
-  IconPeople,
-  IconScooter,
-  IconSparkle,
-  IconSun,
-  IconTicket,
-} from "./icons";
+import { IconArrow, IconCalendar, IconChart, IconChatSpark, IconPeople, IconSparkle, IconTicket } from "./icons";
 import { SoonButton } from "./toast";
 
 const ICONS = {
-  concierge: IconSparkle,
+  ai: IconSparkle,
   bookings: IconCalendar,
-  myDay: IconSun,
-  delivery: IconScooter,
-  talent: IconPeople,
   teams: IconPeople,
   events: IconTicket,
-  pass: IconCrown,
-  academy: IconCap,
+  talent: IconChatSpark,
   analytics: IconChart,
 };
 
 export type FeatureKey = keyof typeof ICONS;
 export type Feature = { key: FeatureKey; label: string; tagline: string; body: string; color: string };
 export type FeatureGroup = { title: string; count: string; items: Feature[] };
-type DemoText = { chatUser: string; chatArk: { before: string; total: string; after: string }; bookAll: string; changeChef: string };
+type DemoText = { chatUser: string; chatArk: { before: string; total: string; after: string }; primary: string; secondary: string };
 
-// Inicio: tira de colores arriba + una tarjeta grande por función.
+// Panel (modo Ofrecer): tira de colores arriba + una tarjeta grande por herramienta.
 // Al bajar, la tira marca la función que estás viendo; al tocar un color, te lleva a ella.
 export function FeaturesFeed({ groups, demo, howItWorks }: { groups: FeatureGroup[]; demo: DemoText; howItWorks: string }) {
   const all = groups.flatMap((g) => g.items);
@@ -105,8 +90,8 @@ export function FeaturesFeed({ groups, demo, howItWorks }: { groups: FeatureGrou
                       boxShadow: `0 30px 80px -40px ${f.color}99, inset 0 1px 0 ${f.color}33`,
                     }}
                   >
-                    {f.key === "concierge" ? (
-                      <ConciergeDemo demo={demo} color={f.color} />
+                    {f.key === "ai" ? (
+                      <AiDemo demo={demo} color={f.color} />
                     ) : (
                       <span style={{ filter: `drop-shadow(0 0 22px ${f.color})` }}>
                         <Icon size={84} stroke="#FFFFFF" weight={1.4} />
@@ -136,7 +121,7 @@ export function FeaturesFeed({ groups, demo, howItWorks }: { groups: FeatureGrou
   );
 }
 
-function ConciergeDemo({ demo, color }: { demo: DemoText; color: string }) {
+function AiDemo({ demo, color }: { demo: DemoText; color: string }) {
   return (
     <div className="flex w-full flex-col gap-3 p-[22px]">
       <p className="max-w-[250px] self-end rounded-[18px_18px_4px_18px] bg-cream px-3.5 py-3 text-sm leading-[1.45] text-ink shadow-lg">{demo.chatUser}</p>
@@ -147,9 +132,9 @@ function ConciergeDemo({ demo, color }: { demo: DemoText; color: string }) {
       </p>
       <div className="flex gap-2 self-start">
         <SoonButton className="flex h-[34px] items-center rounded-full px-3.5 text-[13px] font-bold text-ink" style={{ background: color }}>
-          {demo.bookAll}
+          {demo.primary}
         </SoonButton>
-        <SoonButton className="flex h-[34px] items-center rounded-full border border-teal-line px-3.5 text-[13px] text-cream">{demo.changeChef}</SoonButton>
+        <SoonButton className="flex h-[34px] items-center rounded-full border border-teal-line px-3.5 text-[13px] text-cream">{demo.secondary}</SoonButton>
       </div>
     </div>
   );
