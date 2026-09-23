@@ -435,6 +435,28 @@ export const en: typeof es = {
       generic: "Couldn't save. Please try again.",
     },
   },
+  start: {
+    title: "What do you want to do today?",
+    hire: {
+      title: "Hire talent",
+      sub: "People in Miami or remote from Latin America, hourly or per project.",
+      steps: ["Browse roles or ask ARK AI", "Pick a candidate and hours", "Sign the contract and pay weekly"],
+      explore: "Explore talent",
+      ai: "Have ARK AI build my team",
+      yours: (n: number, total: string) => `Your team: ${n} ${n === 1 ? "person" : "people"} · ${total}/month`,
+    },
+    bundle: {
+      title: "Build bundles to sell",
+      sub: "Combine ARK services (yacht, chef, photos…), add your margin and sell them under your brand.",
+      steps: ["Pick the services", "Add your margin", "Send the proposal to your client"],
+      create: "Build a bundle",
+      docs: "My proposals",
+      yours: (n: number) => `${n} ${n === 1 ? "proposal sent" : "proposals sent"}`,
+    },
+    toTeam: "Not sure who to hire? Ask ARK AI",
+    toTalent: "See all roles (138)",
+    toResell: "Want to sell this to your clients? Build a bundle",
+  },
   biz: {
     team: {
       title: "Build your team.",

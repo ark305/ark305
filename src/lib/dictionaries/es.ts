@@ -433,6 +433,28 @@ export const es = {
       generic: "No se pudo guardar. Intenta de nuevo.",
     },
   },
+  start: {
+    title: "¿Qué quieres hacer hoy?",
+    hire: {
+      title: "Contratar talento",
+      sub: "Gente en Miami o remota desde Latinoamérica, por horas o por proyecto.",
+      steps: ["Explora los puestos o pídele a ARK IA", "Elige candidato y horas", "Firma el contrato y paga cada semana"],
+      explore: "Explorar talento",
+      ai: "Que ARK IA arme mi equipo",
+      yours: (n: number, total: string) => `Tu equipo: ${n} ${n === 1 ? "persona" : "personas"} · ${total}/mes`,
+    },
+    bundle: {
+      title: "Armar paquetes para vender",
+      sub: "Junta servicios de ARK (yate, chef, fotos…), ponle tu margen y véndelos con tu marca.",
+      steps: ["Elige los servicios", "Pon tu margen", "Envía la propuesta a tu cliente"],
+      create: "Armar un paquete",
+      docs: "Mis propuestas",
+      yours: (n: number) => `${n} ${n === 1 ? "propuesta enviada" : "propuestas enviadas"}`,
+    },
+    toTeam: "¿No sabes a quién contratar? Pídeselo a ARK IA",
+    toTalent: "Ver todos los puestos (138)",
+    toResell: "¿Quieres vender esto a tus clientes? Arma un paquete",
+  },
   biz: {
     team: {
       title: "Arma tu equipo.",

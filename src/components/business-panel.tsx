@@ -5,7 +5,7 @@ import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
 import { clientPrice, resellerProfit, useProposals } from "@/lib/resale-store";
-import { IconChevron, IconPlus } from "./icons";
+import { IconChevron } from "./icons";
 
 // Panel en Business · Ofrecer: propuestas a tus clientes y lo que ganas revendiendo.
 export function BusinessPanel({ locale }: { locale: Locale }) {
@@ -29,14 +29,6 @@ export function BusinessPanel({ locale }: { locale: Locale }) {
             <span className="text-[11px] leading-tight text-mute">{s.label}</span>
           </div>
         ))}
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Link href="/revender" className="gold-grad flex h-12 items-center justify-center gap-1.5 rounded-full text-sm font-bold text-ink">
-          <IconPlus size={16} stroke="#08090B" weight={2.4} /> {b.newShort}
-        </Link>
-        <Link href="/documentos" className="flex h-12 items-center justify-center rounded-full border border-white/15 text-sm font-bold text-cream">
-          {b.docs}
-        </Link>
       </div>
       <h2 className="mt-2 text-lg font-extrabold text-white">{b.recent}</h2>
       {list.length === 0 ? (

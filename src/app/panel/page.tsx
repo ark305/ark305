@@ -5,6 +5,7 @@ import { FeaturesFeed, type FeatureGroup, type FeatureKey } from "@/components/f
 import { IconChevron } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import { BusinessPanel } from "@/components/business-panel";
+import { BusinessStart } from "@/components/business-start";
 import { SellerAi } from "@/components/seller-ai";
 import { SidePill } from "@/components/side-switch";
 import { getItem } from "@/lib/catalog";
@@ -82,7 +83,10 @@ export default async function PanelPage() {
         </header>
 
         {business ? (
-          <BusinessPanel locale={locale} />
+          <>
+            <BusinessStart locale={locale} />
+            <BusinessPanel locale={locale} />
+          </>
         ) : (
           <>
         <div className="grid grid-cols-3 gap-2">

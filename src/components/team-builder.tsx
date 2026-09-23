@@ -79,6 +79,10 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
         <p className="text-[11px] text-mute">{b.preview}</p>
       </section>
 
+      <Link href="/talento" className="-mt-2 text-center text-sm font-semibold text-gold">
+        {t.start.toTalent} →
+      </Link>
+
       {plan && (
         <section className="flex flex-col gap-3 rounded-[24px] border border-white/10 bg-white/[0.035] p-4">
           <p className="text-[11px] font-bold tracking-[0.14em] text-gold uppercase">{b.proposal}</p>
@@ -125,6 +129,9 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
               <IconLock size={16} stroke="#08090B" weight={2} /> {t.talent.locked}
             </Link>
           )}
+          <Link href="/revender" className="text-center text-[13px] font-semibold text-mute">
+            {t.start.toResell} →
+          </Link>
         </section>
       )}
     </div>

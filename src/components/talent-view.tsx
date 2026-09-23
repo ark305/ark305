@@ -75,19 +75,24 @@ export function TalentView({ locale, canHire }: { locale: Locale; canHire: boole
   return (
     <div className="flex flex-col gap-4 px-4 pt-8">
       <header>
-        <span className="mb-2 inline-flex rounded-full bg-[#8FB0D0]/15 px-3 py-1 text-[12px] font-bold text-[#8FB0D0]">{t.badge}</span>
+        <span className="mb-2 inline-flex rounded-full bg-gold/15 px-3 py-1 text-[12px] font-bold text-gold">{t.badge}</span>
         <h1 className="font-display text-[42px] leading-[1.05] font-semibold text-white">{t.title}</h1>
         <p className="mt-2 text-[15px] leading-normal text-mute">{t.intro}</p>
       </header>
 
       {!canHire && (
-        <Link href="/niveles" className="flex items-center gap-3 rounded-[20px] border border-[#8FB0D0]/35 bg-[#8FB0D0]/[0.08] p-3.5">
-          <IconLock size={18} stroke="#8FB0D0" weight={2} />
+        <Link href="/niveles" className="flex items-center gap-3 rounded-[20px] border border-gold/35 bg-gold/[0.08] p-3.5">
+          <IconLock size={18} className="text-gold" weight={2} />
           <span className="grow text-sm font-semibold text-cream">{t.locked}</span>
-          <span className="text-[13px] font-bold text-[#8FB0D0]">{t.lockedCta}</span>
-          <IconChevron size={16} stroke="#8FB0D0" />
+          <span className="text-[13px] font-bold text-gold">{t.lockedCta}</span>
+          <IconChevron size={16} className="text-gold" />
         </Link>
       )}
+
+      <Link href="/equipo" className="flex items-center justify-between gap-3 rounded-[18px] border border-gold/30 bg-gold/[0.06] px-4 py-3 text-[14px] font-semibold text-gold">
+        {dict(locale).start.toTeam}
+        <IconChevron size={16} className="shrink-0" />
+      </Link>
 
       <TeamSummary locale={locale} />
 
@@ -287,7 +292,7 @@ function HireSheet({ p, locale, canHire, onClose }: { p: Position; locale: Local
             {p.unit === "q" ? t.quote : t.add}
           </button>
         ) : (
-          <Link href="/niveles" className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#8FB0D0] text-base font-bold text-ink">
+          <Link href="/niveles" className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-gold text-base font-bold text-ink">
             <IconLock size={18} stroke="#08090B" weight={2} /> {t.locked}
           </Link>
         )}

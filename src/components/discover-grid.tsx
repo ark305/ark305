@@ -65,15 +65,15 @@ export function DiscoverGrid({ items, text, vip, promo }: { items: DiscoverItem[
           </span>
           <IconChevron size={20} stroke="#08090B" weight={2} />
         </button>
-        <Link href="/talento" className="flex h-[68px] items-center gap-3.5 rounded-[22px] border border-[#8FB0D0]/35 bg-[#8FB0D0]/[0.08] px-[18px]">
-          <span className="gloss flex size-10 shrink-0 items-center justify-center rounded-[13px]" style={{ "--c": "#8FB0D0" } as React.CSSProperties}>
+        <Link href="/talento" className="flex h-[68px] items-center gap-3.5 rounded-[22px] border border-gold/35 bg-gold/[0.08] px-[18px]">
+          <span className="gloss flex size-10 shrink-0 items-center justify-center rounded-[13px]" style={{ "--c": "#D8B170" } as React.CSSProperties}>
             <IconPeople size={20} stroke="#FFFFFF" weight={2} />
           </span>
           <span className="flex grow flex-col">
             <span className="text-[16px] font-extrabold text-white">{text.talentTitle}</span>
             <span className="text-[13px] text-cream/70">{text.talentSub}</span>
           </span>
-          <IconChevron size={20} stroke="#8FB0D0" weight={2} />
+          <IconChevron size={20} className="text-gold" weight={2} />
         </Link>
         <div className="no-scrollbar -mx-3.5 flex gap-2 overflow-x-auto px-3.5">
           {(Object.keys(text.chips) as Chip[]).map((c) => (

@@ -60,9 +60,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* En la capa base, para que los colores de cada botón o enlace (clases de Tailwind) siempre ganen. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
 .no-scrollbar {
