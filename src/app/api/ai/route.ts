@@ -1,5 +1,6 @@
 // POST /api/ai — Asistente IA de ARK305 (Claude).
 // La llave de Anthropic vive solo aquí, en el servidor. Nunca llega al navegador.
+// v2: redeploy para tomar ANTHROPIC_API_KEY en Vercel.
 import { NextResponse } from "next/server";
 
 const MODELS = {
