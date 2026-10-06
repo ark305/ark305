@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       new URL("https://images.unsplash.com/**"),
       // Fotos que sube cada persona a Supabase Storage.
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
+      // Avatares de los perfiles de la agencia.
+      { protocol: "https", hostname: "medialinks.ark305.com", pathname: "/uploads/**" },
     ],
   },
 };
