@@ -166,3 +166,45 @@ export function defaultEntry(id: string, guests = 4): Omit<DayEntry, "uid"> {
   const rule = RULES.find((r) => r.id === id);
   return { id, time: rule?.time ?? "12:00", qty: rule?.qty ?? getItem(id)?.hours?.[0] ?? 1, guests };
 }
+
+// ---------- ARK IA · planificador con Claude ----------
+// La IA solo puede elegir servicios del catálogo; lo que no reconozcamos se descarta.
+
+export function aiPlanPrompt(request: string, guests: number, locale: Locale) {
+  const list = catalog
+    .map((c) => `- ${c.id}: ${c.name[locale]} · ${c.unit === "h" ? `por hora (opciones: ${c.hours?.join(", ")})` : c.unit === "p" ? "por persona" : "precio fijo"}${c.outing ? " · salida (necesita chofer)" : ""}`)
+    .join("\n");
+  return [
+    `Arma un día en Miami con este pedido: "${request.slice(0, 500)}". Personas por defecto: ${guests}.`,
+    `Usa solo estos servicios (id: nombre · cobro):\n${list}`,
+    `Reglas: horas en formato HH:MM entre 06:00 y 23:59, en orden; qty = horas para los servicios por hora (usa una de sus opciones) y 1 para los demás; si hay salidas y no pidió chofer, agrega "suv"; máximo 6 servicios.`,
+    `Responde con este JSON: {"guests": número, "items": [{"id": "...", "time": "HH:MM", "qty": número}], "summary": "una o dos frases en ${locale === "es" ? "español" : "inglés"} explicando el plan"}`,
+  ].join("\n\n");
+}
+
+export function parseAiPlan(text: string, fallbackGuests: number): (Plan & { summary: string }) | null {
+  try {
+    const raw = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)) as {
+      guests?: unknown;
+      items?: { id?: unknown; time?: unknown; qty?: unknown }[];
+      summary?: unknown;
+    };
+    const guests = Math.min(20, Math.max(1, Math.round(Number(raw.guests) || fallbackGuests)));
+    const items = (Array.isArray(raw.items) ? raw.items : [])
+      .map((i) => {
+        const c = typeof i.id === "string" ? getItem(i.id) : undefined;
+        const time = typeof i.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(i.time) ? i.time : null;
+        if (!c || !time) return null;
+        const q = Math.round(Number(i.qty) || 1);
+        const qty = c.unit === "h" ? (c.hours?.includes(q) ? q : (c.hours?.[0] ?? 1)) : 1;
+        return { id: c.id, time, qty, guests };
+      })
+      .filter((i): i is NonNullable<typeof i> => i !== null)
+      .slice(0, 6)
+      .sort((a, b) => toMin(a.time) - toMin(b.time));
+    if (!items.length) return null;
+    return { items, guests, understood: true, summary: typeof raw.summary === "string" ? raw.summary.slice(0, 400) : "" };
+  } catch {
+    return null;
+  }
+}

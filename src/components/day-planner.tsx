@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { entryPrice, getItem, packages, planDay, planSummary, type Plan } from "@/lib/catalog";
+import { aiPlanPrompt, entryPrice, getItem, packages, parseAiPlan, planDay, planSummary, type Plan } from "@/lib/catalog";
+import { askArk } from "@/lib/ai-client";
 import { day, useDay } from "@/lib/day-store";
 import { dict, formatTime } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
@@ -24,6 +25,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
   const [guests, setGuests] = useState(4);
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [booking, setBooking] = useState<{ code: string; step: number } | null>(null);
   const [priority, setPriority] = useState(false);
   const dayRef = useRef<HTMLElement>(null);
@@ -35,17 +37,20 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
     return () => clearTimeout(id);
   }, [booking, t.steps.length]);
 
-  function build(prompt = text) {
+  // ARK IA: con sesión, Claude arma el plan; sin sesión o si falla, el planificador local.
+  async function build(prompt = text) {
     if (!prompt.trim()) return show(t.needText);
     setText(prompt);
     setBuilding(true);
     setPlan(null);
-    setTimeout(() => {
-      const p = planDay(prompt, guests);
-      setGuests(p.guests);
-      setPlan(p);
-      setBuilding(false);
-    }, 900);
+    const ai = await askArk(aiPlanPrompt(prompt, guests, locale), { locale, json: true });
+    const fromAi = ai.ok ? parseAiPlan(ai.text, guests) : null;
+    if (ai.ok === false && ai.reason === "limit") show(t.aiLimit);
+    const p = fromAi ?? planDay(prompt, guests);
+    setAiSummary(fromAi?.summary || null);
+    setGuests(p.guests);
+    setPlan(p);
+    setBuilding(false);
   }
 
   function addToDay(items: Plan["items"]) {
@@ -123,7 +128,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
       {plan && (
         <section className="flex flex-col gap-3 rounded-[26px] border border-teal-line bg-teal-deep/40 p-4">
           <p className="text-xs font-bold tracking-[0.14em] text-teal uppercase">{t.proposal}</p>
-          <p className="rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3 text-[15px] leading-normal text-cream">{planSummary(plan, locale)}</p>
+          <p className="rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3 text-[15px] leading-normal text-cream">{aiSummary ?? planSummary(plan, locale)}</p>
           <ul className="flex flex-col gap-2">
             {plan.items.map((i) => {
               const c = getItem(i.id)!;
