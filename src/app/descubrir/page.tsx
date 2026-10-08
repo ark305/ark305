@@ -25,7 +25,7 @@ export default async function DiscoverPage() {
     near: p.near,
     photo: p.photo,
   }));
-  return <DiscoverGrid items={items} text={{ ...t.discover, talentTitle: t.talent.discoverTitle, talentSub: t.talent.discoverSub(positions.length) }} vip={level === "vip"}
+  return <DiscoverGrid items={items} text={{ ...t.discover, talentTitle: t.talent.discoverTitle, talentSub: t.talent.discoverSub(positions.length), carsTitle: t.cars.discover, carsSub: t.cars.discoverSub, deliveryTitle: t.delivery.title, deliverySub: t.delivery.discoverSub }} vip={level === "vip"}
       promo={{
         title: t.money.promoteTitle,
         sub: t.money.promoteSub,

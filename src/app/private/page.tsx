@@ -4,6 +4,7 @@ import Link from "next/link";
 import { IconCrown, IconLock } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import { PrivateGate } from "@/components/private-gate";
+import { ResidenceCards } from "@/components/residence-cards";
 import { ToastButton } from "@/components/toast";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
@@ -81,28 +82,7 @@ export default async function PrivatePage() {
           <h2 className="font-display text-2xl font-semibold text-white">{p.residences}</h2>
           <p className="text-sm text-mute">{p.residencesSub}</p>
         </div>
-        <div className="no-scrollbar flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5">
-          {residences.map((r) => (
-            <ToastButton
-              key={r.id}
-              message={p.requested}
-              className="relative flex h-[300px] w-[78%] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[26px] border border-gold/25 p-4 text-left"
-            >
-              <Image src={r.photo} alt="" fill sizes="340px" className="object-cover" />
-              <div className="fade-bottom absolute inset-0" />
-              <span className="relative text-[12px] font-semibold text-gold-soft">
-                {r.hood} · {p.delivery(r.delivery)}
-              </span>
-              <span className="relative font-display text-2xl font-semibold text-white">{r.name}</span>
-              <span className="relative text-[13px] text-cream/75">
-                {r.developer} · {r.beds[locale]}
-              </span>
-              <span className="relative mt-1 text-base font-bold text-gold-soft">
-                {p.from} {r.from}
-              </span>
-            </ToastButton>
-          ))}
-        </div>
+        <ResidenceCards residences={residences} locale={locale} />
       </section>
 
       <section className="flex flex-col gap-4 px-5">

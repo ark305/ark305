@@ -24,7 +24,7 @@ export function BottomNav({ labels, avatar, name, handle, side, level }: { label
         ? "profile"
         : first === "mi-dia" || first === "equipo" || first === "diagnostico"
           ? "ai"
-          : first === "descubrir" || first === "talento"
+          : first === "descubrir" || first === "talento" || first === "autos" || first === "delivery"
             ? "search"
             : first === "academia"
               ? "academy"

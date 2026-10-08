@@ -4,7 +4,7 @@ import { Photo } from "./photo";
 import Link from "next/link";
 import { useState } from "react";
 import type { Kind } from "@/lib/mock-data";
-import { IconChevron, IconCrown, IconLock, IconMegaphone, IconPeople, IconSearch } from "./icons";
+import { IconCar, IconChevron, IconCrown, IconLock, IconMegaphone, IconPeople, IconScooter, IconSearch } from "./icons";
 import { useToast } from "./toast";
 
 export type DiscoverItem = { handle: string; name: string; role: string; area: string; kind: Kind; kindLabel: string; near: boolean; private: boolean; photo: string | null };
@@ -21,6 +21,10 @@ type Text = {
   privateLocked: string;
   talentTitle: string;
   talentSub: string;
+  carsTitle: string;
+  carsSub: string;
+  deliveryTitle: string;
+  deliverySub: string;
 };
 
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -75,6 +79,20 @@ export function DiscoverGrid({ items, text, vip, promo }: { items: DiscoverItem[
           </span>
           <IconChevron size={20} className="text-gold" weight={2} />
         </Link>
+        <div className="grid grid-cols-2 gap-2.5">
+          {[
+            { href: "/autos", title: text.carsTitle, sub: text.carsSub, icon: <IconCar size={20} stroke="#FFFFFF" weight={2} />, c: "#8FB0D0" },
+            { href: "/delivery", title: text.deliveryTitle, sub: text.deliverySub, icon: <IconScooter size={20} stroke="#FFFFFF" weight={2} />, c: "#7FC2B7" },
+          ].map((x) => (
+            <Link key={x.href} href={x.href} className="flex flex-col gap-2 rounded-[22px] border border-white/10 bg-white/[0.04] p-3.5">
+              <span className="gloss flex size-10 items-center justify-center rounded-[13px]" style={{ "--c": x.c } as React.CSSProperties}>
+                {x.icon}
+              </span>
+              <span className="text-[15px] font-extrabold text-white">{x.title}</span>
+              <span className="text-[12px] leading-snug text-cream/70">{x.sub}</span>
+            </Link>
+          ))}
+        </div>
         <div className="no-scrollbar -mx-3.5 flex gap-2 overflow-x-auto px-3.5">
           {(Object.keys(text.chips) as Chip[]).map((c) => (
             <button

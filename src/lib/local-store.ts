@@ -40,3 +40,41 @@ export function createLocalStore<T>(key: string) {
     useItems: () => useSyncExternalStore(subscribe, read, () => EMPTY),
   };
 }
+
+// Un solo valor (por ejemplo, la membresía de ARK CARS o el carrito de Delivery).
+export function createLocalValue<T extends object>(key: string, initial: T) {
+  const listeners = new Set<() => void>();
+  let cache: T | null = null;
+
+  const read = (): T => {
+    if (cache !== null) return cache;
+    try {
+      const raw = localStorage.getItem(key);
+      cache = raw ? ({ ...initial, ...JSON.parse(raw) } as T) : initial;
+    } catch {
+      cache = initial;
+    }
+    return cache;
+  };
+
+  const write = (next: T) => {
+    cache = next;
+    try {
+      localStorage.setItem(key, JSON.stringify(next));
+    } catch {
+      // sin almacenamiento: el valor vive solo mientras la página está abierta
+    }
+    listeners.forEach((l) => l());
+  };
+
+  const subscribe = (l: () => void) => {
+    listeners.add(l);
+    return () => listeners.delete(l);
+  };
+
+  return {
+    read,
+    write,
+    useValue: () => useSyncExternalStore(subscribe, read, () => initial),
+  };
+}
