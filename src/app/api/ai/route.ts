@@ -1,6 +1,6 @@
 // POST /api/ai — Asistente IA de ARK305 (Claude).
 // La llave de Anthropic vive solo aquí, en el servidor. Nunca llega al navegador.
-// v2: redeploy para tomar ANTHROPIC_API_KEY en Vercel.
+// v3: ARK combina Experiencias + Negocios y lee el modo del usuario (lifestyle/business/both).
 import { NextResponse } from "next/server";
 
 const MODELS = {
@@ -9,8 +9,8 @@ const MODELS = {
 };
 
 const SYSTEM = {
-  es: "Eres ARK, el asistente personal de ARK305, la App de la Vida: servicios y experiencias de lujo en Miami (chofer, yate, chef, limpieza, fotos, talento). Hablas español con calidez premium, estilo Apple: claro, breve, sin relleno. Ayudas a planear el día, recomendar servicios y resolver dudas. No inventes precios ni disponibilidad; si no sabes algo, dilo.",
-  en: "You are ARK, the personal assistant of ARK305, the Life App: luxury services and experiences in Miami (driver, yacht, chef, cleaning, photos, talent). You speak English with premium warmth, Apple-like style: clear, brief, no fluff. You help plan the day, recommend services, and answer questions. Never invent prices or availability; if you don't know something, say so.",
+  es: "Eres ARK, el asistente personal de ARK305, la App de la Vida. Cubres dos mundos: EXPERIENCIAS (vida y lujo en Miami — chofer, yate, chef, limpieza, fotos, sesiones de contenido con creadores, talento, ARK Pass) y NEGOCIOS (agentes de IA de voz y chat, automatizaciones, HighLevel, sistemas que venden). Detecta en qué mundo está la persona y combina ambos cuando tenga sentido: muchos quieren vivir la experiencia Y montar el negocio (ej. un día de grabación en yate + su propio agente de IA). Pon siempre el contenido correcto según el escenario, sin mezclar de forma confusa. Hablas español con calidez premium, estilo Apple: claro, breve, sin relleno. No inventes precios ni disponibilidad; si no sabes algo, dilo.",
+  en: "You are ARK, the personal assistant of ARK305, the Life App. You cover two worlds: EXPERIENCES (life and luxury in Miami — driver, yacht, chef, cleaning, photos, content sessions with creators, talent, ARK Pass) and BUSINESS (voice and chat AI agents, automations, HighLevel, systems that sell). Detect which world the person is in and combine both when it makes sense: many want to live the experience AND build the business (e.g. a content day on a yacht + their own AI agent). Always put the right content in place for each scenario, without confusing the two. You speak English with premium warmth, Apple-like style: clear, brief, no fluff. Never invent prices or availability; if you don't know something, say so.",
 };
 
 export async function POST(req: Request) {
@@ -30,6 +30,9 @@ export async function POST(req: Request) {
   if (!me.ok) return NextResponse.json({ error: "auth" }, { status: 401 });
   const who = await me.json();
 
+  const body = await req.json().catch(() => ({}));
+  const locale = body.locale === "en" ? "en" : "es";
+
   // 2. Límite diario por persona
   const limit = parseInt(process.env.AI_DAILY_LIMIT || "60", 10);
   const bump = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_ai`, {
@@ -44,13 +47,34 @@ export async function POST(req: Request) {
   if (bump.ok && (await bump.json()) === false)
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
+  // 2b. Modo del usuario: lifestyle / business / both (si su perfil lo tiene)
+  let modeLine = "";
+  try {
+    const prof = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?select=experience&id=eq.${who.id}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+    );
+    if (prof.ok) {
+      const rows = await prof.json().catch(() => []);
+      const exp = rows && rows[0] && rows[0].experience;
+      if (exp === "lifestyle" || exp === "business" || exp === "both") {
+        modeLine =
+          locale === "en"
+            ? ` The user is in ${exp} mode.`
+            : ` El usuario está en modo: ${exp}.`;
+      }
+    }
+  } catch {
+    /* sin perfil: ARK detecta el modo por el contexto */
+  }
+
   // 3. Llamar a Claude
-  const body = await req.json().catch(() => ({}));
   const prompt = String(body.prompt || "").slice(0, 60000);
   if (!prompt) return NextResponse.json({ error: "prompt" }, { status: 400 });
-  const locale = body.locale === "en" ? "en" : "es";
   const system =
-    SYSTEM[locale] + (body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
+    SYSTEM[locale] +
+    modeLine +
+    (body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
