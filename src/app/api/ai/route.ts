@@ -4,8 +4,8 @@
 import { NextResponse } from "next/server";
 
 const MODELS = {
-  default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5",
-  quick: process.env.ANTHROPIC_MODEL_QUICK || "claude-haiku-4-5-20251001",
+  default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5",
+  quick: process.env.ANTHROPIC_MODEL_QUICK || "claude-haiku-5-5",
 };
 
 const SYSTEM = {
