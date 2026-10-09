@@ -3,6 +3,13 @@
 // v3: ARK combina Experiencias + Negocios y lee el modo del usuario (lifestyle/business/both).
 import { NextResponse } from "next/server";
 
+// Nunca dejar la petición colgada: tope total de la función y tope por cada llamada externa.
+export const maxDuration = 60;
+const AUTH_TIMEOUT_MS = 5000;
+const DB_TIMEOUT_MS = 5000;
+const AI_TIMEOUT_MS = 45000;
+const timeout = (ms: number) => AbortSignal.timeout(ms);
+
 const MODELS = {
   default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5",
   quick: process.env.ANTHROPIC_MODEL_QUICK || "claude-haiku-5-5",
@@ -18,41 +25,55 @@ export async function POST(req: Request) {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_KEY =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!ANTHROPIC_API_KEY) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
+  // 1. Solo usuarios con sesión. Sin token: 401 inmediato, sin tocar nada externo.
+  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token) return NextResponse.json({ error: "auth" }, { status: 401 });
+  if (!ANTHROPIC_API_KEY || !SUPABASE_URL || !SUPABASE_KEY)
+    return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
 
-  // 1. Solo usuarios con sesión
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!token || !SUPABASE_URL || !SUPABASE_KEY)
-    return NextResponse.json({ error: "auth" }, { status: 401 });
-  const me = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  });
-  if (!me.ok) return NextResponse.json({ error: "auth" }, { status: 401 });
-  const who = await me.json();
+  let who: { id: string };
+  try {
+    const me = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
+      signal: timeout(AUTH_TIMEOUT_MS),
+    });
+    if (!me.ok) return NextResponse.json({ error: "auth" }, { status: 401 });
+    who = await me.json();
+    if (!who?.id) return NextResponse.json({ error: "auth" }, { status: 401 });
+  } catch (e) {
+    console.error("auth check failed", e);
+    return NextResponse.json({ error: "auth_unavailable" }, { status: 503 });
+  }
 
   const body = await req.json().catch(() => ({}));
   const locale = body.locale === "en" ? "en" : "es";
 
   // 2. Límite diario por persona
   const limit = parseInt(process.env.AI_DAILY_LIMIT || "60", 10);
-  const bump = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_ai`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ lim: limit }),
-  });
-  if (bump.ok && (await bump.json()) === false)
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  try {
+    const bump = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_ai`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ lim: limit }),
+      signal: timeout(DB_TIMEOUT_MS),
+    });
+    if (bump.ok && (await bump.json()) === false)
+      return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  } catch (e) {
+    // Si el contador no responde, seguimos: mejor responder que colgarse.
+    console.error("bump_ai failed", e);
+  }
 
   // 2b. Modo del usuario: lifestyle / business / both (si su perfil lo tiene)
   let modeLine = "";
   try {
     const prof = await fetch(
       `${SUPABASE_URL}/rest/v1/profiles?select=experience&id=eq.${who.id}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` }, signal: timeout(DB_TIMEOUT_MS) }
     );
     if (prof.ok) {
       const rows = await prof.json().catch(() => []);
@@ -76,7 +97,9 @@ export async function POST(req: Request) {
     modeLine +
     (body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
 
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  let r: Response;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "x-api-key": ANTHROPIC_API_KEY,
@@ -89,7 +112,12 @@ export async function POST(req: Request) {
       system,
       messages: [{ role: "user", content: prompt }],
     }),
+    signal: timeout(AI_TIMEOUT_MS),
   });
+  } catch (e) {
+    console.error("anthropic timeout/network", e);
+    return NextResponse.json({ error: "upstream_timeout" }, { status: 504 });
+  }
   if (r.status === 429) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   if (!r.ok) {
     console.error("anthropic", r.status, await r.text());

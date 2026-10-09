@@ -19,6 +19,8 @@ export async function askArk(prompt: string, opts: { locale: Locale; json?: bool
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ prompt, locale: opts.locale, json: !!opts.json, tier: opts.tier ?? "default" }),
+      // Si ARK IA tarda demasiado, la pantalla sigue con su versión sin IA.
+      signal: AbortSignal.timeout(55000),
     });
     if (r.status === 401) return { ok: false, reason: "signin" };
     if (r.status === 429) return { ok: false, reason: "limit" };
