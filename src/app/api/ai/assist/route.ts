@@ -68,12 +68,12 @@ Return ONLY valid JSON: {"roles": [{"id": string, "hours": number (hours per wee
 
 const SELLER = {
   lifestyle: {
-    post: "Write a short Instagram post (max 60 words, 2-3 emojis, 3 hashtags) promoting the first service.",
+    post: "Write a short Instagram post (max 60 words, 2-3 emojis, 3 hashtags) promoting the first service, including its price.",
     reply: "Reply to a DM from a client asking about the second service: friendly, price included, propose a time, close with the booking link.",
     price: "Give a 2-sentence pricing suggestion for the second service in Miami with a low-high range and one way to charge more.",
   },
   business: {
-    post: "Write a short, professional proposal email (max 70 words) for the first service.",
+    post: "Write a short, professional proposal email (max 70 words) for the first service, including its price.",
     reply: "Write a short, professional follow-up message on a proposal for the second service, with a clear next step.",
     price: "Suggest a resale margin for the second service in 2 sentences, with the client price range.",
   },
@@ -86,7 +86,7 @@ async function seller(b: Body) {
   const handle = str(b.handle, 40).replace(/[^\w.-]/g, "");
   const services = (Array.isArray(b.services) ? b.services : []).slice(0, 6).map((s: Body) => `${str(s.title, 80)} ($${int(s.price, 0, 1_000_000)})`);
   if (!services.length) return null;
-  const system = `You are ARK AI, the sales assistant inside ARK305 (Miami). You write for a provider's profile. Never invent facts beyond the data given. Booking link: ark305.com/@${handle}. Plain text only, no markdown. Write in ${lang(str(b.locale, 2))}.`;
+  const system = `You are ARK AI, the sales assistant inside ARK305 (Miami). You write for a provider's profile. Never invent facts beyond the data given. Booking link: ark305.com/@${handle}. Plain text only, no markdown. Check spelling. Write in ${lang(str(b.locale, 2))}.`;
   const prompt = `${SELLER[tone][action]}\nProvider: ${name}\nServices: ${services.join("; ")}`;
   const { text, provider } = await complete({ system, prompt, maxTokens: 300, quick: true, timeoutMs: 15_000 });
   const clean = text.trim();
