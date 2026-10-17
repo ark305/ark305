@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { BottomNav } from "@/components/bottom-nav";
 import { ToastProvider } from "@/components/toast";
 import { DiagnosisGate } from "@/components/diagnosis-chat";
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <SideFade side={side ?? "personal"} />
           <BottomNav labels={t.nav} avatar={me?.photo ?? null} name={me?.name ?? ""} handle={me?.handle ?? null} side={side ?? "personal"} level={level} />
         </ToastProvider>
+        <Analytics />
       </body>
     </html>
   );
