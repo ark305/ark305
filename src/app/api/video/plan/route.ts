@@ -1,9 +1,9 @@
 // POST /api/video/plan — ARK IA organiza el contenido de una sesión de video.
-// Pública (es para el evento), con límite por IP. Sin llave o si Claude falla: plan demo, nunca se rompe.
+// Pública (es para el evento), con límite por IP. Sin llave o si el modelo falla: plan demo, nunca se rompe.
 import { NextResponse } from "next/server";
+import { aiProvider, complete } from "@/lib/llm";
 import { demoPlan, sanitizePlan, videoPackages } from "@/lib/video";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5";
 const LIMIT = 12; // planes por IP por hora
 const hits = new Map<string, { n: number; reset: number }>();
 
@@ -31,24 +31,15 @@ export async function POST(req: Request) {
   const brief = String(body.brief || "").trim().slice(0, 800);
   if (brief.length < 3) return NextResponse.json({ error: "brief" }, { status: 400 });
 
-  const key = process.env.ANTHROPIC_API_KEY;
   const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "local";
-  if (!key || !allowed(ip)) return NextResponse.json(demoPlan(brief, locale));
+  if (!aiProvider() || !allowed(ip)) return NextResponse.json(demoPlan(brief, locale));
 
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: SYSTEM(locale), messages: [{ role: "user", content: brief }] }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!r.ok) throw new Error(`anthropic ${r.status}`);
-    const data = await r.json();
-    const text: string = (data.content || []).filter((b: { type: string }) => b.type === "text").map((b: { text: string }) => b.text).join("");
+    const { text, provider } = await complete({ system: SYSTEM(locale), prompt: brief, maxTokens: 1200, timeoutMs: 20_000 });
     const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
     const plan = sanitizePlan(JSON.parse(json));
     if (!plan) throw new Error("invalid plan");
-    return NextResponse.json(plan);
+    return NextResponse.json(plan, { headers: { "x-ark-ai": provider } });
   } catch (e) {
     console.error("video plan", e);
     return NextResponse.json(demoPlan(brief, locale));
