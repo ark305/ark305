@@ -6,6 +6,8 @@ import { useState, useTransition } from "react";
 import type { Locale } from "@/lib/locale";
 import type { Mode, Side } from "@/lib/mode";
 import { markStep, signOut } from "@/lib/actions";
+import { archie } from "@/lib/archie/browser";
+import { archieReady } from "@/lib/archie/config";
 import { savePref } from "@/lib/prefs";
 import { IconChevron, IconClose, IconCopy, IconMenu } from "./icons";
 import { SideSwitch } from "./side-switch";
@@ -85,7 +87,13 @@ export function ProfileMenu({ locale, mode, side = "personal", signedIn = false,
               ))}
             </div>
             {signedIn && (
-              <form action={signOut}>
+              <form
+                action={async () => {
+                  // Primero cierra la sesión de Archie en el navegador (si no, el SDK la vuelve a abrir).
+                  if (archieReady) await archie().auth.signOut().catch(() => {});
+                  await signOut();
+                }}
+              >
                 <button type="submit" className="mt-5 h-12 w-full rounded-full border border-white/10 text-[15px] font-semibold text-[#E07A8F]">
                   {labels.signOut}
                 </button>
