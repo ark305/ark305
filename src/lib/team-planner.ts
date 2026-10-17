@@ -28,6 +28,12 @@ export function planTeam(prompt: string): TeamPlan {
   const text = norm(prompt);
   const picked = new Map<string, number>();
   for (const r of RULES) if (r.words.some((w) => new RegExp(`(^|[^a-z])${w}`).test(text))) r.roles.forEach(([id, h]) => picked.set(id, Math.max(picked.get(id) ?? 0, h)));
+  return planFromRoles([...picked].map(([id, hours]) => ({ id, hours })));
+}
+
+// Arma el plan con costos a partir de roles (palabras clave o Claude). Sin roles: propuesta base.
+export function planFromRoles(roles: { id: string; hours: number }[]): TeamPlan {
+  const picked = new Map(roles.filter((r) => positions.some((p) => p.id === r.id)).map((r) => [r.id, r.hours] as const));
   const understood = picked.size > 0;
   if (!understood) [["r-reel", 20], ["r-cm", 20], ["r-gd", 10]].forEach(([id, h]) => picked.set(id as string, h as number));
 

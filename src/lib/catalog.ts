@@ -131,8 +131,13 @@ export function planDay(prompt: string, fallbackGuests = 4): Plan {
     return { id: r.id, time, qty: r.qty ?? 1, guests };
   });
 
+  return finishPlan(items, guests);
+}
+
+// Completa el plan (venga de las palabras clave o de Claude): plan base si no hay nada, SUV para las salidas y orden por hora.
+export function finishPlan(items: Plan["items"], guests: number): Plan {
   const understood = items.length > 0;
-  const base = understood ? items : packages[0].items.map((i) => ({ ...i, guests }));
+  const base = understood ? [...items] : packages[0].items.map((i) => ({ ...i, guests }));
 
   // Si hay salidas y no pidió chofer, ARK agrega el SUV de ida y vuelta.
   const outings = base.filter((i) => getItem(i.id)?.outing);

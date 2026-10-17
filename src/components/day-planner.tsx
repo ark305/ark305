@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { askArk } from "@/lib/ai-client";
 import { entryPrice, getItem, packages, planDay, planSummary, type Plan } from "@/lib/catalog";
 import { day, useDay } from "@/lib/day-store";
 import { dict, formatTime } from "@/lib/dict";
@@ -26,6 +27,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
   const [plan, setPlan] = useState<Plan | null>(null);
   const [booking, setBooking] = useState<{ code: string; step: number } | null>(null);
   const [priority, setPriority] = useState(false);
+  const [live, setLive] = useState(false);
   const dayRef = useRef<HTMLElement>(null);
 
   // La reserva avanza sola, como en el prototipo: Confirmado → … → En curso.
@@ -40,12 +42,13 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
     setText(prompt);
     setBuilding(true);
     setPlan(null);
-    setTimeout(() => {
-      const p = planDay(prompt, guests);
+    askArk<{ plan: Plan }>({ kind: "day", prompt, guests, locale }).then((r) => {
+      const p = r?.plan ?? planDay(prompt, guests);
+      setLive(!!r);
       setGuests(p.guests);
       setPlan(p);
       setBuilding(false);
-    }, 900);
+    });
   }
 
   function addToDay(items: Plan["items"]) {
@@ -116,7 +119,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-mute">{t.aiPreview}</p>
+        <p className="text-[11px] text-mute">{live ? dict(locale).common.aiLive : t.aiPreview}</p>
       </section>
 
       {/* Propuesta de ARK IA */}

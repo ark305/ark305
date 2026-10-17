@@ -6,7 +6,8 @@ import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
 import { candidates, positions } from "@/lib/talent";
-import { planTeam, teamSummary, type TeamPlan } from "@/lib/team-planner";
+import { askArk } from "@/lib/ai-client";
+import { planFromRoles, planTeam, teamSummary, type TeamPlan } from "@/lib/team-planner";
 import { team } from "@/lib/team-store";
 import { IconLock, IconPeople } from "./icons";
 import { useToast } from "./toast";
@@ -21,6 +22,7 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
   const [busy, setBusy] = useState(false);
   const [plan, setPlan] = useState<TeamPlan | null>(null);
   const [added, setAdded] = useState(false);
+  const [live, setLive] = useState(false);
 
   function build(prompt = text) {
     if (!prompt.trim()) return;
@@ -28,10 +30,11 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
     setBusy(true);
     setPlan(null);
     setAdded(false);
-    setTimeout(() => {
-      setPlan(planTeam(prompt));
+    askArk<{ roles: { id: string; hours: number }[] }>({ kind: "team", prompt, locale }).then((r) => {
+      setLive(!!r);
+      setPlan(r ? planFromRoles(r.roles) : planTeam(prompt));
       setBusy(false);
-    }, 800);
+    });
   }
 
   function addAll() {
@@ -76,7 +79,7 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-mute">{b.preview}</p>
+        <p className="text-[11px] text-mute">{live ? t.common.aiLive : b.preview}</p>
       </section>
 
       <Link href="/talento" className="-mt-2 text-center text-sm font-semibold text-gold">
