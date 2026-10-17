@@ -1,9 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { bookDay } from "@/lib/actions";
+import { useEffect, useRef, useState } from "react";
 import { askArk } from "@/lib/ai-client";
 import { entryPrice, getItem, packages, planDay, planSummary, type Plan } from "@/lib/catalog";
 import { day, useDay } from "@/lib/day-store";
@@ -30,34 +28,6 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
   const [booking, setBooking] = useState<{ code: string; step: number } | null>(null);
   const [priority, setPriority] = useState(false);
   const [live, setLive] = useState(false);
-  const [booking_, startBooking] = useTransition();
-  const router = useRouter();
-
-  // Reserva todo tu día en Archie (una reserva por servicio). Cada hora es la próxima vez que llega:
-  // hoy si todavía no pasó, si no mañana.
-  function bookAll() {
-    const now = new Date();
-    const items = entries.map((e) => {
-      const [h, min] = e.time.split(":").map(Number);
-      const at = new Date(now);
-      at.setHours(h, min, 0, 0);
-      if (at < now) at.setDate(at.getDate() + 1);
-      return { id: e.id, startsAt: at.toISOString(), qty: e.qty, guests: e.guests };
-    });
-    startBooking(async () => {
-      const res = await bookDay(items, priority);
-      if (!res.ok) {
-        if (res.error === "auth") {
-          show(t.bookNeedsAccount);
-          return router.push("/entrar?next=/mi-dia");
-        }
-        if (res.error === "profile") return router.push("/bienvenida");
-        return show(t.bookError);
-      }
-      if (res.saved) show(t.bookSaved);
-      setBooking({ code: res.code, step: 0 });
-    });
-  }
   const dayRef = useRef<HTMLElement>(null);
 
   // La reserva avanza sola, como en el prototipo: Confirmado → … → En curso.
@@ -283,11 +253,10 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={bookAll}
-                  disabled={booking_}
-                  className="gold-grad h-[52px] rounded-full text-base font-bold text-ink shadow-[0_14px_40px_-16px_var(--accent)] disabled:opacity-60"
+                  onClick={() => setBooking({ code: `ARK-${Math.floor(1000 + Math.random() * 9000)}`, step: 0 })}
+                  className="gold-grad h-[52px] rounded-full text-base font-bold text-ink shadow-[0_14px_40px_-16px_var(--accent)]"
                 >
-                  {booking_ ? t.booking_ : t.bookAll}
+                  {t.bookAll}
                 </button>
                 <SoonButton className="glass h-12 rounded-full text-[15px] font-semibold text-cream">{t.group}</SoonButton>
                 <p className="text-center text-[11px] text-mute">{t.demoNote}</p>

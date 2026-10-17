@@ -13,14 +13,14 @@ export default async function SignInPage({ searchParams }: PageProps<"/entrar">)
   const { locale } = await getDictionary();
   const viewer = await getViewer();
   if (viewer.userId) redirect(viewer.row ? "/perfil" : "/bienvenida");
-  const { next } = await searchParams;
+  const { error, next } = await searchParams;
   const safeNext = typeof next === "string" && next.startsWith("/") && !next.startsWith("//") ? next : "/perfil";
   return (
     <div className="px-4 pt-10">
       <p className="mb-6 font-display text-[34px] leading-none font-semibold text-white">
         ARK<span className="text-gold">305</span>
       </p>
-      <SignIn locale={locale} next={safeNext} />
+      <SignIn locale={locale} next={safeNext} linkError={error === "link"} />
     </div>
   );
 }
