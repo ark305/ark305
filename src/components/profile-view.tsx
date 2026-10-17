@@ -33,7 +33,7 @@ export function ProfileView({
   t: Dictionary;
   mode: Mode;
   level: Level;
-  real?: boolean; // perfil real en Supabase (se puede editar)
+  real?: boolean; // perfil real en Archie (se puede editar)
   signedIn?: boolean;
   steps?: Steps;
   exp?: unknown;

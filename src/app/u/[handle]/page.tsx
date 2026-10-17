@@ -4,7 +4,7 @@ import { ProfileView } from "@/components/profile-view";
 import { getContext } from "@/lib/i18n";
 import { CURRENT_HANDLE } from "@/lib/mock-data";
 import { findProfile, getViewer } from "@/lib/profiles-db";
-import { supabaseReady } from "@/lib/supabase/config";
+import { archieReady } from "@/lib/archie/config";
 
 // Perfil público: ark305.com/@usuario (proxy.ts lo trae hasta aquí).
 export async function generateMetadata({ params }: PageProps<"/u/[handle]">): Promise<Metadata> {
@@ -27,7 +27,7 @@ export default async function PublicProfilePage({ params }: PageProps<"/u/[handl
   if (!profile || (profile.private && level !== "vip")) notFound();
 
   const viewer = await getViewer();
-  const mine = viewer.row ? viewer.row.handle === profile.handle : !supabaseReady && profile.handle === CURRENT_HANDLE;
+  const mine = viewer.row ? viewer.row.handle === profile.handle : !archieReady && profile.handle === CURRENT_HANDLE;
   const r = mine ? viewer.row : null;
   return (
     <ProfileView
