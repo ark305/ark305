@@ -33,6 +33,7 @@ export type BookLabels = {
 };
 
 const hm = (t: string) => t.slice(0, 5);
+const miamiNow = () => new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
 
 export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels; locale: Locale; signedIn: boolean }) {
   const days = Array.from({ length: 7 }, (_, i) => miamiDate(i));
@@ -102,7 +103,7 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-1.5 overflow-x-auto">
+        <div className="no-scrollbar flex gap-1.5 overflow-x-auto">
           {days.map((d, i) => (
             <button key={d} type="button" aria-pressed={d === date} onClick={() => { setDate(d); setPick(null); }} className={`h-9 shrink-0 rounded-full border px-3 text-[12px] font-bold capitalize ${d === date ? "border-gold/50 bg-gold/15 text-white" : "border-white/10 text-mute"}`}>
               {fmtDay(d, i)}
@@ -135,7 +136,9 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
             </div>
             <p className="text-[12px] text-mute">{l.types[s.type]} · ★ {s.rating ?? "–"} · {s.description}</p>
             <div className="mt-3 grid grid-cols-4 gap-1.5">
-              {data.slots.filter((x) => x.service_id === s.id).map((x) => (
+              {data.slots.filter((x) => x.service_id === s.id).map((raw) => {
+                const x = raw.date === days[0] && hm(raw.start_time) <= miamiNow() ? { ...raw, available: false } : raw;
+                return (
                 <button
                   key={x.id}
                   type="button"
@@ -147,7 +150,8 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
                 >
                   {hm(x.start_time)}
                 </button>
-              ))}
+                );
+              })}
             </div>
             {pick && pick.service_id === s.id && (
               <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-gold/25 bg-gold/[0.05] p-3">
