@@ -1,6 +1,6 @@
 "use client";
 
-// Respuestas del Diagnóstico en este teléfono (para invitados). Con cuenta, también en Archie.
+// Respuestas del Diagnóstico en este teléfono (para invitados). Con cuenta, también en Supabase.
 import { useSyncExternalStore } from "react";
 import type { Answers } from "./diagnosis";
 
