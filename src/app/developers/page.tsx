@@ -159,6 +159,9 @@ export default async function DevelopersPage() {
         </div>
         <h3 className="mt-2 text-[15px] font-bold text-white">{d.calcTitle}</h3>
         <NodeCalculator labels={d.calc} locale={locale} />
+        <Link href="/club?c=frida" className="flex h-11 items-center justify-center rounded-full border border-gold/40 text-[13px] font-bold text-gold-soft">
+          {d.clubLink}
+        </Link>
       </section>
 
       <section className="flex flex-col gap-4 px-5">
