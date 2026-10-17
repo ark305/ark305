@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { miamiDate, SERVICE_TYPES, type Availability, type Booking, type ServiceType, type Slot } from "@/lib/booking";
 import type { Locale } from "@/lib/locale";
+import { BookingSignIn } from "./booking-sign-in";
 
 export type BookLabels = {
   live: string;
@@ -21,7 +21,9 @@ export type BookLabels = {
   booking: string;
   signIn: string;
   signInHint: string;
-  profileHint: string;
+  email: string;
+  sendLink: string;
+  linkSent: string;
   booked: string;
   demoBooked: string;
   slotTaken: string;
@@ -86,7 +88,7 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
       setMsg({ ok: true, text: l.booked });
       setPick(null);
       setNotes("");
-    } else setMsg({ ok: false, text: j.error === "slot_taken" ? l.slotTaken : j.error === "auth_required" ? l.signInHint : j.error === "profile" ? l.profileHint : l.error });
+    } else setMsg({ ok: false, text: j.error === "slot_taken" ? l.slotTaken : j.error === "auth_required" ? l.signInHint : l.error });
     load(date);
     loadMine();
   }
@@ -168,7 +170,7 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
                   </label>
                 </div>
                 {live && !signedIn ? (
-                  <Link href="/entrar?next=/reservar" className="flex h-11 items-center justify-center rounded-full bg-cream text-[14px] font-bold text-ink">{l.signIn}</Link>
+                  <BookingSignIn labels={l} />
                 ) : (
                   <button type="button" disabled={busy} onClick={book} className="h-11 rounded-full bg-cream text-[14px] font-bold text-ink disabled:opacity-60">{busy ? l.booking : l.confirm}</button>
                 )}
@@ -185,9 +187,9 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
           {mine.map((b) => (
             <div key={b.id} className="flex items-center justify-between gap-3 rounded-[20px] border border-white/[0.08] bg-card p-3">
               <span className="min-w-0">
-                <span className="block truncate text-[14px] font-bold text-white">{b.provider_name}</span>
+                <span className="block truncate text-[14px] font-bold text-white">{b.catalog_services?.provider_name}</span>
                 <span className="block text-[12px] text-mute">
-                  {b.service_name} · {b.date} · {hm(b.start_time)} · {b.guests} · {l.status[b.status]}
+                  {b.availability_slots?.date} · {b.availability_slots && hm(b.availability_slots.start_time)} · {b.guests} · {l.status[b.status]}
                 </span>
               </span>
               {(b.status === "confirmed" || b.status === "requested") && (

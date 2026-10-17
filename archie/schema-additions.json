@@ -571,20 +571,6 @@
           "defaultValue": "false"
         }
       }
-    ],
-    "experience_booking": [
-      {
-        "clientId": "slot_key",
-        "op": "ADD_COLUMN",
-        "column": {
-          "name": "slot_key",
-          "type": "VARCHAR",
-          "isNullable": true,
-          "length": 120,
-          "isUnique": true,
-          "description": "provider_id|starts_at while the booking is active (null when cancelled). Unique: blocks double booking."
-        }
-      }
     ]
   }
 }

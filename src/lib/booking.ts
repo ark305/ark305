@@ -1,4 +1,4 @@
-// Reservas: tipos compartidos y catálogo demo (se usa cuando Archie no está configurado o falla).
+// Reservas: tipos compartidos y catálogo demo (se usa cuando Supabase no está configurado o falla).
 export type ServiceType = "driver" | "yacht" | "chef" | "videographer" | "photographer" | "cleaning";
 
 export type CatalogService = {
@@ -22,12 +22,10 @@ export type Booking = {
   guests: number;
   notes: string | null;
   price: number;
-  service_name: string;
-  type: ServiceType | null;
-  provider_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
+  price_unit: string;
+  created_at: string;
+  catalog_services: { name: string; type: ServiceType; provider_name: string } | null;
+  availability_slots: { date: string; start_time: string; end_time: string } | null;
 };
 
 export type Availability = { source: "live" | "demo"; date: string; services: CatalogService[]; slots: Slot[] };
@@ -45,18 +43,14 @@ const DEMO_SERVICES: CatalogService[] = [
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// Horarios de 2 horas, de 8am a 10pm (hora de Miami).
-export const SLOT_HOURS = [8, 10, 12, 14, 16, 18, 20];
-export const SLOT_LEN_H = 2;
-
 export function demoAvailability(date: string): Availability {
   const slots: Slot[] = DEMO_SERVICES.flatMap((s) =>
-    SLOT_HOURS.map((h) => ({
+    [8, 10, 12, 14, 16, 18, 20].map((h) => ({
       id: `demo-${s.id.slice(-2)}-${date}-${h}`,
       service_id: s.id,
       date,
       start_time: `${pad(h)}:00:00`,
-      end_time: `${pad(h + SLOT_LEN_H)}:00:00`,
+      end_time: `${pad(h + 2)}:00:00`,
       available: !(s.type === "yacht" && date === "2026-10-17" && h === 18),
     })),
   );
@@ -70,21 +64,12 @@ export function miamiDate(offsetDays = 0) {
 }
 
 export const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
-export const isId = (v: unknown): v is string => typeof v === "string" && /^[0-9a-zA-Z-]{8,64}$/.test(v);
+export const isUuid = (v: unknown): v is string =>
+  typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 
-// El instante en que son las `hour` en Miami ese día (EDT o EST según la fecha).
-export function miamiInstant(date: string, hour: number) {
-  const [y, m, d] = date.split("-").map(Number);
-  for (const off of [4, 5]) {
-    const t = new Date(Date.UTC(y, m - 1, d, hour + off));
-    if (miamiParts(t).date === date && miamiParts(t).time.startsWith(String(hour).padStart(2, "0"))) return t;
-  }
-  return new Date(Date.UTC(y, m - 1, d, hour + 5));
-}
-
-// Fecha (YYYY-MM-DD) y hora (HH:MM:00) de un instante, en Miami.
-export function miamiParts(t: Date) {
-  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(t);
-  const time = new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(t);
-  return { date, time: `${time}:00` };
+// Errores de las funciones SQL → respuesta HTTP.
+export function rpcError(message: string | undefined) {
+  const code = ["slot_taken", "auth_required", "not_cancellable", "not_allowed", "bad_transition"].find((c) => message?.includes(c));
+  const status = code === "slot_taken" ? 409 : code === "auth_required" ? 401 : code === "not_allowed" ? 403 : code ? 422 : 500;
+  return { error: code ?? "server_error", status };
 }
