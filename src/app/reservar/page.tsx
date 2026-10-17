@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
 import { BookingApp } from "@/components/booking-app";
 import { getContext, getDictionary } from "@/lib/i18n";
-import { supabaseReady } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@/lib/archie/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
   return { title: t.book.title };
 }
 
-// Reservas reales (Supabase) con respaldo demo si la base no está configurada.
+// Reservas reales (Archie) con respaldo demo si Archie no está configurado.
 export default async function BookPage() {
   const { locale, t } = await getContext();
-  let signedIn = false;
-  if (supabaseReady) {
-    const { data } = await (await createClient()).auth.getUser();
-    signedIn = Boolean(data.user);
-  }
+  const signedIn = Boolean(await getSession());
   const { title, intro, ...labels } = t.book;
   return (
     <div className="flex flex-col gap-5 px-5 pt-8 pb-28">

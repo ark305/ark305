@@ -71,6 +71,12 @@ Todos aceptan vacío (nullable) salvo donde dice otra cosa. En GraphQL salen en 
 | `outing` | boolean | no nulo, default `false` (salidas que necesitan chofer) |
 | `is_demo_data` | boolean | no nulo, default `false` |
 
+### `experience_booking`
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `slot_key` | varchar(120) | **único**. `provider_id|starts_at` mientras la reserva está activa (vacío al cancelar). Impide la doble reserva en `/reservar` |
+
 ### `experience_package`
 
 `slug` varchar(40) único · `title_en` varchar(80) · `description_en` text · `photo_url` varchar(500) · `items` jsonb · `is_demo_data` boolean default `false`

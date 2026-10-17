@@ -1,33 +1,17 @@
-// Cancelar (cliente) o avanzar el estado (proveedor). Las reglas viven en las funciones SQL.
+// Cancelar (cliente) o avanzar el estado (proveedor). Las reglas viven en src/lib/archie/bookings.ts.
 import { NextResponse, type NextRequest } from "next/server";
-import { isUuid, rpcError } from "@/lib/booking";
-import { supabaseReady } from "@/lib/supabase/config";
-import { createClient } from "@/lib/supabase/server";
-
-const STATUSES = ["confirmed", "en_route", "arrived", "in_service", "done"];
+import { BookingError, updateBooking } from "@/lib/archie/bookings";
+import { isId } from "@/lib/booking";
 
 export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/bookings/[id]">) {
-  if (!supabaseReady) return NextResponse.json({ error: "not_configured" }, { status: 503 });
   const { id } = await ctx.params;
+  if (!isId(id)) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const body = await req.json().catch(() => ({}));
-  if (!isUuid(id)) return NextResponse.json({ error: "bad_request" }, { status: 400 });
-
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return NextResponse.json({ error: "auth_required" }, { status: 401 });
-
-  const call =
-    body.action === "cancel"
-      ? supabase.rpc("cancel_booking", { p_booking: id })
-      : STATUSES.includes(body.status)
-        ? supabase.rpc("set_booking_status", { p_booking: id, p_status: body.status })
-        : null;
-  if (!call) return NextResponse.json({ error: "bad_request" }, { status: 400 });
-
-  const { data, error } = await call;
-  if (error) {
-    const e = rpcError(error.message);
-    return NextResponse.json({ error: e.error }, { status: e.status });
+  try {
+    return NextResponse.json({ booking: await updateBooking(id, body.action, body.status) });
+  } catch (e) {
+    if (e instanceof BookingError) return NextResponse.json({ error: e.code }, { status: e.status });
+    console.error("booking update", e);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
   }
-  return NextResponse.json({ booking: data });
 }
