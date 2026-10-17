@@ -4,11 +4,13 @@ import Link from "next/link";
 import { IconCrown, IconLock } from "@/components/icons";
 import { Photo } from "@/components/photo";
 import { PrivateGate } from "@/components/private-gate";
+import { PrivateMls } from "@/components/private-mls";
 import { ToastButton } from "@/components/toast";
 import { getContext, getDictionary } from "@/lib/i18n";
 import { getLevel } from "@/lib/levels";
 import { CURRENT_HANDLE, getProfile, profiles } from "@/lib/mock-data";
 import { getViewer } from "@/lib/profiles-db";
+import { compareOffMarket, getMlsSnapshot } from "@/lib/mls";
 import { privateServices, residences } from "@/lib/private";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,6 +58,7 @@ export default async function PrivatePage() {
   }
 
   const team = profiles.filter((x) => x.private);
+  const mls = await getMlsSnapshot();
   return (
     <div className="flex flex-col gap-7">
       <section className="relative flex h-[420px] flex-col justify-end gap-2 overflow-hidden px-5 pb-6">
@@ -104,6 +107,8 @@ export default async function PrivatePage() {
           ))}
         </div>
       </section>
+
+      <PrivateMls locale={locale} snapshot={mls} compare={compareOffMarket(mls)} l={p.mls} />
 
       <section className="flex flex-col gap-4 px-5">
         <h2 className="font-display text-2xl font-semibold text-white">{p.services}</h2>
