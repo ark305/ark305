@@ -6,7 +6,6 @@ import { deleteService, saveService, updateProfile, type FormState } from "@/lib
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
-import { SERVICE_CATEGORIES } from "@/lib/archie/categories";
 import type { ProfileRow, ServiceRow } from "@/lib/profiles-db";
 import { uploadPhoto } from "@/lib/upload";
 import { IconChevron, IconClose, IconPlus } from "./icons";
@@ -218,15 +217,6 @@ function ServiceSheet({ locale, uid, service, onClose }: { locale: Locale; uid: 
         </Field>
         <Field label={e.detail}>
           <input name="detail" maxLength={80} defaultValue={service?.detail} placeholder={e.detailPh} className={field} />
-        </Field>
-        <Field label={e.category}>
-          <select name="category" defaultValue={service?.category ?? "PHOTOGRAPHER"} className={`${field} appearance-none`}>
-            {SERVICE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {e.categories[c]}
-              </option>
-            ))}
-          </select>
         </Field>
         <Field label={e.price}>
           <input name="price" required type="number" inputMode="numeric" min={0} max={1000000} step={1} defaultValue={service?.price} className={field} />
