@@ -1,17 +1,34 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import type { Map as LMap, LayerGroup, Marker, Polyline } from "leaflet";
-import { useEffect, useRef, useState } from "react";
+import type { Layer, LayerGroup, Map as LMap, Marker, Polyline } from "leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { SERVICE_TYPES, type ServiceType } from "@/lib/booking";
 import type { Locale } from "@/lib/locale";
-import { DEMO_TRIP_MIN, MIAMI_CENTER, demoRoute, mapNodes, type MapKind } from "@/lib/map";
+import { DEMO_TRIP_MIN, MAP_HOODS, MAP_KINDS, MIAMI_CENTER, PRICE_BANDS, demoRoute, inBand, mapNodes, type MapKind, type MapNode, type PriceBand } from "@/lib/map";
 
-const COLORS: Record<MapKind, string> = { residence: "#D8B170", provider: "#5EEAD4", demand: "#F472B6" };
-const KINDS: MapKind[] = ["residence", "provider", "demand"];
+const COLORS: Record<MapKind, string> = { residence: "#D8B170", provider: "#5EEAD4", ally: "#A78BFA", demand: "#F472B6" };
 const TRIP_SECONDS = 45;
+
+export type MapFilters = { kinds?: MapKind[]; zone?: string; service?: ServiceType };
 
 export type MapLabels = {
   filters: Record<MapKind, string>;
+  ui: {
+    zone: string;
+    allZones: string;
+    service: string;
+    allServices: string;
+    services: Record<ServiceType, string>;
+    price: string;
+    prices: Record<PriceBand, string>;
+    now: string;
+    nowBadge: string;
+    results: string;
+    empty: string;
+    reset: string;
+    cta: Record<MapKind, string>;
+  };
   track: {
     title: string;
     who: string;
@@ -38,15 +55,32 @@ function pointAt(t: number): [number, number] {
   return demoRoute[demoRoute.length - 1];
 }
 
-export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }) {
+const chip = (active: boolean) =>
+  `flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold ${active ? "border-white/25 bg-white/[0.1] text-white" : "border-white/10 text-mute"}`;
+
+const allOn = (kinds?: MapKind[]) => Object.fromEntries(MAP_KINDS.map((k) => [k, !kinds?.length || kinds.includes(k)])) as Record<MapKind, boolean>;
+
+export function ArkMap({ labels, locale, initial }: { labels: MapLabels; locale: Locale; initial?: MapFilters }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<LMap | null>(null);
-  const groups = useRef<Partial<Record<MapKind, LayerGroup>>>({});
+  const group = useRef<LayerGroup | null>(null);
+  const layers = useRef<Map<string, Layer>>(new Map());
   const car = useRef<Marker | null>(null);
   const trail = useRef<Polyline | null>(null);
-  const [on, setOn] = useState<Record<MapKind, boolean>>({ residence: true, provider: true, demand: true });
+  const [on, setOn] = useState<Record<MapKind, boolean>>(() => allOn(initial?.kinds));
+  const [zone, setZone] = useState(initial?.zone && MAP_HOODS.includes(initial.zone) ? initial.zone : "all");
+  const [service, setService] = useState<ServiceType | "all">(initial?.service ?? "all");
+  const [band, setBand] = useState<PriceBand>("all");
+  const [nowOnly, setNowOnly] = useState(false);
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
+  const zoneRow = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const row = zoneRow.current;
+    const active = row?.querySelector<HTMLElement>("[aria-pressed=true]");
+    if (row && active) row.scrollLeft = active.offsetLeft - row.clientWidth / 2 + active.offsetWidth / 2;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,11 +94,12 @@ export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }
       }).addTo(m);
       L.control.zoom({ position: "bottomright" }).addTo(m);
 
-      for (const kind of KINDS) groups.current[kind] = L.layerGroup().addTo(m);
+      group.current = L.layerGroup().addTo(m);
       for (const n of mapNodes) {
-        const popup = `<strong>${n.name}</strong><br/>${n.sub[locale]}`;
+        const now = n.availableNow ? `<span class="ark-pop-now">● ${labels.ui.nowBadge}</span><br/>` : "";
+        const popup = `<div class="ark-pop"><strong>${n.name}</strong><br/>${now}${n.sub[locale]}<br/><a href="${n.href}">${labels.ui.cta[n.kind]} →</a></div>`;
         if (n.kind === "demand") {
-          L.circle([n.lat, n.lng], { radius: 250 + (n.size ?? 10) * 28, color: COLORS.demand, weight: 1, fillOpacity: 0.18 }).bindPopup(popup).addTo(groups.current.demand!);
+          layers.current.set(n.id, L.circle([n.lat, n.lng], { radius: 250 + (n.size ?? 10) * 28, color: COLORS.demand, weight: 1, fillOpacity: 0.18 }).bindPopup(popup));
         } else {
           const icon = L.divIcon({
             className: "",
@@ -72,7 +107,7 @@ export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }
             iconSize: [16, 16],
             iconAnchor: [8, 8],
           });
-          L.marker([n.lat, n.lng], { icon, title: n.name }).bindPopup(popup).addTo(groups.current[n.kind]!);
+          layers.current.set(n.id, L.marker([n.lat, n.lng], { icon, title: n.name }).bindPopup(popup));
         }
       }
 
@@ -84,7 +119,6 @@ export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }
         icon: L.divIcon({ className: "", html: '<span style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;background:#5EEAD4;border:3px solid #0b0b0b;color:#0b0b0b"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H8v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1zm2.2 0h9.6l-1-3H8.2zM7.5 14.5a1.5 1.5 0 1 0 0-.01zm9 0a1.5 1.5 0 1 0 0-.01z"/></svg></span>', iconSize: [30, 30], iconAnchor: [15, 15] }),
         zIndexOffset: 1000,
       }).addTo(m);
-      m.fitBounds(L.latLngBounds(mapNodes.map((n) => [n.lat, n.lng] as [number, number])), { padding: [24, 24] });
       map.current = m;
       setReady(true);
     });
@@ -93,18 +127,46 @@ export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }
       map.current?.remove();
       map.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- los textos no cambian sin cambiar de idioma
   }, [locale]);
+
+  const visible = useMemo(
+    () =>
+      mapNodes.filter(
+        (n: MapNode) =>
+          on[n.kind] &&
+          (zone === "all" || n.hood === zone) &&
+          (n.kind !== "provider" || ((service === "all" || n.service === service) && (!nowOnly || n.availableNow))) &&
+          (n.kind !== "residence" || inBand(n.priceM, band)),
+      ),
+    [on, zone, service, band, nowOnly],
+  );
+
+  useEffect(() => {
+    const g = group.current;
+    if (!g || !map.current) return;
+    const ids = new Set(visible.map((n) => n.id));
+    for (const [id, layer] of layers.current) {
+      if (ids.has(id)) g.addLayer(layer);
+      else g.removeLayer(layer);
+    }
+  }, [visible, ready]);
 
   useEffect(() => {
     const m = map.current;
     if (!m) return;
-    for (const kind of KINDS) {
-      const g = groups.current[kind];
-      if (!g) continue;
-      if (on[kind]) g.addTo(m);
-      else g.remove();
-    }
-  }, [on, ready]);
+    const pts = (zone === "all" ? mapNodes : visible).map((n) => [n.lat, n.lng] as [number, number]);
+    if (pts.length) m.fitBounds(pts, { padding: [28, 28], maxZoom: 15 });
+  }, [zone, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const reset = () => {
+    setOn(allOn());
+    setZone("all");
+    setService("all");
+    setBand("all");
+    setNowOnly(false);
+  };
+  const u = labels.ui;
 
   useEffect(() => {
     if (!ready || progress >= 1) return;
@@ -126,18 +188,59 @@ export function ArkMap({ labels, locale }: { labels: MapLabels; locale: Locale }
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap gap-1.5" role="group">
-        {KINDS.map((k) => (
-          <button
-            key={k}
-            type="button"
-            aria-pressed={on[k]}
-            onClick={() => setOn((s) => ({ ...s, [k]: !s[k] }))}
-            className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-bold ${on[k] ? "border-white/20 bg-white/[0.08] text-white" : "border-white/10 text-mute"}`}
-          >
+        {MAP_KINDS.map((k) => (
+          <button key={k} type="button" aria-pressed={on[k]} onClick={() => setOn((s) => ({ ...s, [k]: !s[k] }))} className={chip(on[k])}>
             <span className="size-2.5 rounded-full" style={{ background: COLORS[k], opacity: on[k] ? 1 : 0.35 }} />
             {labels.filters[k]}
           </button>
         ))}
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-[22px] border border-white/[0.08] bg-card p-3">
+        <p className="text-[10px] font-bold tracking-[0.12em] text-mute uppercase">{u.zone}</p>
+        <div ref={zoneRow} className="no-scrollbar relative -mx-3 flex gap-1.5 overflow-x-auto px-3" role="group" aria-label={u.zone}>
+          {["all", ...MAP_HOODS].map((h) => (
+            <button key={h} type="button" aria-pressed={zone === h} onClick={() => setZone(h)} className={chip(zone === h)}>
+              {h === "all" ? u.allZones : h}
+            </button>
+          ))}
+        </div>
+        {on.provider && (
+          <>
+            <p className="mt-1 text-[10px] font-bold tracking-[0.12em] text-mute uppercase">{u.service}</p>
+            <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3" role="group" aria-label={u.service}>
+              <button type="button" aria-pressed={nowOnly} onClick={() => setNowOnly((v) => !v)} className={chip(nowOnly)}>
+                <span className="size-2 rounded-full bg-emerald-400" />
+                {u.now}
+              </button>
+              {(["all", ...SERVICE_TYPES] as const).map((k) => (
+                <button key={k} type="button" aria-pressed={service === k} onClick={() => setService(k)} className={chip(service === k)}>
+                  {k === "all" ? u.allServices : u.services[k]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {on.residence && (
+          <>
+            <p className="mt-1 text-[10px] font-bold tracking-[0.12em] text-mute uppercase">{u.price}</p>
+            <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3" role="group" aria-label={u.price}>
+              {PRICE_BANDS.map((b) => (
+                <button key={b} type="button" aria-pressed={band === b} onClick={() => setBand(b)} className={chip(band === b)}>
+                  {u.prices[b]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="text-[12px] font-bold text-cream/80" aria-live="polite">
+            {visible.length ? u.results.replace("{n}", String(visible.length)) : u.empty}
+          </p>
+          <button type="button" onClick={reset} className="text-[12px] font-bold text-gold-soft">
+            {u.reset}
+          </button>
+        </div>
       </div>
 
       <div ref={el} className="h-[440px] w-full overflow-hidden rounded-[22px] border border-white/[0.08] bg-raised" />

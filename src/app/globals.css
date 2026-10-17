@@ -114,3 +114,18 @@ body {
 .leaflet-container {
   background: #0b0b0b;
 }
+.ark-pop {
+  font-size: 13px;
+  line-height: 1.45;
+}
+.ark-pop a {
+  display: inline-block;
+  margin-top: 6px;
+  font-weight: 700;
+  color: #9a6f2a;
+}
+.ark-pop-now {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+}

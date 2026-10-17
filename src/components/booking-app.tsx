@@ -55,10 +55,10 @@ const writeDemo = (list: Booking[]) => {
 const demoSlotId = (b: Booking) => b.id.split("|")[0];
 const miamiNow = () => new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
 
-export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels; locale: Locale; signedIn: boolean }) {
+export function BookingApp({ labels: l, locale, signedIn, initialType = "all" }: { labels: BookLabels; locale: Locale; signedIn: boolean; initialType?: ServiceType | "all" }) {
   const days = Array.from({ length: 7 }, (_, i) => miamiDate(i));
   const [date, setDate] = useState(days[0]);
-  const [type, setType] = useState<ServiceType | "all">("all");
+  const [type, setType] = useState<ServiceType | "all">(initialType);
   const [data, setData] = useState<Availability | null>(null);
   const [pick, setPick] = useState<Slot | null>(null);
   const [guests, setGuests] = useState(2);
