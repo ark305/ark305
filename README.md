@@ -45,19 +45,22 @@ Por ahora el modo y el nivel se guardan en el navegador y cambiar de nivel no co
 - `src/app/` — una carpeta por pantalla.
 - `src/components/` — piezas que se repiten (barra de abajo, perfil, íconos).
 - `src/lib/dictionaries/` — todos los textos en español (`es.ts`) e inglés (`en.ts`).
-- `src/lib/mock-data.ts`, `catalog.ts`, `levels.ts`, `community.ts`, `private.ts` — datos de ejemplo. En la Fase 2 se cambian por datos reales de Supabase.
+- `src/lib/archie/` — conexión con Archie (configuración, GraphQL, sesión en el servidor y en el teléfono).
+- `src/lib/profiles-db.ts` y `src/lib/actions.ts` — leer y guardar perfiles, servicios, gustos, diagnóstico y reservas en Archie.
+- `src/lib/mock-data.ts`, `catalog.ts`, `levels.ts`, `community.ts`, `private.ts` — datos de ejemplo. El script `scripts/seed-archie.ts` los carga en Archie.
   Las fotos de ejemplo son de Unsplash (licencia libre) y se reemplazan por las fotos reales de cada proveedor.
 - `src/proxy.ts` — hace que `ark305.com/@usuario` abra el perfil.
 
-## Cuentas (Fase 2)
+## Backend: Archie
 
-Inicio de sesión con enlace al correo y perfiles reales en Supabase.
+El backend es el proyecto **ARK305 Life OS** en Archie (base de datos, API GraphQL, inicio de sesión y fotos). La app se conecta con el SDK de Archie (`@archie/js-sdk` y `@archie/react-sdk`).
 
-1. En Supabase → SQL Editor, corre `supabase/schema.sql` (tablas, reglas de privacidad y carpeta de fotos).
-2. Copia `.env.example` a `.env.local` y pon la URL y la llave pública del proyecto.
-3. En Vercel agrega las mismas dos variables.
+- **Cuentas:** correo y contraseña con Archie Auth. La sesión vive en el navegador; el token se copia a la cookie `ark_token` para que el servidor sepa quién eres, y el servidor lo verifica con las llaves públicas de Archie.
+- **Perfiles:** tabla `member` (con `handle`, galería, redes, diagnóstico y gustos). Quien ofrece servicios tiene un `provider` y sus `service_offering`.
+- **Reservas:** "Reservar todo" en Mi día crea una `experience_booking` por servicio.
+- **Fotos:** almacenamiento de Archie (`files`).
 
-Sin esas variables la app funciona en modo demo, con el perfil de ejemplo.
+Para configurarlo sigue `docs/archie-setup.md` (campos nuevos, permisos, fotos, llaves y datos de ejemplo). Copia `.env.example` a `.env.local` y llena la llave anon. Sin esas variables la app funciona en modo demo, con el perfil de ejemplo.
 
 ## Experiencias
 
@@ -67,7 +70,6 @@ Sin esas variables la app funciona en modo demo, con el perfil de ejemplo.
 
 La persona elige al registrarse (o la primera vez que abre la app) y lo cambia en su perfil.
 El feed aprende de lo que ves, guardas, reservas y ocultas (`src/lib/taste.ts`).
-Para guardar la experiencia y los gustos en la cuenta, corre también `supabase/002_experiences.sql`.
 
 Niveles: **Gratis**, **Pro** ($79/mes) y **Súper Premium VIP** ($2,500/mes). Las tarifas de ARK están en `/niveles`.
 
