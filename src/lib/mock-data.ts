@@ -1,4 +1,4 @@
-// Datos de ejemplo. En las fases 2 y 3 esto se reemplaza por Archie.
+// Datos de ejemplo. En las fases 2 y 3 esto se reemplaza por Supabase.
 // Las fotos son de Unsplash (licencia libre) y se cambian por las fotos reales de cada proveedor.
 import type { Locale, Localized } from "./locale";
 
