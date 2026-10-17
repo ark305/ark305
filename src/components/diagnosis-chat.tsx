@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { saveDiagnosis, saveSide } from "@/lib/actions";
 import { allQuestions, answerLabel, buildSnapshot, nextQuestion, progress, type Answers, type Question } from "@/lib/diagnosis";
@@ -199,7 +199,9 @@ export function DiagnosisChat({ locale, initial, onClose }: { locale: Locale; in
 // Primera visita: el Diagnóstico a pantalla completa (se puede terminar después).
 export function DiagnosisGate({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState(true);
-  if (!open) return null;
+  // /video llega por QR desde el evento: va directo a reservar, sin el diagnóstico.
+  const path = usePathname();
+  if (!open || path.startsWith("/video")) return null;
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-ink">
       <div className="mx-auto max-w-[430px]">
