@@ -1,7 +1,10 @@
 // POST /api/ai — Asistente IA de ARK305 (Claude).
 // La llave de Anthropic vive solo aquí, en el servidor. Nunca llega al navegador.
+// La sesión y el límite diario viven en Archie.
 // v3: ARK combina Experiencias + Negocios y lee el modo del usuario (lifestyle/business/both).
 import { NextResponse } from "next/server";
+import { gql } from "@/lib/archie/gql";
+import { getSession } from "@/lib/archie/server";
 
 const MODELS = {
   default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5",
@@ -15,57 +18,38 @@ const SYSTEM = {
 
 export async function POST(req: Request) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_KEY =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!ANTHROPIC_API_KEY) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
 
-  // 1. Solo usuarios con sesión
-  const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!token || !SUPABASE_URL || !SUPABASE_KEY)
-    return NextResponse.json({ error: "auth" }, { status: 401 });
-  const me = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` },
-  });
-  if (!me.ok) return NextResponse.json({ error: "auth" }, { status: 401 });
-  const who = await me.json();
+  // 1. Solo usuarios con sesión de Archie (cookie verificada con las llaves públicas de Archie).
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "auth" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
   const locale = body.locale === "en" ? "en" : "es";
 
-  // 2. Límite diario por persona
+  // 2. Límite diario por persona (columnas ai_day y ai_count del member) y su modo.
   const limit = parseInt(process.env.AI_DAILY_LIMIT || "60", 10);
-  const bump = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bump_ai`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ lim: limit }),
-  });
-  if (bump.ok && (await bump.json()) === false)
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-
-  // 2b. Modo del usuario: lifestyle / business / both (si su perfil lo tiene)
   let modeLine = "";
   try {
-    const prof = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles?select=experience&id=eq.${who.id}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } }
+    const { member } = await gql<{ member: { items: { id: string; experience: string | null; aiDay: string | null; aiCount: number | null }[] } }>(
+      `query($a: String) { member(first: 1, filter: { authId: { equals: $a } }) { items { id experience aiDay aiCount } } }`,
+      { a: session.userId },
+      session.token,
     );
-    if (prof.ok) {
-      const rows = await prof.json().catch(() => []);
-      const exp = rows && rows[0] && rows[0].experience;
-      if (exp === "lifestyle" || exp === "business" || exp === "both") {
-        modeLine =
-          locale === "en"
-            ? ` The user is in ${exp} mode.`
-            : ` El usuario está en modo: ${exp}.`;
-      }
+    const row = member.items[0];
+    if (!row) return NextResponse.json({ error: "profile" }, { status: 403 });
+    const today = new Date().toISOString().slice(0, 10);
+    const used = row.aiDay?.slice(0, 10) === today ? (row.aiCount ?? 0) : 0;
+    if (used >= limit) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    await gql(`mutation($id: String, $in: MemberUpdateInput!) { updateMember(id: $id, input: $in) { id } }`, { id: row.id, in: { aiDay: today, aiCount: used + 1 } }, session.token);
+    const exp = row.experience;
+    if (exp === "lifestyle" || exp === "business" || exp === "both") {
+      modeLine = locale === "en" ? ` The user is in ${exp} mode.` : ` El usuario está en modo: ${exp}.`;
     }
-  } catch {
-    /* sin perfil: ARK detecta el modo por el contexto */
+  } catch (e) {
+    // Si Archie no responde, no llamamos a la IA: así el límite nunca se salta.
+    console.error("archie ai limit", e);
+    return NextResponse.json({ error: "upstream" }, { status: 502 });
   }
 
   // 3. Llamar a Claude
@@ -100,5 +84,5 @@ export async function POST(req: Request) {
     .filter((b: { type: string }) => b.type === "text")
     .map((b: { text: string }) => b.text)
     .join("\n");
-  return NextResponse.json({ text, user: who.id });
+  return NextResponse.json({ text, user: session.userId });
 }

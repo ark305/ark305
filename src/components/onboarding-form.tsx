@@ -94,6 +94,7 @@ export function OnboardingForm({ locale, uid, email }: { locale: Locale; uid: st
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      <input type="hidden" name="email" value={email ?? ""} />
       <PhotoPicker
         name="photo_url"
         uid={uid}

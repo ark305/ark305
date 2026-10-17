@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { miamiDate, SERVICE_TYPES, type Availability, type Booking, type ServiceType, type Slot } from "@/lib/booking";
 import type { Locale } from "@/lib/locale";
+import { BookingSignIn } from "./booking-sign-in";
 
 export type BookLabels = {
   live: string;
@@ -21,6 +21,9 @@ export type BookLabels = {
   booking: string;
   signIn: string;
   signInHint: string;
+  email: string;
+  sendLink: string;
+  linkSent: string;
   booked: string;
   demoBooked: string;
   slotTaken: string;
@@ -167,7 +170,7 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
                   </label>
                 </div>
                 {live && !signedIn ? (
-                  <Link href="/entrar?next=/reservar" className="flex h-11 items-center justify-center rounded-full bg-cream text-[14px] font-bold text-ink">{l.signIn}</Link>
+                  <BookingSignIn labels={l} />
                 ) : (
                   <button type="button" disabled={busy} onClick={book} className="h-11 rounded-full bg-cream text-[14px] font-bold text-ink disabled:opacity-60">{busy ? l.booking : l.confirm}</button>
                 )}

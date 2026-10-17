@@ -1,8 +1,8 @@
 "use client";
 
-import { createClient } from "./supabase/client";
+import { archie } from "./archie/browser";
 
-// Achica la foto en el teléfono (máx. 1600 px, JPG) y la sube a la carpeta de la persona.
+// Achica la foto en el teléfono (máx. 1600 px, JPG) y la sube al almacenamiento de Archie.
 async function shrink(file: File, max = 1600): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
@@ -16,9 +16,9 @@ async function shrink(file: File, max = 1600): Promise<Blob> {
 
 export async function uploadPhoto(file: File, uid: string, kind: string): Promise<string> {
   const blob = await shrink(file);
-  const supabase = createClient();
-  const path = `${uid}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
-  const { error } = await supabase.storage.from("media").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
-  if (error) throw error;
-  return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+  const files = archie().files;
+  const res = await files.upload(blob, { filename: `${kind}-${uid}-${Date.now()}.jpg`, contentType: "image/jpeg" });
+  const url = res.url ?? (await files.getUrl(res.fileId));
+  if (!url) throw new Error("upload_url");
+  return url;
 }
