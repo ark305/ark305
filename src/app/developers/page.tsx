@@ -4,7 +4,8 @@ import Link from "next/link";
 import { IconCheck, IconCrown } from "@/components/icons";
 import { NodeCalculator } from "@/components/node-calculator";
 import { ToastButton } from "@/components/toast";
-import { demoProject, devTiers, hoodDemand, matchedBuyers, nodeKinds, residentPerks } from "@/lib/developers";
+import { clubs } from "@/lib/clubs";
+import { demoProject, devTiers, hoodDemand, matchedBuyers, nodeKinds, pitchDevelopments, residentPerks, revenueStreams } from "@/lib/developers";
 import { getContext, getDictionary } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,6 +21,7 @@ export default async function DevelopersPage() {
   const d = t.developers;
   const pipeline = matchedBuyers.reduce((s, b) => s + b.budgetMid, 0);
   const maxBuyers = Math.max(...hoodDemand.map((h) => h.buyers));
+  const club = clubs[0];
 
   return (
     <div className="flex flex-col gap-8">
@@ -33,8 +35,82 @@ export default async function DevelopersPage() {
         <p className="relative text-[15px] leading-normal text-cream/80">{d.intro}</p>
       </section>
 
+      <section className="flex flex-col gap-3">
+        <div className="px-5">
+          <h2 className="font-display text-2xl font-semibold text-white">{d.landscapeTitle}</h2>
+          <p className="text-sm text-mute">{d.landscapeSub(pitchDevelopments.length)}</p>
+        </div>
+        <div className="no-scrollbar flex snap-x gap-3 overflow-x-auto px-5 pb-1">
+          {pitchDevelopments.map((p) => (
+            <Link
+              key={p.img}
+              href={p.club ? `/club?c=${p.club}` : "#planes"}
+              className={`relative flex h-[220px] w-[170px] shrink-0 snap-start flex-col justify-end overflow-hidden rounded-[22px] border p-3 ${p.club ? "border-gold/60" : "border-white/[0.08]"}`}
+            >
+              <Image src={`/pitch/landscape/${p.img}`} alt="" fill sizes="170px" className="object-cover" />
+              <div className="fade-bottom absolute inset-0" />
+              <span className={`relative mb-auto w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${p.club ? "gold-grad text-ink" : "bg-black/50 text-cream backdrop-blur"}`}>
+                {p.club ? d.clubLive : d.clubOpen}
+              </span>
+              <span className="relative text-[14px] leading-tight font-bold text-white">{p.name}</span>
+              <span className="relative text-[11px] text-cream/75">{p.place}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="flex flex-col gap-3 px-5">
-        <h2 className="font-display text-2xl font-semibold text-white">{d.howTitle}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-white">{d.networkTitle}</h2>
+            <p className="text-sm text-mute">{d.networkSub(club.name)}</p>
+          </div>
+          <span className="shrink-0 rounded-full border border-gold/40 bg-gold/[0.08] px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-gold-soft uppercase">{d.demo}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Stat label={d.networkStat} value={String(club.allies.length)} gold />
+          <Stat label={club.short} value={`${club.units} u.`} />
+        </div>
+        <ul className="flex flex-col divide-y divide-white/[0.06] rounded-[22px] border border-white/[0.08] bg-card px-4">
+          {club.allies.map((a) => (
+            <li key={a.id} className="flex items-start justify-between gap-3 py-3">
+              <span className="min-w-0">
+                <span className="block truncate text-[14px] font-bold text-white">{a.name}</span>
+                <span className="block text-[12px] text-mute">{a.hood}</span>
+              </span>
+              <span className="max-w-[55%] text-right text-[12px] leading-snug font-semibold text-gold-soft">{a.benefit[locale]}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="grid grid-cols-2 gap-2">
+          <Link href={`/mapa?capa=ally,residence&zona=${encodeURIComponent(club.hood)}`} className="flex h-11 items-center justify-center rounded-full border border-gold/40 px-2 text-center text-[12px] font-bold text-gold-soft">
+            {d.networkMap}
+          </Link>
+          <Link href={`/club?c=${club.slug}`} className="flex h-11 items-center justify-center rounded-full border border-gold/40 px-2 text-center text-[12px] font-bold text-gold-soft">
+            {d.networkClub}
+          </Link>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3 px-5">
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-white">{d.payTitle}</h2>
+          <p className="text-sm text-mute">{d.paySub}</p>
+        </div>
+        {revenueStreams.map((r) => (
+          <div key={r.id} className="rounded-[20px] border border-white/[0.08] bg-card p-4">
+            <p className="text-[15px] font-bold text-white">{r.name[locale]}</p>
+            <p className="mt-0.5 text-[13px] leading-snug text-cream/75">{r.body[locale]}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="flex flex-col gap-3 px-5">
+        <div>
+          <h2 className="font-display text-[28px] leading-tight font-semibold text-white">{d.title2}</h2>
+          <p className="mt-1 text-sm leading-snug text-mute">{d.intro2}</p>
+        </div>
+        <h3 className="text-[15px] font-bold text-white">{d.howTitle}</h3>
         <ol className="flex flex-col gap-2.5">
           {d.steps.map((s, i) => (
             <li key={s.title} className="flex gap-3 rounded-[20px] border border-white/[0.08] bg-card p-4">
@@ -164,7 +240,7 @@ export default async function DevelopersPage() {
         </Link>
       </section>
 
-      <section className="flex flex-col gap-4 px-5">
+      <section id="planes" className="flex scroll-mt-6 flex-col gap-4 px-5">
         <div>
           <h2 className="font-display text-2xl font-semibold text-white">{d.plansTitle}</h2>
           <p className="text-sm text-mute">{d.plansSub}</p>

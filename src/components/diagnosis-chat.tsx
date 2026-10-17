@@ -199,9 +199,9 @@ export function DiagnosisChat({ locale, initial, onClose }: { locale: Locale; in
 // Primera visita: el Diagnóstico a pantalla completa (se puede terminar después).
 export function DiagnosisGate({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState(true);
-  // /video llega por QR desde el evento: va directo a reservar, sin el diagnóstico.
+  // /video llega por QR desde el evento y /developers se comparte con desarrolladoras: entran directo, sin el diagnóstico.
   const path = usePathname();
-  if (!open || path.startsWith("/video")) return null;
+  if (!open || path.startsWith("/video") || path.startsWith("/developers")) return null;
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-ink">
       <div className="mx-auto max-w-[430px]">

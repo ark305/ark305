@@ -159,3 +159,41 @@ export const residentPerks: Localized[] = [
   { es: "Contenido y video para vender o rentar su unidad", en: "Content and video to sell or rent their unit" },
   { es: "Acceso a off-market y reventas antes del MLS", en: "Access to off-market and resales before the MLS" },
 ];
+
+// Los 14 desarrollos del pitch deck (fotos en /public/pitch/landscape). Solo Frida tiene club armado en el demo.
+export type PitchDevelopment = { name: string; place: string; img: string; club?: string };
+
+export const pitchDevelopments: PitchDevelopment[] = [
+  { name: "Frida Kahlo Wynwood Residences", place: "Wynwood", img: "frida.jpg", club: "frida" },
+  { name: "Twenty Sixth & 2nd", place: "Wynwood", img: "26-2.jpg" },
+  { name: "Kempinski Residences Miami Design District", place: "Design District", img: "kempinski.jpg" },
+  { name: "Jean-Georges Miami Tropic Residences", place: "Miami", img: "miamitropic.jpg" },
+  { name: "Delano Residences & Hotel Miami", place: "Miami", img: "delano.jpg" },
+  { name: "619 Brickell", place: "Brickell", img: "619brickell.jpg" },
+  { name: "One Twenty Brickell Signature", place: "Brickell", img: "onetwenty.jpg" },
+  { name: "Domus Brickell Center", place: "Brickell", img: "domus-center.jpg" },
+  { name: "Domus Brickell Park", place: "Brickell", img: "domus-park.jpg" },
+  { name: "Palm Tree Residences Miami", place: "Miami", img: "palmtree.jpg" },
+  { name: "Shoma Bay", place: "Miami", img: "shoma.jpg" },
+  { name: "Tyrian Residences", place: "Miami", img: "tyrian.jpg" },
+  { name: "House of Wellness", place: "Miami", img: "wellness.jpg" },
+  { name: "Pier Sixty-Six", place: "Miami", img: "pier66.jpg" },
+];
+
+export const revenueStreams: { id: string; name: Localized; body: Localized }[] = [
+  {
+    id: "dev",
+    name: { es: "Developers", en: "Developers" },
+    body: { es: "Setup del club + membresía por desarrollo. Su proyecto, su club, su marca, operado por ARK305.", en: "Club setup + membership per development. Their project, their club, their brand, run by ARK305." },
+  },
+  {
+    id: "services",
+    name: { es: "Servicios", en: "Services" },
+    body: { es: "Comisión sobre reservas: chofer, yate, chef, limpieza, fotos, talento y ARK Cars.", en: "Commission on bookings: driver, yacht, chef, cleaning, photos, talent and ARK Cars." },
+  },
+  {
+    id: "pass",
+    name: { es: "ARK Pass", en: "ARK Pass" },
+    body: { es: "Membresía premium para quienes viven fuera de un desarrollo aliado: descuentos y acceso prioritario.", en: "Premium membership for people outside a partner development: discounts and priority access." },
+  },
+];

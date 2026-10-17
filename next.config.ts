@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Pitch deck: /pitch sirve la página estática de public/pitch.
+  async rewrites() {
+    return [
+      { source: "/pitch", destination: "/pitch/index.html" },
+      { source: "/pitch/", destination: "/pitch/index.html" },
+    ];
+  },
   images: {
     remotePatterns: [
       // Fotos de ejemplo (Unsplash, licencia libre).
