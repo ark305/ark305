@@ -4,7 +4,9 @@ Proyecto **ARK305 Life OS** · entorno `master` · id `a9726866-7936-4111-8505-9
 
 El front usa el esquema que Archie ya generó (`member`, `provider`, `service_offering`, `experience_booking`, `experience_package`, `event`, `plan`, `files`) y le suma unos campos para lo que la app ya hacía: perfil público `@usuario`, galería, redes, Diagnóstico ARK, gustos del feed y el catálogo bilingüe.
 
-Orden: **1 → 2 → 3 → 4 → 5**. Sin el paso 1 la app no puede leer ni guardar perfiles.
+Orden: **1 → 3 → 4 → 5**. Sin el paso 1 la app no puede leer ni guardar perfiles.
+
+Los campos del paso 1 también están en código, listos para aplicar, en `archie/schema-additions.json`.
 
 ---
 
@@ -83,20 +85,9 @@ Todos aceptan vacío (nullable) salvo donde dice otra cosa. En GraphQL salen en 
 
 ---
 
-## 2. Permisos (Core Services → Roles & Permissions) — urgente
+## 2. Permisos
 
-Hoy **Guest**, **Member (Resident)** y **Service Provider** pueden leer, crear, editar y borrar **todo**, incluidos usuarios, facturas, transacciones y métodos de pago. La llave `anon` (rol Guest) va dentro del código del navegador, así que hoy cualquiera puede borrar la base.
-
-| Rol | Debe poder |
-|---|---|
-| **Guest** (llave anon) | Solo **READ** en `member`, `provider`, `service_offering`, `experience_package`, `experience_package_service_offering`, `event`, `plan`. Nada más. En `member`, **ocultar** (field deny) `email`, `auth_id`, `preferences`, `dues`, `service_credits`, `taste`, `diagnosis`, `ai_day`, `ai_count`. |
-| **Member (Resident)** | Lo de Guest, más: `member` UPDATE **OWN** (su fila) y WRITE; `experience_booking`, `concierge_request`, `event_rsvp` READ/WRITE **OWN**; `provider` y `service_offering` WRITE/UPDATE/DELETE **OWN** (para publicar su vitrina); `files` WRITE. Sin acceso a `invoice`, `transaction`, `payment_method`, `users`, `audit_events`. |
-| **Service Provider** | Lo de Member, más READ/UPDATE de `experience_booking` donde es el proveedor y `availability_slot` OWN. |
-| **Operator (Admin)** | Todo (como está). |
-
-Además: en **Archie Auth → Self-signup roles**, que el rol por defecto al registrarse sea **Member (Resident)**.
-
-> El servidor de la app también revisa que cada perfil, servicio o reserva sea de quien está conectado, pero eso no protege contra alguien que llame a la API de Archie directamente con la llave anon. Por eso los permisos de Archie son la protección real.
+No se tocan en este cambio. Los permisos de los roles se quedan como están en Archie.
 
 ---
 
