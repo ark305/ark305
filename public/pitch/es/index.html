@@ -1,0 +1,278 @@
+<!doctype html><html lang="es"><head><meta charset=utf8><base href="/pitch/"><meta name="description" content="ARK305 Life OS: LinkedIn + Uber, unidos por una IA que te conoce."><meta property="og:title" content="ARK305 Life OS"><meta property="og:image" content="https://ark305.com/pitch/slides/slide-1.jpg"><link rel="icon" href="/favicon.ico"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ARK305 Life OS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Epilogue:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a dark screening room — the deck runs as a reel; after the club slide the reel opens into the Miami landscape, one render per development; "Presentar" plays the whole sequence. */
+  :root {
+    --bg: #15120E;
+    --surface: #1F1B16;
+    --line: #342E26;
+    --fg: #F3ECE4;
+    --muted: #B3A99D;
+    --accent: #D4592F;
+    --display: "Archivo Black", "Arial Black", Arial, sans-serif;
+    --body: "Epilogue", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+  header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 20px; padding-block: 48px 8px; }
+  .brand { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  h1, h2 { font-family: var(--display); font-weight: 400; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  h1 { font-size: clamp(36px, 7vw, 64px); line-height: 1; }
+  h2 { font-size: clamp(30px, 5vw, 48px); line-height: 1.05; }
+  .sub { color: var(--muted); font-size: 17px; margin: 0; max-width: 62ch; }
+  button {
+    font: 600 15px/1 var(--body); color: var(--bg); background: var(--accent);
+    border: 0; border-radius: 999px; padding: 14px 24px; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+  button:focus-visible, .dev:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+  .reel { display: flex; flex-direction: column; gap: 24px; list-style: none; margin: 0; padding: 0; }
+  .reel li { display: flex; flex-direction: column; gap: 10px; }
+  .num { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .reel img {
+    display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 16 / 9;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: zoom-in;
+  }
+
+  .landscape { display: flex; flex-direction: column; gap: 24px; padding-block: 32px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .landscape-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+  .landscape-head > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .count { font-family: var(--display); font-size: clamp(48px, 9vw, 96px); line-height: 0.9; color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+  .dev {
+    position: relative; display: block; aspect-ratio: 4 / 5; max-width: 100%; overflow: hidden;
+    border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: zoom-in;
+    padding: 0; text-align: left; color: var(--fg); font: inherit;
+  }
+  .dev img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .dev .cap {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 48px 16px 16px;
+    background: linear-gradient(to top, rgba(11,9,7,.92), rgba(11,9,7,0));
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .dev .name { font-family: var(--display); font-size: 19px; line-height: 1.15; }
+  .dev .place { font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .badge {
+    position: absolute; top: 12px; left: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--accent); color: var(--bg); padding: 6px 10px; border-radius: 999px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dev img { transition: transform .5s ease; }
+    .dev:hover img { transform: scale(1.04); }
+  }
+  .credit { color: var(--muted); font-size: 13px; margin: 0; }
+  footer { color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--line); padding-top: 20px; }
+  footer b { color: var(--accent); font-weight: 600; }
+
+  .stage {
+    position: fixed; inset: 0; background: #0B0907; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  }
+  .frame {
+    position: relative; overflow: hidden; border-radius: 6px; background: #0B0907;
+    width: min(100%, calc((100dvh - 120px) * 16 / 9)); aspect-ratio: 16 / 9; max-width: 100%;
+    container-type: inline-size; cursor: pointer;
+  }
+  .frame > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  .frame.photo > img { object-fit: cover; }
+  .frame .shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,9,7,.9) 0%, rgba(11,9,7,.15) 45%, rgba(11,9,7,0) 70%); }
+  .frame .label { position: absolute; left: 5cqw; right: 5cqw; bottom: 5cqw; display: flex; flex-direction: column; gap: 1cqw; }
+  .frame .label .k { font-size: max(12px, 1.4cqw); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .frame .label .t { font-family: var(--display); font-size: max(22px, 4.6cqw); line-height: 1.02; color: var(--fg); text-wrap: balance; }
+  .frame .label .p { font-size: max(13px, 1.6cqw); color: var(--muted); }
+  .frame.intro { display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(2, 1fr); }
+  .frame.intro .tile { position: relative; overflow: hidden; }
+  .frame.intro .tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; }
+  .frame.intro .over { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 70%, rgba(11,9,7,.92), rgba(11,9,7,.55)); }
+  .frame.intro .label .t { font-size: max(26px, 6cqw); }
+  .frame.intro .big { font-family: var(--display); font-size: max(40px, 9cqw); line-height: .9; color: var(--accent); }
+  .bar { display: flex; align-items: center; gap: 16px; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 15px; }
+  .bar button { padding: 10px 18px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">Pitch deck · eMerge 2026</span>
+      <h1>ARK305 Life OS</h1>
+      <p class="sub">LinkedIn + Uber, unidos por una IA que te conoce.</p>
+    </div>
+    <button id="present" type="button">Presentar</button>
+  </header>
+
+  <ol class="reel" id="reelA"></ol>
+
+  <section class="landscape" id="landscape" aria-labelledby="landscape-title">
+    <div class="landscape-head">
+      <div>
+        <span class="eyebrow">El landscape de Miami</span>
+        <h2 id="landscape-title">Los desarrollos que están creando la nueva Miami</h2>
+        <p class="sub">Torres en Brickell, Wynwood y el Design District: el lugar donde el residente vive y donde ARK305 lleva su club.</p>
+      </div>
+      <span class="count" id="devCount">14</span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="credit">Renders tomados del material de ventas de cada desarrollo.</p>
+  </section>
+
+  <ol class="reel" id="reelB"></ol>
+
+  <footer>
+    <span>Descubre. Conecta. Crea. Crece.</span>
+    <b>ark305.com</b>
+  </footer>
+</div>
+
+<div class="stage" id="stage" hidden>
+  <div class="frame" id="frame" role="img"></div>
+  <div class="bar">
+    <button class="ghost" id="prev" type="button" aria-label="Slide anterior">←</button>
+    <span id="counter">1 / 1</span>
+    <button class="ghost" id="next" type="button" aria-label="Slide siguiente">→</button>
+    <button class="ghost" id="exit" type="button">Salir</button>
+  </div>
+</div>
+
+<script>
+  const deck = [
+    "ARK305 Life OS — portada con Miami de noche",
+    "Vivir en Miami está roto en 20 apps distintas",
+    "LinkedIn + Uber, unidos por una IA que te conoce",
+    "Pides en lenguaje natural. ARK IA reserva por ti.",
+    "Cada desarrollo tiene su propio club",
+    "El developer paga. El residente lo vive.",
+    "Descubre. Conecta. Crea. Crece. — ark305.com"
+  ];
+  const devs = [
+    { name: "Frida Kahlo Wynwood Residences", place: "Wynwood", img: "frida.jpg", badge: "Club en el demo" },
+    { name: "Twenty Sixth & 2nd", place: "Wynwood", img: "26-2.jpg" },
+    { name: "Kempinski Residences Miami Design District", place: "Design District", img: "kempinski.jpg" },
+    { name: "Jean-Georges Miami Tropic Residences", place: "", img: "miamitropic.jpg" },
+    { name: "Delano Residences & Hotel Miami", place: "", img: "delano.jpg" },
+    { name: "619 Brickell", place: "Brickell", img: "619brickell.jpg" },
+    { name: "One Twenty Brickell Signature", place: "Brickell", img: "onetwenty.jpg" },
+    { name: "Domus Brickell Center", place: "Brickell", img: "domus-center.jpg" },
+    { name: "Domus Brickell Park", place: "Brickell", img: "domus-park.jpg" },
+    { name: "Palm Tree Residences Miami", place: "", img: "palmtree.jpg" },
+    { name: "Shoma Bay", place: "", img: "shoma.jpg" },
+    { name: "Tyrian Residences", place: "", img: "tyrian.jpg" },
+    { name: "House of Wellness", place: "", img: "wellness.jpg" },
+    { name: "Pier Sixty-Six", place: "", img: "pier66.jpg" }
+  ];
+  document.getElementById("devCount").textContent = devs.length;
+
+  // Presentation order: slides 1–5, the landscape (intro + one per development), slides 6–7.
+  const seq = [];
+  deck.slice(0, 5).forEach((alt, i) => seq.push({ type: "slide", n: i + 1, alt }));
+  seq.push({ type: "intro" });
+  devs.forEach((d, i) => seq.push({ type: "dev", d, i }));
+  deck.slice(5).forEach((alt, i) => seq.push({ type: "slide", n: i + 6, alt }));
+
+  const total = deck.length;
+  function addSlide(list, n, alt) {
+    const li = document.createElement("li");
+    const label = document.createElement("span");
+    label.className = "num";
+    label.textContent = String(n).padStart(2, "0") + " / " + String(total).padStart(2, "0");
+    const img = document.createElement("img");
+    img.src = "slides/slide-" + n + ".jpg";
+    img.alt = alt;
+    img.loading = n <= 2 ? "eager" : "lazy";
+    img.width = 1920; img.height = 1080;
+    img.addEventListener("click", () => open(seq.findIndex(s => s.type === "slide" && s.n === n)));
+    li.append(label, img);
+    list.append(li);
+  }
+  deck.forEach((alt, i) => addSlide(document.getElementById(i < 5 ? "reelA" : "reelB"), i + 1, alt));
+
+  const grid = document.getElementById("grid");
+  devs.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "dev";
+    b.setAttribute("aria-label", "Ver " + d.name + " en pantalla completa");
+    b.innerHTML = '<img loading="lazy" alt=""><span class="cap"><span class="name"></span><span class="place"></span></span>';
+    b.querySelector("img").src = "landscape/" + d.img;
+    b.querySelector(".name").textContent = d.name;
+    b.querySelector(".place").textContent = d.place;
+    if (d.badge) { const s = document.createElement("span"); s.className = "badge"; s.textContent = d.badge; b.append(s); }
+    b.addEventListener("click", () => open(seq.findIndex(s => s.type === "dev" && s.i === i)));
+    grid.append(b);
+  });
+
+  const stage = document.getElementById("stage");
+  const frame = document.getElementById("frame");
+  const counter = document.getElementById("counter");
+  let current = 0;
+
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  function render() {
+    const s = seq[current];
+    frame.className = "frame";
+    frame.replaceChildren();
+    if (s.type === "slide") {
+      const img = el("img"); img.src = "slides/slide-" + s.n + ".jpg"; img.alt = "";
+      frame.append(img);
+      frame.setAttribute("aria-label", s.alt);
+    } else if (s.type === "intro") {
+      frame.classList.add("intro");
+      devs.forEach(d => { const t = el("div", "tile"); const img = el("img"); img.src = "landscape/" + d.img; img.alt = ""; t.append(img); frame.append(t); });
+      frame.append(el("div", "over"));
+      const lab = el("div", "label");
+      lab.append(el("span", "k", "El landscape de Miami"), el("span", "big", String(devs.length)), el("span", "t", "desarrollos que están creando la nueva Miami"));
+      frame.append(lab);
+      frame.setAttribute("aria-label", "El landscape de Miami: " + devs.length + " desarrollos");
+    } else {
+      frame.classList.add("photo");
+      const img = el("img"); img.src = "landscape/" + s.d.img; img.alt = "";
+      frame.append(img, el("div", "shade"));
+      const lab = el("div", "label");
+      lab.append(el("span", "k", (s.d.badge ? s.d.badge + " · " : "") + "Desarrollo " + (s.i + 1) + " de " + devs.length), el("span", "t", s.d.name));
+      if (s.d.place) lab.append(el("span", "p", s.d.place));
+      frame.append(lab);
+      frame.setAttribute("aria-label", s.d.name + (s.d.place ? ", " + s.d.place : ""));
+    }
+    counter.textContent = (current + 1) + " / " + seq.length;
+  }
+  function go(i) { current = (i + seq.length) % seq.length; render(); }
+  function open(i) {
+    go(i < 0 ? 0 : i);
+    stage.hidden = false;
+    if (stage.requestFullscreen) stage.requestFullscreen().catch(() => {});
+    document.getElementById("next").focus();
+  }
+  function close() {
+    stage.hidden = true;
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  }
+  document.getElementById("present").addEventListener("click", () => open(0));
+  document.getElementById("prev").addEventListener("click", () => go(current - 1));
+  document.getElementById("next").addEventListener("click", () => go(current + 1));
+  document.getElementById("exit").addEventListener("click", close);
+  frame.addEventListener("click", () => go(current + 1));
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && !stage.hidden) stage.hidden = true; });
+  document.addEventListener("keydown", (e) => {
+    if (stage.hidden) return;
+    if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); go(current + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(current - 1); }
+    else if (e.key === "Escape") close();
+  });
+</script>
+
+</body></html>
