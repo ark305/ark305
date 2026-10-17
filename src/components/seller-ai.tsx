@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { askArk } from "@/lib/ai-client";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import Link from "next/link";
@@ -18,13 +19,23 @@ export function SellerAi({ locale, name, handle, services, tone = "lifestyle" }:
   const t = tone === "business" ? { ...base, aiOutputs: biz.aiOutputs, aiActions: biz.aiActions } : base;
   const { show } = useToast();
   const [out, setOut] = useState<string | null>(null);
+  const [busy, setBusy] = useState<Action | null>(null);
+  const [live, setLive] = useState(false);
   const [first, second = services[0]] = services;
   const money = (n: number) => formatPrice(n, locale);
 
-  function run(a: Action) {
-    if (a === "post") setOut(t.aiOutputs.post(name, handle, first.title, money(first.price)));
-    if (a === "reply") setOut(t.aiOutputs.reply(handle, second.title, money(second.price)));
-    if (a === "price") setOut(t.aiOutputs.price(second.title, money(Math.round(second.price * 0.8)), money(Math.round(second.price * 1.6))));
+  function preview(a: Action) {
+    if (a === "post") return t.aiOutputs.post(name, handle, first.title, money(first.price));
+    if (a === "reply") return t.aiOutputs.reply(handle, second.title, money(second.price));
+    return t.aiOutputs.price(second.title, money(Math.round(second.price * 0.8)), money(Math.round(second.price * 1.6)));
+  }
+
+  async function run(a: Action) {
+    setBusy(a);
+    const r = await askArk<{ text: string }>({ kind: "seller", action: a, tone, locale, name, handle, services: [first, second, ...services.slice(2)] });
+    setLive(!!r);
+    setOut(r?.text ?? preview(a));
+    setBusy(null);
   }
 
   async function copy() {
@@ -52,15 +63,16 @@ export function SellerAi({ locale, name, handle, services, tone = "lifestyle" }:
       ) : (
       <div className="flex flex-wrap gap-2">
         {(Object.keys(t.aiActions) as Action[]).map((a) => (
-          <button key={a} type="button" onClick={() => run(a)} className="h-10 rounded-full border border-teal/30 bg-teal/10 px-3.5 text-[13px] font-semibold text-teal">
-            {t.aiActions[a]}
+          <button key={a} type="button" onClick={() => run(a)} disabled={!!busy} className="h-10 disabled:opacity-60 rounded-full border border-teal/30 bg-teal/10 px-3.5 text-[13px] font-semibold text-teal">
+            {busy === a ? "…" : t.aiActions[a]}
           </button>
         ))}
       </div>
       )}
       {out && (
         <div className="flex flex-col gap-2 rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3" aria-live="polite">
-          <p className="text-[15px] leading-normal text-cream">{out}</p>
+          <p className="text-[15px] leading-normal whitespace-pre-line text-cream">{out}</p>
+          <p className="text-[11px] text-mute">{live ? dict(locale).common.aiLive : dict(locale).day.aiPreview}</p>
           <button type="button" onClick={copy} className="self-end rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-bold text-ink">
             {t.copy}
           </button>

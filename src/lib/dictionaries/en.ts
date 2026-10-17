@@ -21,6 +21,7 @@ export const en: typeof es = {
     resell: "Resell",
   },
   common: {
+    aiLive: "ARK AI · live answer from Claude",
     soon: "Coming soon to ARK305",
     copied: "Link copied",
     copyFailed: "Couldn't copy",

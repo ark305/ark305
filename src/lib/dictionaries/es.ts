@@ -19,6 +19,7 @@ export const es = {
     resell: "Revender",
   },
   common: {
+    aiLive: "ARK IA · respuesta en vivo con Claude",
     soon: "Muy pronto en ARK305",
     copied: "Enlace copiado",
     copyFailed: "No se pudo copiar",
