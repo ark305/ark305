@@ -110,6 +110,14 @@ export default async function PrivatePage() {
 
       <PrivateMls locale={locale} snapshot={mls} compare={compareOffMarket(mls)} l={p.mls} />
 
+      <Link href="/developers" className="mx-5 flex items-center justify-between gap-3 rounded-[22px] border border-gold/30 bg-gradient-to-br from-[#2a2217] to-ink p-4">
+        <span>
+          <span className="block text-[15px] font-bold text-white">{t.developers.cta}</span>
+          <span className="block text-[13px] text-gold-soft">{t.developers.ctaSub}</span>
+        </span>
+        <IconCrown size={20} stroke="#EBD3A0" weight={1.8} />
+      </Link>
+
       <section className="flex flex-col gap-4 px-5">
         <h2 className="font-display text-2xl font-semibold text-white">{p.services}</h2>
         {privateServices.map((g) => (
