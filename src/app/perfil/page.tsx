@@ -10,7 +10,7 @@ import { getLevel } from "@/lib/levels";
 import { CURRENT_HANDLE, getProfile } from "@/lib/mock-data";
 import { LEVEL_COLOR } from "@/lib/mode";
 import { getViewer } from "@/lib/profiles-db";
-import { archieReady } from "@/lib/archie/config";
+import { supabaseReady } from "@/lib/supabase/config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getDictionary();
@@ -21,7 +21,7 @@ export default async function MyProfilePage() {
   const { locale, t, mode, level, exp } = await getContext();
 
   // Sin base de datos conectada: perfil de ejemplo (Lente 305), como antes.
-  if (!archieReady) {
+  if (!supabaseReady) {
     const me = getProfile(CURRENT_HANDLE)!;
     return <ProfileView profile={me} isOwner locale={locale} t={t} mode={mode} level={level} exp={exp} />;
   }
