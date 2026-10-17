@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { miamiDate, SERVICE_TYPES, type Availability, type Booking, type ServiceType, type Slot } from "@/lib/booking";
+import { demoAvailability, miamiDate, SERVICE_TYPES, type Availability, type Booking, type ServiceType, type Slot } from "@/lib/booking";
 import type { Locale } from "@/lib/locale";
 import { BookingSignIn } from "./booking-sign-in";
 
@@ -36,6 +36,23 @@ export type BookLabels = {
 };
 
 const hm = (t: string) => t.slice(0, 5);
+
+// Modo demo: las reservas viven solo en este navegador (id = "<slotId>|<timestamp>").
+const DEMO_KEY = "ark305.demoBookings";
+const readDemo = (): Booking[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(DEMO_KEY) ?? "[]");
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+const writeDemo = (list: Booking[]) => {
+  try {
+    localStorage.setItem(DEMO_KEY, JSON.stringify(list.slice(0, 30)));
+  } catch {}
+};
+const demoSlotId = (b: Booking) => b.id.split("|")[0];
 const miamiNow = () => new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date());
 
 export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels; locale: Locale; signedIn: boolean }) {
@@ -51,8 +68,18 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
   const [mine, setMine] = useState<Booking[]>([]);
 
   const load = useCallback(async (d: string) => {
-    const r = await fetch(`/api/availability?date=${d}`, { cache: "no-store" });
-    setData(await r.json());
+    try {
+      const r = await fetch(`/api/availability?date=${d}`, { cache: "no-store" });
+      const a: Availability = await r.json();
+      if (a.source === "demo") {
+        const list = readDemo();
+        const taken = new Set(list.filter((b) => b.status !== "cancelled").map(demoSlotId));
+        setMine(list);
+        setData({ ...a, slots: a.slots.map((s) => (taken.has(s.id) ? { ...s, available: false } : s)) });
+      } else setData(a);
+    } catch {
+      setData(demoAvailability(d));
+    }
   }, []);
   const loadMine = useCallback(async () => {
     if (!signedIn) return;
@@ -76,8 +103,26 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
     if (!pick || !data) return;
     setMsg(null);
     if (data.source === "demo") {
+      const svc = data.services.find((s) => s.id === pick.service_id);
+      const unitPrice = Number(svc?.price ?? 0);
+      const price = svc?.price_unit === "hour" ? unitPrice * 2 : svc?.price_unit === "person" ? unitPrice * guests : unitPrice;
+      const b: Booking = {
+        id: `${pick.id}|${Date.now()}`,
+        status: "confirmed",
+        guests,
+        notes: notes.trim() || null,
+        price,
+        price_unit: svc?.price_unit ?? "",
+        created_at: new Date().toISOString(),
+        catalog_services: svc ? { name: svc.name, type: svc.type, provider_name: svc.provider_name } : null,
+        availability_slots: { date: pick.date, start_time: pick.start_time, end_time: pick.end_time },
+      };
+      const list = [b, ...readDemo()];
+      writeDemo(list);
+      setMine(list);
       setData({ ...data, slots: data.slots.map((s) => (s.id === pick.id ? { ...s, available: false } : s)) });
       setPick(null);
+      setNotes("");
       return setMsg({ ok: true, text: l.demoBooked });
     }
     setBusy(true);
@@ -94,6 +139,10 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
   }
 
   async function cancel(id: string) {
+    if (id.includes("|")) {
+      writeDemo(readDemo().map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+      return load(date);
+    }
     const r = await fetch(`/api/bookings/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "cancel" }) });
     if (!r.ok) setMsg({ ok: false, text: l.error });
     load(date);
@@ -180,7 +229,7 @@ export function BookingApp({ labels: l, locale, signedIn }: { labels: BookLabels
         ))
       )}
 
-      {signedIn && (
+      {(signedIn || (data && !live)) && (
         <section className="flex flex-col gap-2">
           <h2 className="text-[15px] font-bold text-white">{l.mine}</h2>
           {mine.length === 0 && <p className="text-[13px] text-mute">{l.none}</p>}
