@@ -1,12 +1,7 @@
-// POST /api/ai — Asistente IA de ARK305 (Claude).
-// La llave de Anthropic vive solo aquí, en el servidor. Nunca llega al navegador.
+// POST /api/ai — Asistente IA de ARK305 (Claude por defecto, o Meta con AI_PROVIDER=meta; ver src/lib/llm.ts).
 // v3: ARK combina Experiencias + Negocios y lee el modo del usuario (lifestyle/business/both).
 import { NextResponse } from "next/server";
-
-const MODELS = {
-  default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5",
-  quick: process.env.ANTHROPIC_MODEL_QUICK || "claude-haiku-4-5-20251001",
-};
+import { AiError, aiProvider, complete } from "@/lib/llm";
 
 const SYSTEM = {
   es: "Eres ARK, el asistente personal de ARK305, la App de la Vida. Cubres dos mundos: EXPERIENCIAS (vida y lujo en Miami — chofer, yate, chef, limpieza, fotos, sesiones de contenido con creadores, talento, ARK Pass) y NEGOCIOS (agentes de IA de voz y chat, automatizaciones, HighLevel, sistemas que venden). Detecta en qué mundo está la persona y combina ambos cuando tenga sentido: muchos quieren vivir la experiencia Y montar el negocio (ej. un día de grabación en yate + su propio agente de IA). Pon siempre el contenido correcto según el escenario, sin mezclar de forma confusa. Hablas español con calidez premium, estilo Apple: claro, breve, sin relleno. No inventes precios ni disponibilidad; si no sabes algo, dilo.",
@@ -14,11 +9,10 @@ const SYSTEM = {
 };
 
 export async function POST(req: Request) {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_KEY =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!ANTHROPIC_API_KEY) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
+  if (!aiProvider()) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
 
   // 1. Solo usuarios con sesión
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
@@ -68,7 +62,7 @@ export async function POST(req: Request) {
     /* sin perfil: ARK detecta el modo por el contexto */
   }
 
-  // 3. Llamar a Claude
+  // 3. Llamar al modelo
   const prompt = String(body.prompt || "").slice(0, 60000);
   if (!prompt) return NextResponse.json({ error: "prompt" }, { status: 400 });
   const system =
@@ -76,29 +70,13 @@ export async function POST(req: Request) {
     modeLine +
     (body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
 
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: body.tier === "quick" ? MODELS.quick : MODELS.default,
-      max_tokens: 1500,
-      system,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (r.status === 429) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-  if (!r.ok) {
-    console.error("anthropic", r.status, await r.text());
+  try {
+    const { text, provider } = await complete({ system, prompt, maxTokens: 1500, quick: body.tier === "quick" });
+    return NextResponse.json({ text, user: who.id, provider });
+  } catch (e) {
+    const status = e instanceof AiError ? e.status : 0;
+    if (status === 429) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    console.error("ai", e);
     return NextResponse.json({ error: "upstream" }, { status: 502 });
   }
-  const data = await r.json();
-  const text = (data.content || [])
-    .filter((b: { type: string }) => b.type === "text")
-    .map((b: { text: string }) => b.text)
-    .join("\n");
-  return NextResponse.json({ text, user: who.id });
 }
