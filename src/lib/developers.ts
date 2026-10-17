@@ -133,3 +133,29 @@ export const matchedBuyers: MatchedBuyer[] = [
     ],
   },
 ];
+
+// ARK Nodos: personas y proveedores verificados con membresía. Lo que compra el developer es acceso a esta red.
+export type NodeKind = { id: "buyer" | "resident" | "owner" | "provider"; name: Localized; count: number; pays: Localized };
+
+export const nodeKinds: NodeKind[] = [
+  { id: "buyer", name: { es: "Compradores", en: "Buyers" }, count: 159, pays: { es: "Gratis o VIP $2,500/mes", en: "Free or VIP $2,500/mo" } },
+  { id: "resident", name: { es: "Residentes", en: "Residents" }, count: 412, pays: { es: "Membresía pagada por el developer", en: "Membership paid by the developer" } },
+  { id: "owner", name: { es: "Inversionistas", en: "Investor-owners" }, count: 96, pays: { es: "Membresía owner (renta corta)", en: "Owner membership (short-term rental)" } },
+  { id: "provider", name: { es: "Proveedores", en: "Providers" }, count: 238, pays: { es: "Comisión 10–18% por trabajo", en: "10–18% commission per job" } },
+];
+
+// Supuestos de la calculadora (demo, ajustables cuando se aprueben precios).
+export const RESIDENT_PRICE = 100; // US$ por unidad al mes, lo paga el developer
+export const RESIDENT_MONTHS = 24;
+export const SERVICE_SPEND = 3000; // US$ al año por nodo en servicios ARK
+export const SERVICE_TAKE = 0.12;
+export const VIP_UPTAKE = 0.02;
+export const VIP_YEAR = 30000;
+
+export const residentPerks: Localized[] = [
+  { es: "Concierge ARK desde el día del cierre", en: "ARK concierge from closing day" },
+  { es: "Mudanza, interiorismo y staff con tarifa de miembro", en: "Moving, interiors and staff at member rates" },
+  { es: "Eventos privados de la comunidad del edificio", en: "Private events for the building's community" },
+  { es: "Contenido y video para vender o rentar su unidad", en: "Content and video to sell or rent their unit" },
+  { es: "Acceso a off-market y reventas antes del MLS", en: "Access to off-market and resales before the MLS" },
+];

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { IconCheck, IconCrown } from "@/components/icons";
+import { NodeCalculator } from "@/components/node-calculator";
 import { ToastButton } from "@/components/toast";
-import { demoProject, devTiers, hoodDemand, matchedBuyers } from "@/lib/developers";
+import { demoProject, devTiers, hoodDemand, matchedBuyers, nodeKinds, residentPerks } from "@/lib/developers";
 import { getContext, getDictionary } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -112,6 +113,48 @@ export default async function DevelopersPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3 px-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl font-semibold text-white">{d.nodesTitle}</h2>
+            <p className="text-sm text-mute">{d.nodesSub}</p>
+          </div>
+          <span className="shrink-0 rounded-full border border-gold/40 bg-gold/[0.08] px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-gold-soft uppercase">{d.demo}</span>
+        </div>
+        <Stat label={d.nodesTotal} value={nodeKinds.reduce((s, n) => s + n.count, 0).toLocaleString("en-US")} gold />
+        <div className="grid grid-cols-2 gap-2">
+          {nodeKinds.map((n) => (
+            <div key={n.id} className="rounded-2xl border border-white/[0.08] bg-card p-3">
+              <p className="text-2xl font-bold text-white">{n.count}</p>
+              <p className="text-[13px] font-bold text-cream">{n.name[locale]}</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-mute">{n.pays[locale]}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3 px-5">
+        <div>
+          <h2 className="font-display text-2xl font-semibold text-white">{d.residentTitle}</h2>
+          <p className="text-sm text-mute">{d.residentSub}</p>
+        </div>
+        <div className="flex flex-col gap-3 rounded-[22px] border border-gold/30 bg-gradient-to-br from-[#2a2217] via-[#141210] to-ink p-4">
+          <p className="text-[15px] font-extrabold text-gold-soft">{d.residentPrice}</p>
+          <ul className="flex flex-col gap-1.5">
+            {residentPerks.map((k) => (
+              <li key={k.es} className="flex items-start gap-2.5 text-[14px] leading-snug text-cream/90">
+                <span className="mt-0.5 flex size-[18px] shrink-0 items-center justify-center rounded-full bg-gold/15">
+                  <IconCheck size={12} stroke="#D8B170" weight={2.6} />
+                </span>
+                {k[locale]}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <h3 className="mt-2 text-[15px] font-bold text-white">{d.calcTitle}</h3>
+        <NodeCalculator labels={d.calc} locale={locale} />
       </section>
 
       <section className="flex flex-col gap-4 px-5">
