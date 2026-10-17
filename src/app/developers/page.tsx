@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { IconCheck, IconCrown } from "@/components/icons";
 import { NodeCalculator } from "@/components/node-calculator";
 import { ToastButton } from "@/components/toast";
@@ -133,6 +134,9 @@ export default async function DevelopersPage() {
             </div>
           ))}
         </div>
+        <Link href="/mapa" className="flex h-11 items-center justify-center rounded-full border border-gold/40 text-[13px] font-bold text-gold-soft">
+          {d.mapLink}
+        </Link>
       </section>
 
       <section className="flex flex-col gap-3 px-5">
