@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "dev:api": "npm --prefix backend run start:dev",
+    "build:api": "npm --prefix backend run build",
+    "test:api": "npm --prefix backend test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
