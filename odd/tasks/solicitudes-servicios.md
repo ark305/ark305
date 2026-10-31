@@ -9,7 +9,7 @@ Pruebas: node:test HTTP, PostgreSQL local para RLS y verificación independiente
 
 ## Tasks
 - T1 | S1–S3 | delegado por continuidad de sesión extensa | implementado y verificado | RED: 13 aprobadas y 6 fallidas; GREEN: 20 aprobadas. Commit pendiente de estrategia de entrega.
-- T2 | S1–S2 | delegado junto con T1 | implementado y verificado | migración aplicada únicamente a PostgreSQL 17 temporal; RLS y permisos comprobados.
+- T2 | S1–S2 | delegado junto con T1 | completado | a5435a3; migración aplicada únicamente a PostgreSQL 17 temporal; RLS y permisos comprobados; revisión nativa reconocida sin hallazgos.
 - T3 | S1–S3 | independiente por riesgo 1/2/3 | verificado | siete rutas previas conservan estado, cuerpo y cabeceras; aislamiento A/B y hash intacto tras rechazos. Pruebas reproducibles incorporadas.
 
 ## Log
@@ -30,3 +30,6 @@ Pruebas: node:test HTTP, PostgreSQL local para RLS y verificación independiente
 - Decisión del usuario: «1», correspondiente a «Entregas encadenadas sobre dev». No autoriza publicación, PR ni integración remota en main.
 - División coherente en una sola pasada: entrega A, persistencia RLS con migración, prueba PostgreSQL y guía propia; entrega B, rutas Nest con adaptador, validación y pruebas HTTP. La entrega B depende de A. Mi día permanece separado. No se eliminan pruebas ni se comprime código para reducir líneas.
 - Cadena local prevista: dev → persistencia de solicitudes → API de solicitudes. Las futuras ramas y PR conservarán esta dependencia cuando se autorice publicarlos. El límite base de A es e4f9dde; commits aún pendientes.
+- Entrega A registrada: a5435a3 sobre e4f9dde, 288 líneas. Cuatro revisiones sin hallazgos; acknowledgement de review-8c3ec5f96c5c38b7 confirmó authority burned. No se publicó ni se aplicó SQL remoto.
+- Entrega B preparada en el índice: 436 adiciones + 13 eliminaciones = 449 líneas, sin contar esta actualización de seguimiento. Conserva rutas, validación, adaptador, pruebas y guía como una unidad funcional. Después de una única división coherente se recomienda size:exception para B, en vez de separar las pruebas del comportamiento. Pendiente aceptación de esa excepción y consentimiento propio de revisión; no se inició otra revisión.
+- 2026-10-31: el usuario respondió «si» a «¿Aceptás la excepción de tamaño para esta entrega?». Se acepta size:exception para B, manteniendo la unidad funcional y sus pruebas; la actualización administrativa de este seguimiento se incluye junto con ella. No autoriza publicación ni sustituye el consentimiento de revisión de B.
