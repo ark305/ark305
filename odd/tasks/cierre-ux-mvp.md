@@ -28,3 +28,5 @@ Pruebas: node:test, ESLint, TypeScript y verificación independiente por contrat
 - Usuario: «vamos a commitear y pushear a dev oara ir subiedo cambios, y kuego mejoramos las funcionalidades falrantes». Autoriza commits y push a dev, sin ampliación funcional.
 - Unidades previas: f809709 (autenticación, revisión nativa aprobada); f7df0ff (IA, pruebas aisladas 46/46, revisión nativa pendiente de corrección por continuación bloqueada); d88828b (solicitudes, 61/61 web y 19/19 Nest, lint y tipos aprobados; evaluación nativa medium/under_budget sin revisión solicitada).
 - El envío a dev no acredita preparación para producción ni resuelve el hallazgo pendiente de IA. SMTP, validación del despliegue y documentación histórica requieren seguimiento.
+
+- Commit UX: 09bdc33. Exportación aislada: 65/65 pruebas web, lint y tipos aprobados; spot check 4/4. Evaluación nativa medium/under_budget, sin nueva revisión requerida. Solicitudes d88828b conserva 19/19 pruebas Nest aprobadas. Se autoriza push a dev como entrega de desarrollo; la revisión de IA permanece pendiente.

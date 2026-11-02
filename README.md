@@ -2,6 +2,8 @@
 
 La app real de ARK305, hecha con el diseño nuevo (negro, dorado y crema).
 
+> **Para entender el proyecto:** consulte la [guía del producto, estado actual y líneas de trabajo](docs/GUIA_DEL_PROYECTO.md). Distingue las funciones implementadas, las demostraciones y las prioridades propuestas; algunas referencias a fases en este README son anteriores al código actual.
+
 ## Cómo abrirla en tu compu
 
 ```bash

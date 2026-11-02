@@ -34,3 +34,5 @@ Pruebas iniciales: node:test con HTTP simulado, lint, compilación y verificaci�
 - Límite adicional: la deduplicación del navegador solo existe mientras el componente está montado; el contrato backend no tiene clave de idempotencia persistente. Tras recargar se consulta/reconcilia historial y un resultado incierto no se reintenta en automático.
 
 - Entrega: el usuario respondió «si» a la excepción de tamaño para conservar IA y solicitudes como unidades completas con sus pruebas y documentación. Solo commits locales en dev, sin push. La revisión nativa mantiene consentimiento independiente por candidato.
+
+- Entrega del 2 de noviembre: commit d88828b, 61/61 pruebas web y 19/19 Nest aprobadas en exportación del índice, lint y tipos aprobados. El usuario autoriza push a dev; sustituye la restricción anterior de entrega solo local, no autoriza despliegue productivo ni nuevas funciones.
