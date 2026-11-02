@@ -7,6 +7,7 @@ import { defaultEntry, getItem } from "@/lib/catalog";
 import { day } from "@/lib/day-store";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
+import type { Answers } from "@/lib/diagnosis";
 import { FOLLOWING, formatCount, formatPrice, getProfile, posts, profiles, type Post } from "@/lib/mock-data";
 import { LEVEL_COLOR, type Level, type Side } from "@/lib/mode";
 import { taste, useTaste } from "@/lib/taste";
@@ -46,6 +47,7 @@ export function Feed({
   labels,
   initialTaste,
   signedIn,
+  fromAccount,
 }: {
   locale: Locale;
   level: Level;
@@ -56,6 +58,7 @@ export function Feed({
   labels: { other: string; tag: string };
   initialTaste: Record<string, number> | null;
   signedIn: boolean;
+  fromAccount: Answers | null;
 }) {
   const t = dict(locale);
   const [tab, setTab] = useState<Tab>("forYou");
@@ -99,7 +102,8 @@ export function Feed({
       </header>
       <p className="-mt-3 px-4 text-[13px] text-mute">{labels.tag}</p>
 
-      <NextStep locale={locale} />
+      <NextStep locale={locale} fromAccount={fromAccount} signedIn={signedIn} />
+      <p className="px-4 text-xs text-mute">{t.feed.prototypeNote}</p>
 
       {/* Historias */}
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4">

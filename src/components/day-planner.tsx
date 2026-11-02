@@ -6,7 +6,7 @@ import { entryPrice, getItem, packages, planSummary, type Plan } from "@/lib/cat
 import { requestDayPlan, type DayProvenance } from "@/lib/day-ai";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseReady } from "@/lib/supabase/config";
-import { day, useDay } from "@/lib/day-store";
+import { day, plannerGuests, useDay, usePlannerGuests } from "@/lib/day-store";
 import { dict, formatTime } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
@@ -16,7 +16,7 @@ import { DayRequests } from "./day-requests";
 
 const TEAL = "#7FC2B7";
 
-// Mi día: ARK IA arma el plan, lo agregas a tu día y lo reservas completo.
+// Meta proposes a plan; adding it to the draft does not submit service requests.
 export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; discount: number; levelName: string; initialPrompt?: string }) {
   const t = dict(locale).day;
   const money = (n: number) => formatPrice(n, locale);
@@ -24,7 +24,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
   const entries = useDay();
 
   const [text, setText] = useState(initialPrompt);
-  const [guests, setGuests] = useState(4);
+  const guests = usePlannerGuests();
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [provenance, setProvenance] = useState<DayProvenance | null>(null);
@@ -46,7 +46,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
       const { data, error } = await createClient().auth.getSession();
       if (error || !data.session) throw new Error("auth");
       const result = await requestDayPlan({ prompt, guests, locale }, data.session.access_token);
-      setGuests(result.plan.guests);
+      plannerGuests.set(result.plan.guests);
       setPlan(result.plan);
       setProvenance(result.provenance);
     } catch (error) {
@@ -102,13 +102,13 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
           <div className="flex items-center gap-2 text-sm text-cream/80">
             <IconPeople size={18} stroke="#EFE6D8" />
             <span className="sr-only">{t.people}</span>
-            <button type="button" aria-label="−" onClick={() => setGuests((g) => Math.max(1, g - 1))} className="flex size-8 items-center justify-center rounded-full bg-white/10 text-lg">
+            <button type="button" aria-label="−" onClick={() => plannerGuests.set(Math.max(1, guests - 1))} className="flex size-8 items-center justify-center rounded-full bg-white/10 text-lg">
               −
             </button>
             <span className="w-6 text-center font-bold tabular-nums" aria-live="polite">
               {guests}
             </span>
-            <button type="button" aria-label="+" onClick={() => setGuests((g) => Math.min(20, g + 1))} className="flex size-8 items-center justify-center rounded-full bg-white/10 text-lg">
+            <button type="button" aria-label="+" onClick={() => plannerGuests.set(Math.min(20, guests + 1))} className="flex size-8 items-center justify-center rounded-full bg-white/10 text-lg">
               +
             </button>
           </div>
@@ -194,6 +194,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
       {/* Tu día */}
       <section ref={dayRef} className="flex scroll-mt-6 flex-col gap-3">
         <h2 className="font-display text-2xl font-semibold text-white">{t.yourDay}</h2>
+        <p className="text-xs leading-relaxed text-mute">{t.draftNote}</p>
         {entries.length === 0 ? (
           <p className="rounded-[22px] border border-dashed border-white/15 px-5 py-8 text-center text-[15px] text-mute">{t.empty}</p>
         ) : (

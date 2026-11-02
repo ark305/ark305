@@ -72,6 +72,7 @@ export const en: typeof es = {
     signInAgain: "Sign in again to continue.",
     redo: "Redo diagnosis",
     start: "Take my diagnosis",
+    viewSnapshot: "View my Snapshot",
     cardTitle: "Your ARK Snapshot",
     cardEmpty: "Tell ARK who you are and the app shapes itself around you.",
   },
@@ -174,6 +175,7 @@ export const en: typeof es = {
     empty: "No services here yet.",
   },
   feed: {
+    prototypeNote: "Prototype content: sample profiles and posts. Providers, prices, and availability are not verified.",
     tabs: { forYou: "For you", following: "Following", near: "Nearby" },
     yourStory: "Your story",
     aiTitle: "Plan your day with ARK AI",
@@ -210,6 +212,7 @@ export const en: typeof es = {
     },
   },
   day: {
+    draftNote: "This draft stays in this browser. Adding services does not send requests; received requests appear in your history.",
     title: "Plan your Miami day.",
     sub: "Build an idea for your day and send interest requests. Availability and bookings are not confirmed.",
     aiLabel: "Tell ARK what you want to do",
@@ -218,7 +221,7 @@ export const en: typeof es = {
     building: "Planning your day…",
     needText: "Write what you'd like to do.",
     suggestions: ["Saturday with 8 friends on the water", "Brickell night for 6", "Sunset for two with photos", "Helicopter and drone over South Beach"],
-    people: "People",
+    people: "People for new plans",
     aiPreview: "Plans generated with Meta. Errors are not replaced with simulated responses.",
     aiUnavailable: "Configure Supabase to sign in and use Meta in My day.",
     aiSignIn: "Sign in to generate your plan with Meta.",
@@ -308,7 +311,7 @@ export const en: typeof es = {
       post: (name: string, handle: string, service: string, price: string) =>
         `📸 ${service} with ${name}. Turquoise water, sunset light and edited photos in 48 hours. From ${price}. Book directly on my ARK profile 👉 ark305.com/@${handle} #miami #yachts #photography`,
       reply: (handle: string, service: string, price: string) =>
-        `Hi! Thanks for reaching out 🙌 The ${service.toLowerCase()} is ${price} and includes editing. I have a slot this Saturday afternoon. Want me to hold it? You can book directly here: ark305.com/@${handle}`,
+        `Hi! Thanks for reaching out. ${service}: an indicative ${price} reference in this prototype. Scope, price, and availability must be confirmed; this message does not book anything. Sample profile: ark305.com/@${handle}`,
       price: (service: string, low: string, high: string) =>
         `For a ${service.toLowerCase()} in Miami, creators at your level charge between ${low} and ${high}. Your price is in range. Add a short reel and you could raise it 15%.`,
     },

@@ -522,7 +522,7 @@ function baseSnapshot(a: Answers): Base | null {
       ]),
       gaps: pick([
         a.support === "none" || !a.support ? L("Todavía no tienes un equipo fijo que te ayude", "You don't have a regular support team yet") : null,
-        L("Aún no tienes días guardados para repetir", "No saved days to rebook yet"),
+        L("Confirma los detalles de tu plan antes de enviar solicitudes", "Confirm your plan details before sending requests"),
         L("Todavía no sigues a proveedores", "You're not following providers yet"),
         seasonal ? L("Tu casa queda sola cuando no estás", "Your home sits empty while you're away") : null,
       ] as Localized[]),

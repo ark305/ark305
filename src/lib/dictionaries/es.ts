@@ -70,6 +70,7 @@ export const es = {
     signInAgain: "Vuelve a iniciar sesión para continuar.",
     redo: "Rehacer diagnóstico",
     start: "Hacer mi diagnóstico",
+    viewSnapshot: "Ver mi Snapshot",
     cardTitle: "Tu ARK Snapshot",
     cardEmpty: "Cuéntale a ARK quién eres y la app se arma a tu medida.",
   },
@@ -172,6 +173,7 @@ export const es = {
     empty: "Todavía no hay servicios aquí.",
   },
   feed: {
+    prototypeNote: "Contenido de prototipo: perfiles y publicaciones de ejemplo. No acredita proveedores, precios ni disponibilidad.",
     tabs: { forYou: "Para ti", following: "Siguiendo", near: "Cerca de ti" },
     yourStory: "Tu historia",
     aiTitle: "Arma tu día con ARK IA",
@@ -208,6 +210,7 @@ export const es = {
     },
   },
   day: {
+    draftNote: "Este borrador se conserva en este navegador. Agregar servicios no envía solicitudes; las recibidas aparecen en tu historial.",
     title: "Arma tu día en Miami.",
     sub: "Arma una idea para tu día y envía solicitudes de interés. No confirma disponibilidad ni reserva.",
     aiLabel: "Cuéntale a ARK qué quieres hacer",
@@ -216,7 +219,7 @@ export const es = {
     building: "Armando tu día…",
     needText: "Escribe qué te gustaría hacer.",
     suggestions: ["Sábado con 8 amigos en el agua", "Noche en Brickell para 6", "Atardecer en pareja con fotos", "Helicóptero y drone sobre South Beach"],
-    people: "Personas",
+    people: "Personas para nuevos planes",
     aiPreview: "Planes generados con Meta. Los errores no se sustituyen por respuestas simuladas.",
     aiUnavailable: "Configura Supabase para iniciar sesión y usar Meta en Mi día.",
     aiSignIn: "Inicia sesión para generar tu plan con Meta.",
@@ -306,7 +309,7 @@ export const es = {
       post: (name: string, handle: string, service: string, price: string) =>
         `📸 ${service} con ${name}. Agua turquesa, luz de atardecer y fotos editadas en 48 horas. Desde ${price}. Reserva directo en mi perfil ARK 👉 ark305.com/@${handle} #miami #yates #fotografia`,
       reply: (handle: string, service: string, price: string) =>
-        `¡Hola! Gracias por escribir 🙌 La ${service.toLowerCase()} cuesta ${price} e incluye edición. Tengo espacio este sábado en la tarde. ¿Te la aparto? Puedes reservar directo aquí: ark305.com/@${handle}`,
+        `¡Hola! Gracias por escribir. ${service}: referencia orientativa de ${price} en este prototipo. El alcance, precio y disponibilidad deben confirmarse; este mensaje no reserva nada. Perfil de ejemplo: ark305.com/@${handle}`,
       price: (service: string, low: string, high: string) =>
         `Para ${service.toLowerCase()} en Miami, los creadores con tu nivel cobran entre ${low} y ${high}. Tu precio está en el rango. Si agregas un reel corto, podrías subirlo 15%.`,
     },
