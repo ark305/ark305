@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { backendApi } from "@/lib/backend-api";
 import { safeLocalNext } from "@/lib/auth-flow";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,6 +22,15 @@ export async function GET(request: NextRequest) {
   if (purpose === "setup") return NextResponse.redirect(`${origin}${SET_PASSWORD}?purpose=setup`);
   if (purpose === "recovery") return NextResponse.redirect(`${origin}${SET_PASSWORD}?purpose=recovery`);
 
-  const { data: profile } = await supabase.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
-  return NextResponse.redirect(`${origin}${profile ? next : "/bienvenida"}`);
+  try {
+    if (!data.session?.access_token) throw new Error("Missing session");
+    const viewer = await backendApi<{ row: { id: string } | null }>("/profiles/me", {
+      token: data.session.access_token,
+    });
+    return NextResponse.redirect(`${origin}${viewer.row ? next : "/bienvenida"}`);
+  } catch {
+    return Response.json({ error: "backend_unavailable" }, {
+      status: 503, headers: { "Cache-Control": "no-store" },
+    });
+  }
 }

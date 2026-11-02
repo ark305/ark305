@@ -53,20 +53,23 @@ function callbackHarness(options = {}) {
       exchangeCodeForSession: async (code) => {
         calls.push(['exchange', code]);
         return options.authError ? { data: { user: null }, error: new Error('invalid') } : {
-          data: { user: { id: 'account-1' } }, error: null,
+          data: { user: { id: 'account-1' }, session: { access_token: 'session-token' } }, error: null,
         };
       },
     },
-    from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: options.profile ? { id: 'account-1' } : null }) }) }),
-    }),
+
   };
   const context = {
     exports,
     require: (name) => name === 'next/server'
       ? { NextResponse: { redirect: (url) => new Response(null, { status: 302, headers: { location: String(url) } }) } }
-      : { safeLocalNext: loadAuthFlow().safeLocalNext, createClient: async () => supabase },
-    URL,
+      : { safeLocalNext: loadAuthFlow().safeLocalNext, createClient: async () => supabase,
+          backendApi: async (path, config) => {
+            calls.push(['backend', path, config.token]);
+            if (options.backendError) throw new Error('Backend unavailable');
+            return { row: options.profile ? { id: 'account-1' } : null };
+          } },
+    URL, Response,
   };
   vm.runInNewContext(callbackCompiled, context);
   return {
@@ -156,3 +159,17 @@ test('password setup page requires a verified Supabase user session', async () =
   assert.deepEqual(JSON.parse(JSON.stringify(verified.signedOut)), [{ scope: 'local' }]);
 });
 
+
+test('callback uses Nest profile lookup with exchanged session and defaults to diagnosis', async () => {
+  const harness = callbackHarness({ profile: true });
+  const response = await harness.invoke('?code=legacy-code');
+  assert.equal(response.headers.get('location'), 'https://ark305.example/diagnostico');
+  assert.deepEqual(harness.calls, [['exchange', 'legacy-code'], ['backend', '/profiles/me', 'session-token']]);
+});
+
+test('callback does not treat unavailable Nest as a missing profile', async () => {
+  const harness = callbackHarness({ backendError: true });
+  const response = await harness.invoke('?code=legacy-code');
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+});
