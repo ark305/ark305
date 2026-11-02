@@ -1,19 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { safeLocalNext } from "@/lib/auth-flow";
 import { createClient } from "@/lib/supabase/server";
 
-// El enlace del correo llega aquí: abrimos la sesión y mandamos a la persona a su perfil
-// (o a crear su perfil si es la primera vez).
+const SET_PASSWORD = "/crear-contrasena";
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const next = searchParams.get("next");
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/perfil";
+  const purpose = searchParams.get("purpose");
+  const requestedNext = searchParams.get("next");
+  const next = requestedNext === null ? "/diagnostico" : safeLocalNext(requestedNext);
 
-  if (!code) return NextResponse.redirect(`${origin}/entrar?error=link`);
+  if (!code || (purpose && purpose !== "setup" && purpose !== "recovery")) {
+    return NextResponse.redirect(`${origin}/entrar?error=link`);
+  }
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) return NextResponse.redirect(`${origin}/entrar?error=link`);
 
+  if (purpose === "setup") return NextResponse.redirect(`${origin}${SET_PASSWORD}?purpose=setup`);
+  if (purpose === "recovery") return NextResponse.redirect(`${origin}${SET_PASSWORD}?purpose=recovery`);
+
   const { data: profile } = await supabase.from("profiles").select("id").eq("id", data.user.id).maybeSingle();
-  return NextResponse.redirect(`${origin}${profile ? safeNext : "/bienvenida"}`);
+  return NextResponse.redirect(`${origin}${profile ? next : "/bienvenida"}`);
 }
