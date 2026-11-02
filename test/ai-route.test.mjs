@@ -20,10 +20,11 @@ const source = fs.readFileSync(new URL('../src/app/api/ai/route.ts', import.meta
 const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 function harness(options = {}) {
   const calls = [];
-  const context = { exports: {}, require, process: { env: { ARK_API_URL: 'http://127.0.0.1:3001', ...options.env } }, AbortSignal, URL, TextEncoder,
+  const deadlines = [];
+  const context = { exports: {}, require, process: { env: { ARK_API_URL: 'http://127.0.0.1:3001', ...options.env } }, AbortSignal: options.elapsed === undefined ? AbortSignal : { timeout(ms) { deadlines.push(ms); return new AbortController().signal; } }, URL, TextEncoder,
     Response,
     fetch: async (url, init = {}) => { calls.push({ url, ...init });
-      if (options.reject) throw new Error('network');
+      if (options.reject || (options.elapsed !== undefined && options.elapsed >= deadlines.at(-1))) throw new Error('network');
       return options.response?.clone() ?? Response.json({ text: 'Hello', user: 'user-1' });
     } };
   vm.runInNewContext(code, context);
@@ -83,4 +84,20 @@ test('Next AI BFF retains the existing 60,000-character prompt allowance for Uni
 test('day planner component uses the API helper instead of local generation', () => {
   const component = fs.readFileSync(new URL('../src/components/day-planner.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(component, /planDay\(/); assert.match(component, /requestDayPlan\(/);
+});
+
+test('AI proxy allows preprocessing plus the full provider deadline without retrying', async () => {
+  for (const elapsed of [61_000, 74_000]) {
+    const slow = harness({ elapsed, response: Response.json({ reply: 'Ready', answers: {}, complete: false }) });
+    const response = await slow.invoke({ task: 'diagnosis', locale: 'es', message: 'Hello', answers: {} });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).reply, 'Ready');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(slow.calls.length, 1);
+  }
+  const expired = harness({ elapsed: 81_000 });
+  const response = await expired.invoke();
+  assert.equal(response.status, 503);
+  assert.deepEqual(await response.json(), { error: 'upstream' });
+  assert.equal(expired.calls.length, 1);
 });

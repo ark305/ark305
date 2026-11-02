@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
       body,
       cache: "no-store",
       redirect: "error",
-      signal: AbortSignal.timeout(60_000),
+      // Nest can spend 3 x 5s on identity/context, then 60s on the provider.
+      signal: AbortSignal.timeout(80_000),
     });
     let payload: unknown;
     try { payload = await response.json(); } catch { return errorResponse(502, "upstream"); }
