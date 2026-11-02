@@ -54,7 +54,8 @@ export const getViewer = cache(async (): Promise<Viewer> => {
     }
     return { userId: result.userId, email: user.user.email ?? null, row: result.row, services: result.services, profile: result.row ? toProfile(result.row, result.services) : null };
   } catch {
-    return { ...empty, userId: user.user.id, email: user.user.email ?? null };
+    // A failed lookup must never be interpreted as a missing account profile.
+    throw new Error('Account temporarily unavailable');
   }
 });
 

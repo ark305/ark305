@@ -8,6 +8,32 @@ import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
 const root = path.resolve('src');
+
+test('fixed navigation has a scroll clearance as well as content padding', () => {
+  const css = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8');
+  assert.match(css, /scroll-padding-bottom:\s*calc\(124px\s*\+\s*env\(safe-area-inset-bottom,\s*0px\)\)/);
+});
+
+test('error screens offer an explicit retry without exposing the original error', () => {
+  let retries = 0;
+  const load = loader();
+  const ErrorPage = load('@/app/error').default;
+  const GlobalError = load('@/app/global-error').default;
+  const page = ErrorPage({ error: new Error('private upstream detail'), retry: () => retries++ });
+  const panel = page.type(page.props);
+  const find = (node, type) => {
+    if (!node || typeof node !== 'object') return null;
+    if (node.type === type) return node;
+    return [node.props?.children].flat().map((child) => find(child, type)).find(Boolean);
+  };
+  assert.doesNotMatch(JSON.stringify(panel), /private upstream detail/);
+  assert.match(JSON.stringify(panel), /No pudimos cargar/);
+  find(panel, 'button').props.onClick();
+  assert.equal(retries, 1);
+  const global = GlobalError({ error: new Error('private upstream detail'), retry: () => retries++ });
+  assert.equal(global.type, 'html');
+  assert.equal(global.props.children.type, 'body');
+});
 function loader(overrides = {}, storage = new Map()) {
   const cache = new Map();
   const react = { useSyncExternalStore: (_subscribe, read) => read() };

@@ -3,11 +3,14 @@ Objetivo: migrar negocio y acceso a datos desde Next a Nest; después implementa
 Verificación: node:test HTTP, pruebas diferenciales, TypeScript y lint. Previsión global superior a 1500 líneas; unidades coherentes cercanas a 400 líneas, sin recortar pruebas. No llamadas reales a Meta ni cambios remotos de datos.
 
 ## Specs
+- S4: «dale cerremos primero esos fallos, y siguiente a esto construimos la bandeja de solicitudes». Primero corregir controles tapados por la navegación y errores que muestran un perfil inexistente cuando falla el backend; comprobar recuperación sin nuevas llamadas a Meta. Luego continuar S2, sujeto a la definición de roles y estados ya indicada.
 - S1: «si terminemos de pasar lo que queda de api en next a nest». Migrar IA y operaciones de negocio/datos actualmente alojadas en rutas y acciones Next. Mantener los contratos observables y el aislamiento por usuario. Next conserva adaptadores de sesión, cookies, redirecciones y revalidación; no debe conservar implementaciones alternativas del negocio al finalizar.
 - S2: «y luego hacer ka gestion y seguimiento de solicitudes». Comenzar después de S1. Los roles operativos y estados permitidos requieren una decisión de producto antes de habilitar escritura administrativa; no se inventan reservas o proveedores confirmados.
 - S3: «siguiente q eso creamos un repo para el.bacm». Extraer el backend después de S2, sin dependencias de archivos de Next. Antes de crear un repositorio remoto confirmar destino y visibilidad; preservar historial y configuración privada.
 
 ## Tasks
+- T9 | S4 | inline: correcciones relacionadas de experiencia y errores | implementado, commit de esta unidad | mantener controles fuera de la navegación fija y distinguir errores de consulta de perfiles ausentes.
+- T10 | S4 | verificación independiente por riesgos 2 y 3 | funcionalmente verificado; revisión nativa pendiente | comprobar recuperación, identidad y navegación; después definir permisos de la bandeja T7.
 - T1 | S1 | inline, unidad acotada | implementado y verificado; revisión nativa pendiente | API de conversación general en Nest con identidad y cuota; Next permanece sin cambio hasta completar los modos estructurados.
 - T2 | S1 | inline salvo motivo de delegación documentado | pendiente | contratos y validadores de diagnóstico y planificación independientes de Next, con compatibilidad diferencial.
 - T3 | S1 | delegado: unidad IA paralela | implementado y verificado; commit pendiente | conectar Next a la IA de Nest mediante un adaptador fino y retirar la orquestación duplicada; configurar variables de servidor sin exponer claves.
@@ -18,6 +21,10 @@ Verificación: node:test HTTP, pruebas diferenciales, TypeScript y lint. Previsi
 - T8 | S3 | pendiente después de S2 | pendiente | separar repositorio backend con historial, pruebas y configuración propia.
 
 ## Log
+- S4: RED 4 fallos, GREEN 15/15 focalizados; suite web 63/63, TypeScript y ESLint aprobados. Verificador independiente: 15/15, seis comparaciones de comportamiento previo idénticas y dos cambios de error intencionados; sin bloqueantes. Navegador: botón queda a y=775, por encima de navegación y=810, hit-test correcto. API detenida de forma controlada: /perfil mantiene URL y muestra recuperación, no bienvenida. API restaurada: Reintentar vuelve al perfil existente. En desarrollo, Next muestra además su overlay; no es la interfaz de producción. Sin llamadas Meta ni escrituras de datos en esta unidad. Risk: items 2 y 3. Reversión: retirar boundaries, cambio de catch y scroll-padding con sus pruebas; no incluye migraciones.
+- 2026-11-02: «dale cerremos primero esos fallos, y siguiente a esto construimos la bandeja de solicitudes». S4 se ejecuta antes de T7; no autoriza despliegue ni nuevas migraciones.
+- Reconciliación: T1 comprometido en 3796a08; T2/T3 en 8437708 y corrección ec15de4; T4/T5 en 8910917. La revisión nativa sigue pendiente por operation_timeout. Pruebas posteriores: web 60/60, backend 38/38. Guardado real de perfil y recuperación de Snapshot verificados tras reiniciar API y agregar únicamente profiles.taste con autorización explícita. Las etiquetas históricas de las tareas se conservan como registro; estos hashes son el estado actual.
+- T9 RED observado en navegador 500x900: scrollIntoView alinea Guardar cambios en y=847..899; navegación ocupa y=810..882, hit-test falla. Padding inferior existente 124px; falta margen de desplazamiento para la navegación fija. Guardado no debe confundirse con disponibilidad del backend.
 - L1: «si terminemos de pasar lo que queda de api en next a nest y luego hacer ka gestion y seguimiento de solicitudes, siguiente q eso creamos un repo para el.bacm».
 - Mapa verificado: api/ai contiene negocio, api/service-requests ya es proxy a Nest. actions.ts y profiles-db.ts conservan acceso a datos. Auth callback, SDK de sesión y cookies son adaptadores web; no se trasladan mecánicamente al backend.
 - Se conserva IdentityGuard y la clave pública con JWT del usuario para respetar RLS. No se introduce service_role ni almacenamiento de tokens en servicios singleton. La lógica de IA no dependerá del árbol src/ de Next al finalizar.

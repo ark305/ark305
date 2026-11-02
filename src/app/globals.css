@@ -52,6 +52,8 @@
 html {
   background: var(--color-ink);
   color-scheme: dark;
+  /* Keep focused controls above the fixed navigation when scrolling into view. */
+  scroll-padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px));
 }
 
 body {

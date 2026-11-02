@@ -125,7 +125,7 @@ test('handle check does not claim availability when the backend is unavailable',
   assert.equal(await actions.checkHandle('ada'), 'invalid');
 });
 
-function loadViewer({ sessionId = 'user-A', responseId = 'user-A', rowId = responseId, serviceOwner = responseId } = {}) {
+function loadViewer({ sessionId = 'user-A', responseId = 'user-A', rowId = responseId, serviceOwner = responseId, backendError, missing = false } = {}) {
   const source = fs.readFileSync(new URL('../src/lib/profiles-db.ts', import.meta.url), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const exports = {};
@@ -139,6 +139,8 @@ function loadViewer({ sessionId = 'user-A', responseId = 'user-A', rowId = respo
     } }) },
     './backend-api': { backendApi: async () => {
       calls.push('backend');
+      if (backendError) throw backendError;
+      if (missing) return { userId: responseId, row: null, services: [] };
       return { userId: responseId, row: { id: rowId, handle: 'ada', name: 'Ada', kind: 'member', role: '', area: '', tagline: '', gallery: [], diagnosis: { private: true } },
         services: [{ id: 'service', owner: serviceOwner, kicker: '', title: 'Service', detail: '', price: 10, action: 'book' }] };
     } },
@@ -167,9 +169,15 @@ test('viewer binds session identity before forwarding any token', async () => {
 
 test('viewer rejects foreign response identity, private profile or service ownership', async () => {
   for (const options of [{ responseId: 'user-B' }, { rowId: 'user-B' }, { serviceOwner: 'user-B' }]) {
-    const viewer = await loadViewer(options).getViewer();
-    assert.equal(viewer.row, null);
-    assert.equal(viewer.profile, null);
-    assert.equal(viewer.services.length, 0);
+    await assert.rejects(loadViewer(options).getViewer(), { message: 'Account temporarily unavailable' });
   }
+});
+
+test('viewer distinguishes an unavailable backend from a genuinely missing profile', async () => {
+  await assert.rejects(loadViewer({ backendError: new Error('secret upstream details') }).getViewer(),
+    { message: 'Account temporarily unavailable' });
+  const viewer = await loadViewer({ missing: true }).getViewer();
+  assert.equal(viewer.userId, 'user-A');
+  assert.equal(viewer.row, null);
+  assert.equal(viewer.profile, null);
 });
