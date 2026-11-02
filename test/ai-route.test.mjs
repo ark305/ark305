@@ -6,7 +6,6 @@ import { createRequire } from 'node:module';
 import ts from 'typescript';
 
 const require = createRequire(import.meta.url);
-
 function loadLibrary(spec) {
   const filename = spec.replace('@/', '../src/');
   const text = fs.readFileSync(new URL(`${filename}.ts`, import.meta.url), 'utf8');
@@ -18,175 +17,70 @@ function loadLibrary(spec) {
 }
 
 const source = fs.readFileSync(new URL('../src/app/api/ai/route.ts', import.meta.url), 'utf8');
-const code = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-}).outputText;
-
+const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 function harness(options = {}) {
   const calls = [];
-  const logs = [];
-  const env = {
-    META_API_KEY: 'test-meta-key',
-    NEXT_PUBLIC_SUPABASE_URL: 'https://auth.example.test',
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-public-key',
-    ...options.env,
-  };
-  const context = {
-    exports: {}, require: (name) => name.startsWith('@/') ? loadLibrary(name) : require(name), process: { env }, AbortSignal,
-    console: { error: (...args) => logs.push(args) },
-    fetch: async (url, init = {}) => {
-      calls.push({ url, ...init });
-      if (url.endsWith('/auth/v1/user')) {
-        return Response.json({ id: 'user-1' }, { status: options.authStatus ?? 200 });
-      }
-      if (url.endsWith('/rpc/bump_ai')) return Response.json(options.allowed ?? true, { status: options.quotaStatus ?? 200 });
-      if (url.includes('/profiles?')) return Response.json([{ experience: 'business' }]);
-      return Response.json(options.upstreamBody ?? {
-        content: [{ type: 'thinking', thinking: 'hidden' }, { type: 'text', text: 'Hello' }],
-      }, { status: options.upstreamStatus ?? 200 });
-    },
-  };
+  const context = { exports: {}, require, process: { env: { ARK_API_URL: 'http://127.0.0.1:3001', ...options.env } }, AbortSignal, URL, TextEncoder,
+    Response,
+    fetch: async (url, init = {}) => { calls.push({ url, ...init });
+      if (options.reject) throw new Error('network');
+      return options.response?.clone() ?? Response.json({ text: 'Hello', user: 'user-1' });
+    } };
   vm.runInNewContext(code, context);
-  const invoke = (body = { prompt: 'Hello' }, authenticated = true) => context.exports.POST(
-    new Request('http://localhost/api/ai', {
-      method: 'POST', headers: authenticated ? { authorization: 'Bearer user-token' } : {},
-      body: JSON.stringify(body),
-    }),
-  );
-  return { invoke, calls, logs };
+  const invoke = (body = { prompt: 'Hello' }, authenticated = true) => context.exports.POST(new Request('http://localhost/api/ai', {
+    method: 'POST', headers: authenticated ? { authorization: 'Bearer user-token' } : {}, body: typeof body === 'string' ? body : JSON.stringify(body),
+  }));
+  return { invoke, calls };
 }
 
-const dayPlan = { guests: 4, understood: true, items: [{ id: 'yacht', time: '14:00', qty: 4 }] };
-const metaPlan = (value) => ({ id: 'msg_test', model: 'muse-spark-1.3', stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(value) }] });
-
-test('Mi dia uses the authenticated request helper instead of local generation', () => {
-  const component = fs.readFileSync(new URL('../src/components/day-planner.tsx', import.meta.url), 'utf8');
-  assert.doesNotMatch(component, /planDay\(/);
-  assert.match(component, /requestDayPlan\(/);
-});
-
-test('day-plan client sends the session and rejects failures without a fallback', async () => {
-  const { requestDayPlan } = loadLibrary('@/lib/day-ai');
-  let calls = 0;
-  const transport = async (url, init) => {
-    calls++;
-    assert.equal(url, '/api/ai');
-    assert.equal(init.headers.Authorization, 'Bearer session-token');
-    assert.equal(JSON.parse(init.body).task, 'day-plan');
-    return Response.json({ plan: dayPlan, provenance: { provider: 'Meta', model: 'muse-spark-1.3', responseId: 'msg_test' } });
-  };
+test('day-plan client sends session and rejects failures without local fallback', async () => {
+  const { requestDayPlan } = loadLibrary('@/lib/day-ai'); let calls = 0;
+  const transport = async (url, init) => { calls++; assert.equal(url, '/api/ai'); assert.equal(init.headers.Authorization, 'Bearer session-token'); assert.equal(JSON.parse(init.body).task, 'day-plan');
+    return Response.json({ plan: { items: [{ id: 'yacht', time: '14:00', qty: 4, guests: 4 }], guests: 4, understood: true }, provenance: { provider: 'Meta', model: 'muse-spark-1.3', responseId: 'msg_test' } }); };
   const input = { prompt: 'Yacht', guests: 4, locale: 'es' };
-  await assert.rejects(requestDayPlan(input, undefined, transport), /auth/);
-  assert.equal(calls, 0);
+  await assert.rejects(requestDayPlan(input, undefined, transport), /auth/); assert.equal(calls, 0);
   assert.equal((await requestDayPlan(input, 'session-token', transport)).plan.items[0].id, 'yacht');
-  for (const response of [Response.json({ error: 'auth' }, { status: 401 }), Response.json({ plan: dayPlan }),
-    Response.json({ error: 'quota_unavailable' }, { status: 503 })]) {
-    await assert.rejects(requestDayPlan(input, 'session-token', async () => response));
-  }
+  for (const response of [Response.json({ error: 'auth' }, { status: 401 }), Response.json({ plan: {} }), Response.json({ error: 'quota_unavailable' }, { status: 503 })]) await assert.rejects(requestDayPlan(input, 'session-token', async () => response));
 });
 
-test('day-plan returns a validated plan and provider response provenance', async () => {
-  const { invoke, calls } = harness({ upstreamBody: metaPlan(dayPlan) });
-  const response = await invoke({ task: 'day-plan', prompt: 'Yacht for four', guests: 4 });
-  assert.equal(response.status, 200);
-  const data = await response.json();
-  assert.deepEqual(data.plan.items, [{ ...dayPlan.items[0], guests: 4 }]);
-  assert.deepEqual(data.provenance, { provider: 'Meta', model: 'muse-spark-1.3', responseId: 'msg_test' });
-  const request = JSON.parse(calls.at(-1).body);
-  assert.ok(request.output_config.format.schema.properties.items.items.properties.id.enum.includes('yacht'));
-  assert.match(request.system, /catalog/);
-});
-
-test('day-plan rejects invalid model output and does not silently invent a plan', async () => {
-  for (const value of [null, { ...dayPlan, guests: 0 }, { ...dayPlan, items: [{ id: 'invented', time: '14:00', qty: 1 }] },
-    { ...dayPlan, items: [{ id: 'yacht', time: '25:00', qty: -1 }] }, { ...dayPlan, items: [dayPlan.items[0], dayPlan.items[0]] }]) {
-    const { invoke } = harness({ upstreamBody: metaPlan(value) });
-    const response = await invoke({ task: 'day-plan', prompt: 'Plan', guests: 4 });
-    assert.equal(response.status, 502);
-    assert.deepEqual(await response.json(), { error: 'invalid_plan' });
-  }
-});
-
-test('day-plan validates input and refuses to bypass an unavailable quota check', async () => {
-  const invalid = harness();
-  assert.equal((await invalid.invoke({ task: 'day-plan', prompt: 'Plan', guests: 21 })).status, 400);
-  assert.equal(invalid.calls.length, 1);
-  const unavailable = harness({ quotaStatus: 500 });
-  assert.equal((await unavailable.invoke({ task: 'day-plan', prompt: 'Plan', guests: 4 })).status, 503);
-  assert.equal(unavailable.calls.length, 2);
-});
-
-test('day-plan rejects incomplete responses and accepts an explicit no-match without fallback', async () => {
-  for (const upstreamBody of [
-    { ...metaPlan(dayPlan), content: [{ type: 'text', text: 'not JSON' }] },
-    { ...metaPlan(dayPlan), stop_reason: 'max_tokens' },
-    { ...metaPlan(dayPlan), model: '' },
-    { ...metaPlan(dayPlan), id: undefined },
-  ]) {
-    const { invoke } = harness({ upstreamBody });
-    assert.equal((await invoke({ task: 'day-plan', prompt: 'Plan', guests: 4 })).status, 502);
-  }
-  const { invoke } = harness({ upstreamBody: metaPlan({ items: [], guests: 4, understood: false }) });
-  const response = await invoke({ task: 'day-plan', prompt: 'Something unrelated', guests: 4 });
-  assert.equal(response.status, 200);
-  assert.deepEqual((await response.json()).plan.items, []);
-});
-
-test('Meta receives the server key, configured model and compatible message payload', async () => {
-  const { invoke, calls } = harness({ env: { META_MODEL: 'configured-model', META_BASE_URL: 'https://api.meta.ai/' } });
-  const response = await invoke({ prompt: 'Hello', locale: 'en', json: true });
-  assert.equal(response.status, 200);
+test('Next route forwards authenticated AI requests to Nest without provider credentials', async () => {
+  const { invoke, calls } = harness();
+  const requestBody = { task: 'day-plan', prompt: 'Yacht', guests: 4, locale: 'en' };
+  const response = await invoke(requestBody); assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { text: 'Hello', user: 'user-1' });
-  const upstream = calls.at(-1);
-  assert.equal(upstream.url, 'https://api.meta.ai/v1/messages');
-  assert.equal(upstream.headers.Authorization, 'Bearer test-meta-key');
-  assert.equal(upstream.headers['x-api-key'], undefined);
-  assert.equal(upstream.headers['anthropic-version'], undefined);
-  const payload = JSON.parse(upstream.body);
-  assert.equal(payload.model, 'configured-model');
-  assert.equal(payload.max_tokens, 1500);
-  assert.deepEqual(payload.messages, [{ role: 'user', content: 'Hello' }]);
-  assert.match(payload.system, /business mode/);
-  assert.match(payload.system, /Respond ONLY with valid JSON/);
-  assert.equal(calls[0].headers.Authorization, 'Bearer user-token');
-  assert.deepEqual(JSON.parse(calls[1].body), { lim: 60 });
+  assert.equal(calls.length, 1); assert.equal(String(calls[0].url), 'http://127.0.0.1:3001/api/v1/ai');
+  assert.equal(calls[0].headers.Authorization, 'Bearer user-token'); assert.equal(calls[0].headers['Content-Type'], 'application/json');
+  assert.deepEqual(JSON.parse(calls[0].body), requestBody); assert.equal(calls[0].redirect, 'error'); assert.equal(calls[0].cache, 'no-store');
+  assert.doesNotMatch(source, /META_API_KEY|api\.meta\.ai|muse-spark|bump_ai/);
+  assert.doesNotMatch(source, /NEXT_PUBLIC_SUPABASE|service_role|createClient/);
 });
 
-test('default and quick requests use Meta, with an optional quick override', async () => {
-  for (const [env, tier, model] of [
-    [{}, undefined, 'muse-spark-1.3'],
-    [{ META_MODEL: 'configured-model' }, 'quick', 'configured-model'],
-    [{ META_MODEL_QUICK: 'quick-model' }, 'quick', 'quick-model'],
-  ]) {
-    const { invoke, calls } = harness({ env });
-    assert.equal((await invoke({ prompt: 'Hola', tier })).status, 200);
-    assert.equal(JSON.parse(calls.at(-1).body).model, model);
-  }
+test('Next AI BFF rejects anonymous, malformed, unsafe-target and unavailable requests', async () => {
+  const anonymous = harness(); assert.equal((await anonymous.invoke({ prompt: 'Hello' }, false)).status, 401); assert.equal(anonymous.calls.length, 0);
+  const malformed = harness(); assert.equal((await malformed.invoke('{')).status, 400); assert.equal(malformed.calls.length, 0);
+  const unsafe = harness({ env: { ARK_API_URL: 'http://example.com' } }); assert.equal((await unsafe.invoke()).status, 503); assert.equal(unsafe.calls.length, 0);
+  const unavailable = harness({ reject: true }); const failed = await unavailable.invoke(); assert.equal(failed.status, 503); assert.deepEqual(await failed.json(), { error: 'upstream' });
 });
 
-test('missing configuration, rejected sessions, limits and empty prompts preserve errors', async () => {
-  for (const [options, authenticated, body, status, error, callCount] of [
-    [{ env: { META_API_KEY: '' } }, true, { prompt: 'Hi' }, 503, 'ai_not_configured', 0],
-    [{}, false, { prompt: 'Hi' }, 401, 'auth', 0],
-    [{ authStatus: 401 }, true, { prompt: 'Hi' }, 401, 'auth', 1],
-    [{ allowed: false }, true, { prompt: 'Hi' }, 429, 'rate_limited', 2],
-    [{}, true, {}, 400, 'prompt', 3],
-  ]) {
-    const { invoke, calls } = harness(options);
-    const response = await invoke(body, authenticated);
-    assert.equal(response.status, status);
-    assert.deepEqual(await response.json(), { error });
-    assert.equal(calls.length, callCount);
-  }
+test('Next AI BFF preserves safe Nest errors and hides malformed upstream responses', async () => {
+  const failed = harness({ response: Response.json({ error: 'rate_limited' }, { status: 429 }) });
+  assert.equal((await failed.invoke()).status, 429); assert.deepEqual(await (await failed.invoke()).json(), { error: 'rate_limited' });
+  const malformed = harness({ response: new Response('secret', { status: 200 }) });
+  assert.equal((await malformed.invoke()).status, 502); assert.deepEqual(await (await malformed.invoke()).json(), { error: 'upstream' });
+  const diagnosis = harness({ response: Response.json({ error: 'invalid_diagnosis', reason: 'invalid_json', secret: 'private' }, { status: 502 }) });
+  assert.deepEqual(await (await diagnosis.invoke({ task: 'diagnosis' })).json(), { error: 'invalid_diagnosis', reason: 'invalid_json' });
+  const unknown = harness({ response: Response.json({ error: 'secret_exception', message: 'sensitive stack' }, { status: 500 }) });
+  assert.equal((await unknown.invoke()).status, 503); assert.deepEqual(await (await unknown.invoke()).json(), { error: 'upstream' });
 });
 
-test('Meta errors retain public mappings without logging upstream bodies', async () => {
-  for (const [upstreamStatus, status, error] of [[429, 429, 'rate_limited'], [500, 502, 'upstream']]) {
-    const { invoke, logs } = harness({ upstreamStatus, upstreamBody: { secret: 'do-not-log' } });
-    const response = await invoke();
-    assert.equal(response.status, status);
-    assert.deepEqual(await response.json(), { error });
-    assert.equal(JSON.stringify(logs).includes('do-not-log'), false);
-    if (upstreamStatus === 500) assert.equal(logs[0][0], 'meta');
-  }
+test('Next AI BFF retains the existing 60,000-character prompt allowance for Unicode', async () => {
+  const { invoke, calls } = harness();
+  const requestBody = { prompt: 'é'.repeat(60_000) };
+  assert.equal((await invoke(requestBody)).status, 200);
+  assert.deepEqual(JSON.parse(calls[0].body), requestBody);
+});
+
+test('day planner component uses the API helper instead of local generation', () => {
+  const component = fs.readFileSync(new URL('../src/components/day-planner.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(component, /planDay\(/); assert.match(component, /requestDayPlan\(/);
 });
