@@ -1,210 +1,225 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
-import { saveDiagnosis, saveSide } from "@/lib/actions";
-import { allQuestions, answerLabel, buildSnapshot, nextQuestion, progress, type Answers, type Question } from "@/lib/diagnosis";
+import { saveDiagnosis } from "@/lib/actions";
+import { requestDiagnosisTurn, type DiagnosisConversationMessage, type DiagnosisProvenance } from "@/lib/diagnosis-ai";
+import { sanitize, type Answers } from "@/lib/diagnosis";
 import { writeDiagnosis } from "@/lib/diagnosis-store";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
-import { IconArrow, IconCheck, IconMic, IconSparkle } from "./icons";
-import { useToast } from "./toast";
+import { createClient } from "@/lib/supabase/client";
+import { supabaseReady } from "@/lib/supabase/config";
+import { IconArrow, IconMic, IconSparkle } from "./icons";
 
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+type SpeechRec = {
+  lang: string;
+  interimResults: boolean;
+  onresult: (event: { results: { 0: { transcript: string } }[] }) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+};
 
-// Si la persona escribe o habla en vez de tocar un botón, buscamos la opción que mencionó.
-function matchOptions(q: Question, text: string, locale: Locale): string[] {
-  const t = norm(text);
-  return (q.options ?? [])
-    .filter((o) => {
-      const words = norm(o.label[locale]).split(/\s+/).filter((w) => w.length > 3);
-      return words.some((w) => t.includes(w)) || t.includes(norm(o.label[locale]));
-    })
-    .map((o) => o.id);
-}
-
-type SpeechRec = { lang: string; interimResults: boolean; onresult: (e: { results: { 0: { transcript: string } }[] }) => void; onend: () => void; start: () => void; stop: () => void };
-
-// Diagnóstico ARK: conversación corta que se adapta a cada respuesta.
-export function DiagnosisChat({ locale, initial, onClose }: { locale: Locale; initial?: Answers | null; onClose?: () => void }) {
+export function DiagnosisChat({ locale, userId, initialAnswers }: {
+  locale: Locale;
+  userId: string;
+  initialAnswers?: Answers | null;
+}) {
   const t = dict(locale).diag;
   const router = useRouter();
-  const { show } = useToast();
-  const [answers, setAnswers] = useState<Answers>(initial ?? {});
-  const [multi, setMulti] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<Answers>(() => sanitize(initialAnswers));
+  const [messages, setMessages] = useState<DiagnosisConversationMessage[]>([]);
   const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [proposalReady, setProposalReady] = useState(false);
+  const [provenance, setProvenance] = useState<DiagnosisProvenance | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionValid, setSessionValid] = useState(true);
   const [listening, setListening] = useState(false);
-  const [, start] = useTransition();
+  const requestActive = useRef(false);
+  const generation = useRef(0);
+  const validRef = useRef(true);
   const rec = useRef<SpeechRec | null>(null);
   const end = useRef<HTMLDivElement>(null);
-  const finished = useRef(false);
 
-  const q = nextQuestion(answers);
-  const { done, total } = progress(answers);
-  // El micrófono solo se muestra si el navegador lo soporta (se revisa ya en el teléfono).
+  const invalidateSession = useCallback(() => {
+    if (!validRef.current) return;
+    validRef.current = false;
+    generation.current += 1;
+    requestActive.current = false;
+    setSessionValid(false);
+    setAnswers({});
+    setMessages([]);
+    setText("");
+    setProposalReady(false);
+    setProvenance(null);
+    setError(t.sessionChanged);
+  }, [t.sessionChanged]);
+
+  useEffect(() => {
+    if (!supabaseReady) return;
+    writeDiagnosis(null);
+    const client = createClient();
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || (session?.user?.id && session.user.id !== userId)) invalidateSession();
+    });
+    return () => subscription.unsubscribe();
+  }, [invalidateSession, userId]);
+
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, busy]);
+
   const speechOk = useSyncExternalStore(
     () => () => {},
     () => "SpeechRecognition" in window || "webkitSpeechRecognition" in window,
     () => false,
   );
 
-  useEffect(() => {
-    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [answers, q]);
-
-  // Al terminar: guardar, aplicar Personal o Business y mostrar el Snapshot.
-  useEffect(() => {
-    if (q || !answers.who || finished.current) return;
-    finished.current = true;
-    writeDiagnosis(answers);
-    start(async () => {
-      await saveDiagnosis(answers);
-      router.push("/snapshot");
-      onClose?.();
-    });
-  }, [q, answers, router, onClose]);
-
-  function answer(value: string | string[]) {
-    if (!q) return;
-    const next = { ...answers, [q.id]: value } as Answers;
-    setAnswers(next);
-    writeDiagnosis(next);
-    setMulti([]);
-    setText("");
+  async function send(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const message = text.trim();
+    if (requestActive.current || !message || !sessionValid) return;
+    if (!supabaseReady) {
+      setError(t.aiUnavailable);
+      return;
+    }
+    requestActive.current = true;
+    const operation = ++generation.current;
+    setBusy(true);
+    setProposalReady(false);
+    setProvenance(null);
+    setError(null);
+    try {
+      const { data, error: sessionError } = await createClient().auth.getSession();
+      if (generation.current !== operation || !validRef.current) return;
+      if (sessionError || data.session?.user?.id !== userId || !data.session.access_token) {
+        invalidateSession();
+        return;
+      }
+      const result = await requestDiagnosisTurn({
+        message,
+        answers,
+        conversation: messages.slice(-8),
+        locale,
+      }, data.session.access_token);
+      if (generation.current !== operation || !validRef.current) return;
+      setAnswers(result.answers);
+      setMessages((current): DiagnosisConversationMessage[] =>
+        [...current, { role: "user" as const, content: message }, { role: "assistant" as const, content: result.reply }].slice(-8));
+      setText("");
+      setProposalReady(result.complete);
+      setProvenance(result.provenance);
+    } catch (requestError) {
+      if (generation.current !== operation || !validRef.current) return;
+      const code = requestError instanceof Error ? requestError.message : "upstream";
+      if (code === "auth") invalidateSession();
+      else setError(code === "rate_limited" ? t.aiLimit : code === "quota_unavailable" ? t.aiUnavailable : t.aiError);
+    } finally {
+      if (generation.current === operation) {
+        requestActive.current = false;
+        setBusy(false);
+      }
+    }
   }
 
-  function sendText() {
-    if (!q || !text.trim()) return;
-    if (q.kind === "text") return answer(text.trim().slice(0, 120));
-    const ids = matchOptions(q, text, locale);
-    if (!ids.length) return show(locale === "es" ? "No te entendí. Elige una opción." : "I didn't catch that. Pick an option.");
-    answer(q.kind === "single" ? ids[0] : ids);
+  async function confirmProposal() {
+    if (!proposalReady || saving || !sessionValid) return;
+    setSaving(true);
+    setError(null);
+    const operation = generation.current;
+    try {
+      const saved = await saveDiagnosis(answers, userId);
+      if (generation.current !== operation || !validRef.current) return;
+      if (!saved) {
+        setError(t.saveError);
+        return;
+      }
+      router.replace("/snapshot");
+      router.refresh();
+    } catch {
+      if (generation.current === operation && validRef.current) setError(t.saveError);
+    } finally {
+      if (generation.current === operation) setSaving(false);
+    }
   }
 
   function listen() {
-    const W = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
-    const Ctor = W.SpeechRecognition ?? W.webkitSpeechRecognition;
-    if (!Ctor) return;
-    const r = new Ctor();
-    r.lang = locale === "es" ? "es-US" : "en-US";
-    r.interimResults = false;
-    r.onresult = (e) => setText(e.results[0][0].transcript);
-    r.onend = () => setListening(false);
-    rec.current = r;
+    const browser = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
+    const Constructor = browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
+    if (!Constructor) return;
+    const recognition = new Constructor();
+    recognition.lang = locale === "es" ? "es-US" : "en-US";
+    recognition.interimResults = false;
+    recognition.onresult = (event) => setText(event.results[0][0].transcript.slice(0, 2000));
+    recognition.onend = () => setListening(false);
+    rec.current = recognition;
     setListening(true);
-    r.start();
+    recognition.start();
   }
 
-  async function later() {
-    writeDiagnosis(answers);
-    const snap = buildSnapshot(answers);
-    await saveSide(snap?.side ?? (answers.who && answers.who !== "individual" ? "business" : "personal"));
-    onClose?.();
-    router.refresh();
-  }
-
-  const history = allQuestions(answers).filter((x) => answers[x.id] !== undefined);
+  const lastReply = [...messages].reverse().find((message) => message.role === "assistant")?.content;
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-[calc(100dvh-150px)] flex-col">
       <header className="sticky top-0 z-10 flex flex-col gap-2 bg-ink/90 px-5 pt-6 pb-3 backdrop-blur-xl">
-        <div className="flex items-center justify-between">
-          <span className="flex items-center gap-2 text-[15px] font-bold text-teal">
-            <IconSparkle size={18} stroke="#7FC2B7" weight={1.9} /> {t.title}
-          </span>
-          <button type="button" onClick={later} className="h-9 rounded-full px-3 text-[13px] font-semibold text-mute">
-            {t.later}
-          </button>
-        </div>
-        <div className="h-1 rounded-full bg-white/10">
-          <div className="h-1 rounded-full bg-teal transition-[width] duration-300" style={{ width: `${Math.min(100, (done / total) * 100)}%` }} />
-        </div>
+        <span className="flex items-center gap-2 text-[15px] font-bold text-teal">
+          <IconSparkle size={18} stroke="#7FC2B7" weight={1.9} /> {t.title}
+        </span>
+        <p className="text-[13px] leading-snug text-mute">{t.intro}</p>
       </header>
 
-      <div className="flex grow flex-col gap-3 px-5 pt-4 pb-6">
-        {history.length === 0 && <p className="text-[13px] text-mute">{t.intro}</p>}
-        {history.map((h) => (
-          <div key={h.id} className="flex flex-col gap-2">
-            <p className="max-w-[85%] self-start rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-2.5 text-[15px] leading-snug text-cream">{h.ask[locale]}</p>
-            <p className="max-w-[85%] self-end rounded-[18px_18px_4px_18px] bg-cream px-3.5 py-2.5 text-[15px] leading-snug text-ink">
-              {answerLabel(h, answers[h.id], locale) === "—" ? t.skip : answerLabel(h, answers[h.id], locale)}
-            </p>
-          </div>
-        ))}
-        {q && <p className="max-w-[85%] self-start rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-2.5 text-[15px] leading-snug text-cream">{q.ask[locale]}</p>}
-        {!q && answers.who && (
-          <p className="self-start rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-2.5 text-[15px] text-teal" role="status">
-            {t.thinking}
+      <div className="flex grow flex-col gap-3 px-5 pt-4 pb-6" aria-live="polite">
+        {messages.map((message, index) => (
+          <p key={`${index}-${message.role}`} className={`max-w-[88%] whitespace-pre-wrap rounded-[18px] px-3.5 py-2.5 text-[15px] leading-snug ${message.role === "user" ? "self-end rounded-br-[4px] bg-cream text-ink" : "self-start rounded-bl-[4px] border border-teal-line bg-teal-deep text-cream"}`}>
+            {message.content}
           </p>
+        ))}
+        {busy && <p role="status" className="self-start rounded-[18px] border border-teal-line bg-teal-deep px-3.5 py-2.5 text-[14px] text-teal">{t.thinking}</p>}
+        {proposalReady && lastReply && (
+          <section aria-labelledby="diagnosis-proposal-title" className="flex flex-col gap-3 rounded-[22px] border border-gold/30 bg-gold/[0.06] p-4">
+            <h2 id="diagnosis-proposal-title" className="text-base font-bold text-gold">{t.proposalTitle}</h2>
+            <p className="whitespace-pre-wrap text-[15px] leading-snug text-cream">{lastReply}</p>
+            <p className="text-[12px] text-mute">{t.proposalDisclaimer}</p>
+            <button type="button" onClick={confirmProposal} disabled={saving || !sessionValid} className="gold-grad min-h-12 rounded-full px-4 text-sm font-bold text-ink disabled:opacity-60">
+              {saving ? t.savingProposal : t.saveProposal}
+            </button>
+          </section>
         )}
+        {provenance && <p className="text-center text-[11px] text-mute">{provenance.provider} · {provenance.model} · {provenance.responseId}</p>}
+        {error && <p role="alert" className="rounded-xl bg-[#E07A8F]/10 px-3 py-2 text-sm text-[#E07A8F]">{error}</p>}
+        {!sessionValid && <p role="status" className="text-center text-xs text-mute">{t.signInAgain}</p>}
         <div ref={end} />
       </div>
 
-      {q && (
-        <div className="sticky bottom-0 flex flex-col gap-3 border-t border-white/[0.07] bg-ink/95 px-5 pt-3 backdrop-blur-xl" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-          {q.options && (
-            <div className="flex flex-wrap gap-2">
-              {q.options.map((o) => {
-                const on = multi.includes(o.id);
-                return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    aria-pressed={q.kind === "multi" ? on : undefined}
-                    onClick={() => (q.kind === "single" ? answer(o.id) : setMulti((m) => (on ? m.filter((x) => x !== o.id) : [...m, o.id])))}
-                    className={`flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold ${on ? "bg-teal text-ink" : "border border-white/15 bg-white/[0.04] text-cream"}`}
-                  >
-                    {on && <IconCheck size={14} stroke="#08090B" weight={2.6} />}
-                    {o.label[locale]}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <div className="flex items-center gap-2">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendText()}
-              placeholder={listening ? t.listening : q.placeholder?.[locale] ?? t.typeHere}
-              aria-label={t.typeHere}
-              className="h-12 min-w-0 grow rounded-full border border-white/10 bg-white/[0.05] px-4 text-base text-cream outline-none placeholder:text-mute focus:border-teal/60"
-            />
-            {speechOk && (
-              <button type="button" aria-label={t.voice} onClick={listen} className={`flex size-12 shrink-0 items-center justify-center rounded-full ${listening ? "bg-teal" : "bg-white/10"}`}>
-                <IconMic size={20} stroke={listening ? "#08090B" : "#EFE6D8"} weight={1.9} />
-              </button>
-            )}
-            {text.trim() ? (
-              <button type="button" aria-label={t.send} onClick={sendText} className="flex size-12 shrink-0 items-center justify-center rounded-full bg-teal">
-                <IconArrow size={20} stroke="#08090B" weight={2.2} />
-              </button>
-            ) : q.kind === "multi" && multi.length ? (
-              <button type="button" onClick={() => answer(multi)} className="h-12 shrink-0 rounded-full bg-teal px-5 text-[15px] font-bold text-ink">
-                {t.done}
-              </button>
-            ) : (
-              <button type="button" onClick={() => answer(q.kind === "multi" ? [] : "")} className="h-12 shrink-0 rounded-full px-3 text-[14px] font-semibold text-mute">
-                {t.skip}
-              </button>
-            )}
-          </div>
-          <p className="text-center text-[11px] text-mute">{t.privacy}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Primera visita: el Diagnóstico a pantalla completa (se puede terminar después).
-export function DiagnosisGate({ locale }: { locale: Locale }) {
-  const [open, setOpen] = useState(true);
-  if (!open) return null;
-  return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-ink">
-      <div className="mx-auto max-w-[430px]">
-        <DiagnosisChat locale={locale} onClose={() => setOpen(false)} />
-      </div>
+      <form onSubmit={send} className="sticky bottom-[calc(100px+env(safe-area-inset-bottom))] z-10 flex items-end gap-2 border-t border-white/[0.07] bg-ink/95 px-4 pt-3 backdrop-blur-xl" style={{ paddingBottom: "16px" }}>
+        <textarea
+          value={text}
+          onChange={(event) => setText(event.target.value.slice(0, 2000))}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              void send(event as unknown as React.FormEvent<HTMLFormElement>);
+            }
+          }}
+          placeholder={listening ? t.listening : t.typeHere}
+          aria-label={t.typeHere}
+          maxLength={2000}
+          rows={2}
+          disabled={busy || saving || !sessionValid}
+          className="min-h-12 min-w-0 grow resize-none rounded-[18px] border border-white/10 bg-white/[0.05] px-4 py-3 text-base text-cream outline-none placeholder:text-mute focus:border-teal/60 disabled:opacity-60"
+        />
+        {speechOk && (
+          <button type="button" aria-label={t.voice} onClick={listen} disabled={busy || !sessionValid} className={`flex size-12 shrink-0 items-center justify-center rounded-full ${listening ? "bg-teal" : "bg-white/10"}`}>
+            <IconMic size={20} stroke={listening ? "#08090B" : "#EFE6D8"} weight={1.9} />
+          </button>
+        )}
+        <button type="submit" aria-label={t.send} disabled={busy || saving || !sessionValid || !text.trim()} className="flex size-12 shrink-0 items-center justify-center rounded-full bg-teal disabled:opacity-50">
+          <IconArrow size={20} stroke="#08090B" weight={2.2} />
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // Catálogo de servicios, días armados y el planificador de "Mi día".
 // Precios del prototipo anterior. El planificador es la vista previa de ARK IA:
-// entiende palabras clave. En la Fase 5 lo reemplaza Claude con el mismo formato de respuesta.
+// entiende palabras clave. La integración futura con Meta conservará el formato de respuesta.
 import type { Locale, Localized } from "./locale";
 import { photo } from "./mock-data";
 

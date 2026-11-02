@@ -1,5 +1,5 @@
 // ARK IA en Business: arma un equipo a partir de lo que necesita tu negocio.
-// Vista previa por palabras clave; en la Fase 5 lo reemplaza Claude con el mismo formato.
+// Vista previa por palabras clave; la integración futura con Meta conservará el formato.
 import type { Locale } from "./locale";
 import { monthly, positions } from "./talent";
 

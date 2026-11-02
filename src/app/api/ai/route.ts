@@ -1,11 +1,14 @@
-// POST /api/ai — Asistente IA de ARK305 (Claude).
-// La llave de Anthropic vive solo aquí, en el servidor. Nunca llega al navegador.
+// POST /api/ai — Asistente IA de ARK305 (Meta Muse Spark).
+// La llave de Meta vive solo aquí, en el servidor. Nunca llega al navegador.
 // v3: ARK combina Experiencias + Negocios y lee el modo del usuario (lifestyle/business/both).
 import { NextResponse } from "next/server";
+import { dayPlanInstructions, dayPlanSchema, parseDayPlan } from "@/lib/day-ai";
+import { buildDiagnosisMessages, buildDiagnosisResponseSchema, parseDiagnosisModelResponse, parseDiagnosisTurnInput } from "@/lib/diagnosis-ai-server";
+import { diagnosisOutputIssue } from "@/lib/diagnosis-ai";
 
 const MODELS = {
-  default: process.env.ANTHROPIC_MODEL || "claude-sonnet-5",
-  quick: process.env.ANTHROPIC_MODEL_QUICK || "claude-haiku-4-5-20251001",
+  default: process.env.META_MODEL || "muse-spark-1.3",
+  quick: process.env.META_MODEL_QUICK || process.env.META_MODEL || "muse-spark-1.3",
 };
 
 const SYSTEM = {
@@ -14,11 +17,11 @@ const SYSTEM = {
 };
 
 export async function POST(req: Request) {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  const META_API_KEY = process.env.META_API_KEY;
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SUPABASE_KEY =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!ANTHROPIC_API_KEY) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
+  if (!META_API_KEY) return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
 
   // 1. Solo usuarios con sesión
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
@@ -32,6 +35,18 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const locale = body.locale === "en" ? "en" : "es";
+  const dayTask = body.task === "day-plan";
+  const diagnosisTask = body.task === "diagnosis";
+  const diagnosisInput = diagnosisTask ? parseDiagnosisTurnInput(body) : null;
+  if (diagnosisTask && !diagnosisInput) return NextResponse.json({ error: "diagnosis_input" }, { status: 400 });
+  if (dayTask && (typeof body.prompt !== "string" || !body.prompt.trim() || body.prompt.length > 4000 ||
+      !Number.isInteger(body.guests) || body.guests < 1 || body.guests > 20)) {
+    return NextResponse.json({ error: "prompt" }, { status: 400 });
+  }
+  const baseUrl = (process.env.META_BASE_URL || "https://api.meta.ai").replace(/\/$/, "");
+  if ((dayTask || diagnosisTask) && baseUrl !== "https://api.meta.ai") {
+    return NextResponse.json({ error: "ai_not_configured" }, { status: 503 });
+  }
 
   // 2. Límite diario por persona
   const limit = parseInt(process.env.AI_DAILY_LIMIT || "60", 10);
@@ -44,7 +59,11 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({ lim: limit }),
   });
-  if (bump.ok && (await bump.json()) === false)
+  if (dayTask || diagnosisTask) {
+    const allowed = bump.ok ? await bump.json().catch(() => null) : null;
+    if (allowed !== true) return NextResponse.json({ error: allowed === false ? "rate_limited" : "quota_unavailable" },
+      { status: allowed === false ? 429 : 503 });
+  } else if (bump.ok && (await bump.json()) === false)
     return NextResponse.json({ error: "rate_limited" }, { status: 429 });
 
   // 2b. Modo del usuario: lifestyle / business / both (si su perfil lo tiene)
@@ -68,34 +87,78 @@ export async function POST(req: Request) {
     /* sin perfil: ARK detecta el modo por el contexto */
   }
 
-  // 3. Llamar a Claude
+  // 3. Llamar a Meta Muse Spark
   const prompt = String(body.prompt || "").slice(0, 60000);
-  if (!prompt) return NextResponse.json({ error: "prompt" }, { status: 400 });
-  const system =
+  if (!diagnosisTask && !prompt) return NextResponse.json({ error: "prompt" }, { status: 400 });
+  const diagnosisContext = diagnosisInput ? buildDiagnosisMessages(diagnosisInput) : null;
+  const system = diagnosisContext
+    ? diagnosisContext.system + modeLine
+    :
     SYSTEM[locale] +
     modeLine +
-    (body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
+    (dayTask ? `\n${dayPlanInstructions}\nRequested guests: ${body.guests}.` :
+      body.json ? " Respond ONLY with valid JSON, no extra text or code blocks." : "");
+  const diagnosisMessages = diagnosisContext?.messages ?? null;
 
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fetch(`${baseUrl}/v1/messages`, {
     method: "POST",
+    ...(dayTask || diagnosisTask ? { signal: AbortSignal.timeout(60000), redirect: "error" as const } : {}),
     headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      Authorization: `Bearer ${META_API_KEY}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({
       model: body.tier === "quick" ? MODELS.quick : MODELS.default,
-      max_tokens: 1500,
+      max_tokens: diagnosisTask ? 4096 : 1500,
+      ...(dayTask ? { output_config: { format: { type: "json_schema", schema: dayPlanSchema } } } : {}),
+      ...(diagnosisTask ? { output_config: { effort: "low", format: { type: "json_schema", schema: buildDiagnosisResponseSchema(diagnosisInput!.answers) } } } : {}),
       system,
-      messages: [{ role: "user", content: prompt }],
+      messages: diagnosisMessages ?? [{ role: "user", content: prompt }],
     }),
-  });
+  }).catch((error) => { if (!dayTask && !diagnosisTask) throw error; return null; });
+  if (!r) return NextResponse.json({ error: "upstream" }, { status: 502 });
   if (r.status === 429) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   if (!r.ok) {
-    console.error("anthropic", r.status, await r.text());
+    console.error("meta", r.status);
     return NextResponse.json({ error: "upstream" }, { status: 502 });
   }
-  const data = await r.json();
+  const data = await r.json().catch((error) => { if (!dayTask && !diagnosisTask) throw error; return null; });
+  if (diagnosisTask) {
+    const invalidDiagnosis = (reason: string) => NextResponse.json(
+      { error: "invalid_diagnosis", reason }, { status: 502, headers: { "Cache-Control": "no-store" } });
+    if (data?.stop_reason === "max_tokens") return invalidDiagnosis("truncated");
+    if (!data || data.stop_reason !== "end_turn" || typeof data.model !== "string" || !data.model ||
+        typeof data.id !== "string" || !data.id || !Array.isArray(data.content)) {
+      return invalidDiagnosis("invalid_metadata");
+    }
+    try {
+      const text = data.content.filter((block: { type: string }) => block.type === "text")
+        .map((block: { text: string }) => block.text).join("\n");
+      const output: unknown = JSON.parse(text);
+      const turn = parseDiagnosisModelResponse(output, diagnosisInput!.answers);
+      if (!turn) {
+        console.error("diagnosis_validation", diagnosisOutputIssue(output, diagnosisInput!.answers));
+        return invalidDiagnosis("invalid_answers");
+      }
+      return NextResponse.json({ ...turn, provenance: { provider: "Meta", model: data.model, responseId: data.id } },
+        { headers: { "Cache-Control": "no-store" } });
+    } catch {
+      return invalidDiagnosis("invalid_json");
+    }
+  }
+  if (dayTask) {
+    try {
+      const text = data.content.filter((block: { type: string }) => block.type === "text")
+        .map((block: { text: string }) => block.text).join("\n");
+      const plan = parseDayPlan(JSON.parse(text));
+      if (!plan || data.stop_reason !== "end_turn" || typeof data.model !== "string" || !data.model ||
+          typeof data.id !== "string" || !data.id) throw new Error("Invalid plan");
+      return NextResponse.json({ plan, provenance: { provider: "Meta", model: data.model, responseId: data.id } },
+        { headers: { "Cache-Control": "no-store" } });
+    } catch {
+      return NextResponse.json({ error: "invalid_plan" }, { status: 502 });
+    }
+  }
   const text = (data.content || [])
     .filter((b: { type: string }) => b.type === "text")
     .map((b: { text: string }) => b.text)

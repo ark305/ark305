@@ -76,7 +76,7 @@ export async function createProfile(_: FormState, form: FormData): Promise<FormS
   });
   if (error) return fail(error.code === "23505" ? "handle" : "generic");
   revalidatePath("/", "layout");
-  redirect("/perfil");
+  redirect("/diagnostico");
 }
 
 export async function updateProfile(_: FormState, form: FormData): Promise<FormState> {
@@ -197,14 +197,30 @@ export async function saveSide(value: string) {
 }
 
 // Guarda el Diagnóstico ARK y aplica su resultado (Personal o Business).
-export async function saveDiagnosis(raw: unknown, applySide = true) {
+export async function saveDiagnosis(raw: unknown, applySideOrExpectedUser: boolean | string = true, expectedUserId?: string): Promise<boolean> {
+  const applySide = typeof applySideOrExpectedUser === "boolean" ? applySideOrExpectedUser : true;
+  const boundUserId = typeof applySideOrExpectedUser === "string" ? applySideOrExpectedUser : expectedUserId;
   const answers = sanitize(raw);
   const snap = buildSnapshot(answers);
-  if (applySide && snap) await saveSide(snap.side);
-  if (!supabaseReady) return;
+  if (!supabaseReady || !snap) return false;
   const { supabase, user } = await currentUser();
-  if (user) await supabase.from("profiles").update({ diagnosis: { answers, at: new Date().toISOString() } }).eq("id", user.id);
+  if (!user || (boundUserId && user.id !== boundUserId)) return false;
+  const update = {
+    diagnosis: { answers, at: new Date().toISOString() },
+    ...(applySide ? { experience: sideToExperience(snap.side) } : {}),
+  };
+  const { data, error } = await supabase.from("profiles")
+    .update(update)
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
+  if (error || data?.id !== user.id) return false;
+  if (applySide) {
+    const jar = await cookies();
+    jar.set("side", snap.side, { path: "/", maxAge: 31536000, sameSite: "lax" });
+  }
   revalidatePath("/", "layout");
+  return true;
 }
 
 // "Lo que ARK sabe de mí": borrar el diagnóstico de la cuenta.

@@ -13,8 +13,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function WelcomePage() {
   const { locale, t } = await getContext();
   const viewer = await getViewer();
-  if (!viewer.userId) redirect("/entrar");
-  if (viewer.row) redirect("/perfil");
+  if (!viewer.userId) redirect("/entrar?next=%2Fdiagnostico");
+  if (viewer.row) redirect("/diagnostico");
   return (
     <div className="flex flex-col gap-6 px-4 pt-10">
       <header>

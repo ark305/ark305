@@ -1,21 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { entryPrice, getItem, packages, planDay, planSummary, type Plan } from "@/lib/catalog";
+import { useRef, useState } from "react";
+import { entryPrice, getItem, packages, planSummary, type Plan } from "@/lib/catalog";
+import { requestDayPlan, type DayProvenance } from "@/lib/day-ai";
+import { createClient } from "@/lib/supabase/client";
+import { supabaseReady } from "@/lib/supabase/config";
 import { day, useDay } from "@/lib/day-store";
 import { dict, formatTime } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
-import { formatPrice, getProfile } from "@/lib/mock-data";
-import { IconCheck, IconClose, IconPeople, IconSparkle } from "./icons";
-import { SoonButton, useToast } from "./toast";
+import { formatPrice } from "@/lib/mock-data";
+import { IconClose, IconPeople, IconSparkle } from "./icons";
+import { useToast } from "./toast";
 
 const TEAL = "#7FC2B7";
 
 // Mi día: ARK IA arma el plan, lo agregas a tu día y lo reservas completo.
-export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: { locale: Locale; discount: number; levelName: string; initialPrompt?: string }) {
+export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; discount: number; levelName: string; initialPrompt?: string }) {
   const t = dict(locale).day;
-  const m = dict(locale).money;
   const money = (n: number) => formatPrice(n, locale);
   const { show } = useToast();
   const entries = useDay();
@@ -24,42 +26,44 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
   const [guests, setGuests] = useState(4);
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);
-  const [booking, setBooking] = useState<{ code: string; step: number } | null>(null);
-  const [priority, setPriority] = useState(false);
+  const [provenance, setProvenance] = useState<DayProvenance | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const requestActive = useRef(false);
   const dayRef = useRef<HTMLElement>(null);
 
-  // La reserva avanza sola, como en el prototipo: Confirmado → … → En curso.
-  useEffect(() => {
-    if (!booking || booking.step >= t.steps.length - 1) return;
-    const id = setTimeout(() => setBooking((b) => b && { ...b, step: b.step + 1 }), 2600);
-    return () => clearTimeout(id);
-  }, [booking, t.steps.length]);
-
-  function build(prompt = text) {
+  async function build(prompt = text) {
+    if (requestActive.current) return;
     if (!prompt.trim()) return show(t.needText);
     setText(prompt);
-    setBuilding(true);
     setPlan(null);
-    setTimeout(() => {
-      const p = planDay(prompt, guests);
-      setGuests(p.guests);
-      setPlan(p);
+    setProvenance(null);
+    setAiError(null);
+    if (!supabaseReady) { setAiError(t.aiUnavailable); return; }
+    requestActive.current = true;
+    setBuilding(true);
+    try {
+      const { data, error } = await createClient().auth.getSession();
+      if (error || !data.session) throw new Error("auth");
+      const result = await requestDayPlan({ prompt, guests, locale }, data.session.access_token);
+      setGuests(result.plan.guests);
+      setPlan(result.plan);
+      setProvenance(result.provenance);
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "upstream";
+      setAiError(code === "auth" ? t.aiSignIn : code === "rate_limited" ? t.aiLimit : t.aiError);
+    } finally {
+      requestActive.current = false;
       setBuilding(false);
-    }, 900);
+    }
   }
 
   function addToDay(items: Plan["items"]) {
     day.add(items);
     setPlan(null);
-    setBooking(null);
     show(dict(locale).feed.added);
     setTimeout(() => dayRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
-  const subtotal = entries.reduce((s, e) => s + entryPrice(e), 0);
-  const off = Math.round((subtotal * discount) / 100);
-  const fee = Math.round((subtotal - off) * 0.05);
-  const total = subtotal - off + fee + (priority ? 49 : 0);
   const planTotal = plan ? plan.items.reduce((s, i) => s + entryPrice({ ...i, uid: "" }), 0) : 0;
 
   return (
@@ -80,6 +84,8 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
         <textarea
           id="ark-ai"
           rows={2}
+          maxLength={4000}
+          disabled={building}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -111,19 +117,23 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
         </div>
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
           {t.suggestions.map((s) => (
-            <button key={s} type="button" onClick={() => build(s)} className="h-9 shrink-0 rounded-full border border-white/10 bg-white/[0.05] px-3.5 text-[13px] text-cream">
+            <button key={s} type="button" disabled={building} onClick={() => build(s)} className="h-9 shrink-0 rounded-full border border-white/10 bg-white/[0.05] px-3.5 text-[13px] text-cream">
               {s}
             </button>
           ))}
         </div>
         <p className="text-[11px] text-mute">{t.aiPreview}</p>
+        {!supabaseReady && <p role="status" className="text-sm text-cream">{t.aiUnavailable}</p>}
+        {aiError && <p role="alert" className="text-sm text-cream">{aiError}{aiError === t.aiSignIn && <a href="/entrar" className="ml-2 underline">{t.aiLogin}</a>}</p>}
       </section>
 
       {/* Propuesta de ARK IA */}
       {plan && (
         <section className="flex flex-col gap-3 rounded-[26px] border border-teal-line bg-teal-deep/40 p-4">
           <p className="text-xs font-bold tracking-[0.14em] text-teal uppercase">{t.proposal}</p>
-          <p className="rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3 text-[15px] leading-normal text-cream">{planSummary(plan, locale)}</p>
+          <p className="rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3 text-[15px] leading-normal text-cream">{plan.items.length ? planSummary(plan, locale) : t.aiNoMatch}</p>
+          {provenance && <p className="break-all text-xs text-mute">{provenance.provider} · {provenance.model} · {provenance.responseId}</p>}
+          <p className="text-xs text-mute">{t.aiEstimate}</p>
           <ul className="flex flex-col gap-2">
             {plan.items.map((i) => {
               const c = getItem(i.id)!;
@@ -144,7 +154,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
             <span className="tabular-nums">{money(planTotal)}</span>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => addToDay(plan.items)} className="h-11 grow rounded-full text-[15px] font-bold text-ink" style={{ background: TEAL }}>
+            <button type="button" disabled={!plan.items.length} onClick={() => addToDay(plan.items)} className="h-11 grow rounded-full text-[15px] font-bold text-ink disabled:opacity-50" style={{ background: TEAL }}>
               {t.addPlan}
             </button>
             <button type="button" onClick={() => setPlan(null)} className="h-11 rounded-full border border-white/15 px-4 text-sm text-cream">
@@ -163,7 +173,6 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
         <div className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4">
           {packages.map((p) => {
             const items = p.items.map((i) => ({ ...i, guests }));
-            const price = items.reduce((s, i) => s + entryPrice({ ...i, uid: "" }), 0);
             return (
               <button
                 key={p.id}
@@ -174,10 +183,7 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
                 <Image src={p.photo} alt="" fill sizes="300px" className="object-cover" />
                 <div className="fade-bottom absolute inset-0" />
                 <span className="relative text-xl font-bold text-white">{p.name[locale]}</span>
-                <span className="relative mt-0.5 text-[13px] leading-snug text-cream/75">{p.desc[locale]}</span>
-                <span className="relative mt-2 text-sm font-bold text-gold-soft">
-                  {t.from} {money(price)}
-                </span>
+                <span className="relative mt-0.5 text-[13px] leading-snug text-cream/75">{t.packageDisclaimer}</span>
               </button>
             );
           })}
@@ -195,7 +201,6 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
               {entries.map((e) => {
                 const c = getItem(e.id);
                 if (!c) return null;
-                const who = getProfile(c.provider)?.name ?? "";
                 const detail = c.unit === "h" ? t.hours(e.qty) : c.unit === "p" ? t.persons(e.guests) : null;
                 return (
                   <li key={e.uid} className="relative flex items-center pl-5">
@@ -210,15 +215,12 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
                           {detail ? ` · ${detail}` : ""}
                         </span>
                         <span className="truncate text-[15px] font-bold text-white">{c.name[locale]}</span>
-                        <span className="truncate text-[12px] text-mute">{t.with(who)}</span>
+                        <span className="truncate text-[12px] text-mute">{t.requestDatePrompt}</span>
                       </span>
                       <span className="flex shrink-0 flex-col items-end gap-1">
-                        <span className="text-sm font-semibold text-cream tabular-nums">{money(entryPrice(e))}</span>
-                        {!booking && (
-                          <button type="button" aria-label={t.remove} onClick={() => day.remove(e.uid)} className="flex size-7 items-center justify-center rounded-full bg-white/[0.07]">
-                            <IconClose size={13} stroke="#9A9EA6" />
-                          </button>
-                        )}
+                        <button type="button" aria-label={t.remove} onClick={() => day.remove(e.uid)} className="flex size-7 items-center justify-center rounded-full bg-white/[0.07]">
+                          <IconClose size={13} stroke="#9A9EA6" />
+                        </button>
                       </span>
                     </div>
                   </li>
@@ -226,79 +228,9 @@ export function DayPlanner({ locale, discount, levelName, initialPrompt = "" }: 
               })}
             </ol>
 
-            <div className="flex flex-col gap-1.5 rounded-[22px] border border-white/10 bg-white/[0.035] p-4 text-sm">
-              <Row label={t.subtotal} value={money(subtotal)} />
-              {discount > 0 ? <Row label={t.levelDiscount(levelName, discount)} value={`−${money(off)}`} accent /> : <p className="text-[13px] text-gold-soft">{t.upsell}</p>}
-              <Row label={t.concierge} value={money(fee)} />
-              <label className="flex items-center justify-between gap-3 py-1 text-cream">
-                <span className="flex items-center gap-2">
-                  <input type="checkbox" checked={priority} disabled={!!booking} onChange={(e) => setPriority(e.target.checked)} className="size-4 accent-[var(--accent)]" />
-                  {m.priority}
-                </span>
-                <span className="text-gold-soft tabular-nums">{m.priorityPrice}</span>
-              </label>
-              <div className="mt-1 flex justify-between border-t border-white/10 pt-2.5 text-base font-bold text-white">
-                <span>{t.total}</span>
-                <span className="tabular-nums">{money(total)}</span>
-              </div>
-              <Row label={t.deposit} value={money(Math.round(total * 0.3))} />
-            </div>
-
-            {booking ? (
-              <BookingTracker locale={locale} code={booking.code} step={booking.step} onReset={() => { day.clear(); setBooking(null); }} />
-            ) : (
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => setBooking({ code: `ARK-${Math.floor(1000 + Math.random() * 9000)}`, step: 0 })}
-                  className="gold-grad h-[52px] rounded-full text-base font-bold text-ink shadow-[0_14px_40px_-16px_var(--accent)]"
-                >
-                  {t.bookAll}
-                </button>
-                <SoonButton className="glass h-12 rounded-full text-[15px] font-semibold text-cream">{t.group}</SoonButton>
-                <p className="text-center text-[11px] text-mute">{t.demoNote}</p>
-              </div>
-            )}
           </>
         )}
       </section>
-    </div>
-  );
-}
-
-function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className={`flex justify-between ${accent ? "text-gold-soft" : "text-mute"}`}>
-      <span>{label}</span>
-      <span className="tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-function BookingTracker({ locale, code, step, onReset }: { locale: Locale; code: string; step: number; onReset: () => void }) {
-  const t = dict(locale).day;
-  return (
-    <div className="flex flex-col gap-4 rounded-[24px] border border-gold/30 bg-gold/[0.06] p-4" role="status" aria-live="polite">
-      <p className="text-sm font-bold text-gold-soft">
-        {t.booking} {code}
-      </p>
-      <ol className="flex flex-col gap-2.5">
-        {t.steps.map((s, i) => (
-          <li key={s} className={`flex items-center gap-3 text-[15px] transition-opacity ${i <= step ? "opacity-100" : "opacity-35"}`}>
-            <span className={`flex size-7 items-center justify-center rounded-full ${i <= step ? "gold-grad" : "border border-white/25"}`}>
-              {i <= step && <IconCheck size={15} stroke="#08090B" weight={2.6} />}
-            </span>
-            <span className={i === step ? "font-bold text-white" : "text-cream/80"}>{s}</span>
-          </li>
-        ))}
-      </ol>
-      <div className="rounded-[18px_18px_18px_4px] bg-white/[0.06] px-3.5 py-3">
-        <p className="text-xs font-bold text-gold-soft">{t.conciergeName}</p>
-        <p className="mt-0.5 text-[15px] text-cream">{t.messages[step]}</p>
-      </div>
-      <button type="button" onClick={onReset} className="h-11 rounded-full border border-white/15 text-sm font-semibold text-cream">
-        {t.again}
-      </button>
     </div>
   );
 }

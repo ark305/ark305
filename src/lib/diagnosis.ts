@@ -1,7 +1,7 @@
 // Diagnóstico ARK: una conversación corta que entiende a la persona o empresa,
 // y el ARK Snapshot que sale de ahí (modo, escalón, fortalezas, huecos, próximos pasos).
 // Las reglas son simples y explicables ("Porque tú..."). En la etapa de IA real,
-// Claude escribe el resumen con estos mismos datos; los números nunca se inventan.
+// Meta escribirá el resumen con estos mismos datos; los números nunca se inventan.
 // Nunca pregunta ni deduce estatus migratorio, salud, religión, orientación ni política.
 import type { Locale, Localized } from "./locale";
 import type { Side } from "./mode";
