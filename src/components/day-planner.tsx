@@ -12,6 +12,7 @@ import type { Locale } from "@/lib/locale";
 import { formatPrice } from "@/lib/mock-data";
 import { IconClose, IconPeople, IconSparkle } from "./icons";
 import { useToast } from "./toast";
+import { DayRequests } from "./day-requests";
 
 const TEAL = "#7FC2B7";
 
@@ -231,6 +232,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
           </>
         )}
       </section>
+      <DayRequests locale={locale} entries={entries} />
     </div>
   );
 }

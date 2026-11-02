@@ -19,8 +19,9 @@ Rama: dev. Entrega: ask-on-risk; previsión de 350 líneas. Pruebas: node:test, 
 - Docker no es necesario para datos en memoria. No se añaden dependencias ni credenciales.
 - Se preservan README.md, docs/ y fase-1-fundamentos.md preexistentes. Espejo Engram pendiente por unknown_project.
 - Riesgo previsto: item 3, composición compartida de AppModule; verificar que salud y rutas anteriores no cambian.
-- T1: RED observado: listado 404 en lugar de 200 y validaci?n 404 en lugar de 400. GREEN: npm run test:api, 7 pruebas aprobadas. Salud y rutas anteriores conservadas.
-- T2: npm run lint aprobado. No existe runner de componentes web configurado; excepci?n RED para vista pasiva, comprobaci?n por build y HTTP integrado.
-- T2: npm run build aprobado. HTTP integrado en espa?ol e ingl?s: 18 nombres, aviso demo y estado de indisponibilidad al apagar API. Procesos de comprobaci?n cerrados.
-- Verificador independiente: S1?S3 PASS; comparaci?n diferencial contra d0c2d9f conserva status, cuerpo y cabeceras de salud/rutas anteriores. Pruebas de ocho escrituras rechazadas y datos intactos incorporadas como regresi?n. Spot check: npm run test:api, 7 aprobadas.
-- Rollback: retirar CatalogModule, m?dulos catalog y p?gina catalogo con sus pruebas/documentaci?n; no hay migraciones ni cambios de datos. Riesgo: item 3 (composici?n compartida), verificaci?n independiente aprobada.
+- T1: RED observado y GREEN: 7 pruebas aprobadas; lint y build aprobados.
+- T2: HTTP integrado en ambos idiomas: 18 servicios y error al apagar API. Sin runner de componentes; comprobaciones funcionales realizadas.
+- Verificador independiente: S1-S3 PASS; rutas anteriores sin cambios frente a d0c2d9f. Ocho escrituras rechazadas sin modificar datos.
+- Commit: 5b919f6 (329 inserciones, 4 eliminaciones). Risk: item 3; verificador independiente aprobado. Sin migraciones.
+- Usuario autorizó la revisión con 1. Cuatro perspectivas sin hallazgos; revisión estática adicional a las pruebas previas.
+- Cierre nativo: review-3f28d241f20456ca, acknowledged, authority burned. Sin correcciones de código ni publicación remota.
