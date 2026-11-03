@@ -78,7 +78,7 @@ export function ProfileView({
                   <IconPen size={16} stroke="#EFE6D8" /> {p.edit}
                 </SoonButton>
               ))}
-            <ProfileMenu locale={locale} mode={isOwner ? mode : null} signedIn={signedIn} labels={{ menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, signOut: t.auth.signOut, ...menuLabels }} side={offer ? "business" : "personal"} />
+            <ProfileMenu locale={locale} mode={isOwner ? mode : null} signedIn={signedIn} labels={{ requests: t.requests.title, menu: t.common.menu, language: t.common.language, close: t.common.close, levels: t.levels.see, signOut: t.auth.signOut, ...menuLabels }} side={offer ? "business" : "personal"} />
           </div>
         </div>
 

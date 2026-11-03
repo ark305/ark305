@@ -1,4 +1,26 @@
 export const es = {
+  requests: {
+  "title": "Solicitudes",
+  "admin": "Administración de solicitudes",
+  "personal": "Mis solicitudes",
+  "refresh": "Actualizar",
+  "loading": "Cargando…",
+  "empty": "Todavía no hay solicitudes.",
+  "detail": "Ver historial",
+  "history": "Historial de estados",
+  "unavailable": "No se pudieron cargar los datos. Intenta actualizar.",
+  "conflict": "El estado cambió. Actualiza antes de volver a gestionarlo.",
+  "uncertain": "No se pudo confirmar el resultado. Actualiza antes de realizar otro cambio.",
+  "login": "Iniciar sesión",
+  "disclaimer": "Últimas 50 solicitudes. Gestionar o cerrar una solicitud no confirma una reserva ni un pago.",
+  "guests": "personas",
+  "created": "Recibida",
+  "actions": {
+    "in_progress": "Iniciar gestión",
+    "closed": "Cerrar solicitud",
+    "cancelled": "Cancelar solicitud"
+  }
+},
   meta: {
     description: "Una sola app para contratar, ofrecer y aprender en Miami. Servicios, experiencias y talento.",
   },

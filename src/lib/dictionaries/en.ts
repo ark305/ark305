@@ -1,6 +1,24 @@
 import type { es } from "./es";
 
 export const en: typeof es = {
+  requests: {
+    title: "Requests",
+    admin: "Request administration",
+    personal: "My requests",
+    refresh: "Refresh",
+    loading: "Loading…",
+    empty: "No requests yet.",
+    detail: "View history",
+    history: "Status history",
+    unavailable: "Could not load the data. Please refresh.",
+    conflict: "The status changed. Refresh before managing it again.",
+    uncertain: "The outcome could not be confirmed. Refresh before making another change.",
+    login: "Sign in",
+    disclaimer: "Latest 50 requests. Managing or closing a request does not confirm a reservation or payment.",
+    guests: "guests",
+    created: "Received",
+    actions: { in_progress: "Start handling", closed: "Close request", cancelled: "Cancel request" },
+  },
   meta: {
     description: "One app to hire, offer and learn in Miami. Services, experiences and talent.",
   },

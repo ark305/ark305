@@ -32,7 +32,7 @@ export function CopyLinkButton({ handle, copied, failed, label, markShared }: { 
   );
 }
 
-type MenuLabels = { menu: string; language: string; close: string; levels: string; signOut: string; label: string; personal: string; business: string };
+type MenuLabels = { requests: string; menu: string; language: string; close: string; levels: string; signOut: string; label: string; personal: string; business: string };
 
 // Menú: modo (solo en tu perfil), niveles e idioma.
 export function ProfileMenu({ locale, mode, side = "personal", signedIn = false, labels }: { locale: Locale; mode: Mode | null; side?: Side; signedIn?: boolean; labels: MenuLabels }) {
@@ -86,6 +86,7 @@ export function ProfileMenu({ locale, mode, side = "personal", signedIn = false,
             </div>
             {signedIn && (
               <form action={signOut}>
+                <Link href="/solicitudes" onClick={() => setOpen(false)} className="mt-4 flex min-h-11 items-center justify-center rounded-full border border-line text-sm text-teal">{labels.requests}</Link>
                 <button type="submit" className="mt-5 h-12 w-full rounded-full border border-white/10 text-[15px] font-semibold text-[#E07A8F]">
                   {labels.signOut}
                 </button>

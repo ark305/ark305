@@ -48,7 +48,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function safeRequest(value: unknown): ServiceRequest | null {
+export function safeRequest(value: unknown): ServiceRequest | null {
   if (!isRecord(value) || typeof value.id !== "string" || !UUID.test(value.id) ||
       typeof value.serviceId !== "string" || !SERVICE_ID.test(value.serviceId) ||
       !isCalendarDate(value.requestedDate) || !Number.isInteger(value.guests) ||

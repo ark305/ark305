@@ -282,7 +282,7 @@ export function DayRequests({ locale, entries }: { locale: Locale; entries: DayE
           )}
           {message && <p role="alert" className="text-sm text-cream">{message}</p>}
           <div className="flex items-center justify-between gap-3 border-t border-white/10 pt-3">
-            <h4 className="text-sm font-bold text-white">{t.requestHistory}</h4>
+            <h4 className="text-sm font-bold text-white"><a href="/solicitudes" className="underline">{t.requestHistory}</a></h4>
             <button type="button" onClick={() => sessionRef.current && void loadHistory(sessionRef.current)} disabled={historyLoading} className="text-sm text-teal underline disabled:opacity-50">
               {historyLoading ? t.loadingHistory : t.refreshHistory}
             </button>
