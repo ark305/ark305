@@ -6,7 +6,7 @@ El plan creado con Meta puede convertirse en solicitudes individuales de interé
 
 1. Configurar las variables públicas de Supabase para la web e iniciar sesión.
 2. Configurar NestJS con `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`, aplicar la migración de solicitudes al entorno local autorizado e iniciar `npm run dev:api`.
-3. Iniciar Next.js con `npm run dev -- --port 3100` para no ocupar el puerto 3000 del otro proyecto. La web usa `ARK_API_URL` del entorno del servidor; si se omite, llama a `http://127.0.0.1:3001`.
+3. Iniciar Next.js con `npm run dev` para no ocupar el puerto 3000 del otro proyecto. La web usa `ARK_API_URL` del entorno del servidor; si se omite, llama a `http://127.0.0.1:3001`.
 4. En Mi día, generar o añadir servicios, elegir una fecha común y enviar. Consultar el historial para confirmar qué solicitudes recibió NestJS.
 
 La integración requiere una sesión válida y la tabla `public.service_requests` creada. El navegador no llama directamente a NestJS: usa `POST` y `GET /api/service-requests` en Next.js, que reenvía solo el Bearer y el JSON permitido al API autenticado `POST`/`GET /api/v1/service-requests`.
@@ -29,7 +29,7 @@ Los estados de prevención de duplicados viven solo mientras el componente está
 Sin credenciales reales ni llamadas de red, desde la raíz del repositorio:
 
 ```powershell
-node --test test/ai-route.test.mjs test/service-requests.test.mjs test/day-requests.test.mjs
+node --test frontend/test/ai-route.test.mjs frontend/test/service-requests.test.mjs frontend/test/day-requests.test.mjs
 npm run lint -- src/app/api/service-requests/route.ts src/lib/service-requests.ts src/components/day-requests.tsx src/components/day-planner.tsx src/lib/dictionaries/es.ts src/lib/dictionaries/en.ts test/service-requests.test.mjs test/day-requests.test.mjs
 ```
 

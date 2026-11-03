@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: { root: __dirname },
+  outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [
       // Fotos de ejemplo (Unsplash, licencia libre).

@@ -59,7 +59,7 @@ La comprobación de escritura remota se realiza solo con datos de prueba autoriz
 ```sh
 npm --prefix backend test
 npm --prefix backend run test:rls
-node --test test/service-requests.test.mjs test/day-requests.test.mjs test/requests-inbox.test.mjs test/requests-inbox-ui.test.mjs
+node --test frontend/test/service-requests.test.mjs frontend/test/day-requests.test.mjs frontend/test/requests-inbox.test.mjs frontend/test/requests-inbox-ui.test.mjs
 ```
 
 La prueba RLS usa PostgreSQL 17 aislado en Docker, sin red y con identidades de prueba. No modifica Supabase remoto ni llama a Meta.

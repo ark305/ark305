@@ -2,6 +2,11 @@
 
 # dependencies
 /node_modules
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/coverage/
+/frontend/build/
 /backend/node_modules/
 /backend/dist/
 /backend/coverage/

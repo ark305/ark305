@@ -31,7 +31,7 @@ El código conserva varias generaciones de navegación y nomenclatura. No todos 
 
 **Ejemplo:** interesarse por Business no demuestra que una persona haya pagado el nivel Pro. La preferencia de navegación y el derecho a un beneficio son cosas distintas.
 
-Referencia: [modelo de modos y niveles](../src/lib/mode.ts), [catálogo de niveles](../src/lib/levels.ts) y [layout principal](../src/app/layout.tsx).
+Referencia: [modelo de modos y niveles](../frontend/src/lib/mode.ts), [catálogo de niveles](../frontend/src/lib/levels.ts) y [layout principal](../frontend/src/app/layout.tsx).
 
 ## 3. Mapa del producto
 
@@ -69,7 +69,7 @@ Una pantalla existente no implica que todas sus acciones estén conectadas a ope
 - **Backend disponible:** `/api/ai` valida la sesión, consulta preferencias y llama a Anthropic. Incluye una llamada para contabilizar el uso diario; su comportamiento ante fallos debe verificarse.
 - **Conexión pendiente de confirmar:** la búsqueda del código no encontró llamadas de componentes a `/api/ai`. Tener el endpoint no equivale a tener un asistente integrado.
 
-Referencias: [planificador](../src/lib/catalog.ts), [endpoint IA](../src/app/api/ai/route.ts) y [acciones del servidor](../src/lib/actions.ts).
+Referencias: [planificador](../frontend/src/lib/catalog.ts), [endpoint IA](../frontend/src/app/api/ai/route.ts) y [acciones del servidor](../frontend/src/lib/actions.ts).
 
 ## 5. Dónde vive la información
 
@@ -134,13 +134,13 @@ Pantallas y componentes
 
 | Ubicación | Responsabilidad |
 |---|---|
-| [`src/app/`](../src/app/) | Rutas, layout y endpoints. |
-| [`src/components/`](../src/components/) | Interfaz y recorridos de usuario. |
-| [`src/lib/actions.ts`](../src/lib/actions.ts) | Acciones del servidor para perfiles, servicios y preferencias. |
-| [`src/lib/profiles-db.ts`](../src/lib/profiles-db.ts) | Lectura de perfiles y combinación con datos demo. |
-| [`src/lib/supabase/`](../src/lib/supabase/) | Configuración y clientes de Supabase. |
-| [`src/lib/dictionaries/`](../src/lib/dictionaries/) | Diccionarios en español e inglés. |
-| [`src/proxy.ts`](../src/proxy.ts) | Tratamiento de sesión y rutas públicas `@usuario`. |
+| [`frontend/src/app/`](../frontend/src/app/) | Rutas, layout y endpoints. |
+| [`frontend/src/components/`](../frontend/src/components/) | Interfaz y recorridos de usuario. |
+| [`frontend/src/lib/actions.ts`](../frontend/src/lib/actions.ts) | Acciones del servidor para perfiles, servicios y preferencias. |
+| [`frontend/src/lib/profiles-db.ts`](../frontend/src/lib/profiles-db.ts) | Lectura de perfiles y combinación con datos demo. |
+| [`frontend/src/lib/supabase/`](../frontend/src/lib/supabase/) | Configuración y clientes de Supabase. |
+| [`frontend/src/lib/dictionaries/`](../frontend/src/lib/dictionaries/) | Diccionarios en español e inglés. |
+| [`frontend/src/proxy.ts`](../frontend/src/proxy.ts) | Tratamiento de sesión y rutas públicas `@usuario`. |
 | [`supabase/schema.sql`](../supabase/schema.sql) | Tablas iniciales, reglas de acceso y almacenamiento de imágenes. |
 | [`supabase/002_experiences.sql`](../supabase/002_experiences.sql) | Extensiones de preferencias y contabilización del uso de IA. |
 
@@ -148,7 +148,7 @@ Pantallas y componentes
 
 El proyecto declara Next.js 16.3.6, React 19.2.8, TypeScript y Tailwind 4. Los comandos disponibles están en [`package.json`](../package.json): `dev`, `build`, `start` y `lint`.
 
-- Para desarrollo local se necesitan dependencias instaladas y configuración de entorno. Consulte [README](../README.md) y [`.env.example`](../.env.example).
+- Para desarrollo local se necesitan dependencias instaladas y configuración de entorno. Consulte [README](../README.md) y [`.env.example`](../frontend/.env.example).
 - Sin configuración pública de Supabase, existe un modo demo. Eso no valida el backend real.
 - El endpoint IA necesita `ANTHROPIC_API_KEY` en servidor; la plantilla de entorno revisada no la documenta. Los modelos configurados también deben comprobarse antes de usar la integración.
 - No ejecute los SQL en una base existente sin revisar primero su estado y los cambios propuestos.
