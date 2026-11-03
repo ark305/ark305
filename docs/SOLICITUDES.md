@@ -17,6 +17,8 @@ Todas las rutas requieren `Authorization: Bearer <sesión del usuario>`. El back
 
 Ejemplo de cuerpo de transición:
 
+Los identificadores UUID aceptan letras mayúsculas o minúsculas y se normalizan antes de comparar la respuesta del almacenamiento.
+
 ```json
 { "expectedStatus": "received", "status": "in_progress" }
 ```
