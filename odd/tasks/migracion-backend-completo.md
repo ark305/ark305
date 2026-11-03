@@ -12,8 +12,8 @@ Verificación: node:test HTTP, pruebas diferenciales, TypeScript y lint. Previsi
 - S3: «siguiente q eso creamos un repo para el.bacm». Extraer el backend después de S2, sin dependencias de archivos de Next. Antes de crear un repositorio remoto confirmar destino y visibilidad; preservar historial y configuración privada.
 
 ## Tasks
-- T7a | S2, S5, S7 | inline | implementación y pruebas completas; cambios actuales pendientes de revisión/commit | historial propio y administrativo: backend focalizado 7/7, suite 48/48; autorización y DTO sanitizado.
-- T7b | S2, S5, S7 | inline, después de T7a | implementación y pruebas completas; cambios actuales pendientes de revisión/commit | bandeja /solicitudes con permisos, historial, recuperación, enlaces y textos ES/EN; focalizados 23/23 antes de corrección, UI 4/4 después.
+- T7a | S2, S5, S7 | inline | completado localmente, 965b137; revisión IA omitida para este candidato | historial propio y administrativo: backend focalizado 7/7, suite 48/48; autorización y DTO sanitizado.
+- T7b | S2, S5, S7 | inline, después de T7a | completado localmente, 965b137; revisión IA omitida para este candidato | bandeja /solicitudes con permisos, historial, recuperación, enlaces y textos ES/EN; focalizados 23/23 antes de corrección, UI 4/4 después.
 - T7c | S2, S5 | verificación independiente por permisos y persistencia | pendiente | recorrido cliente → solicitud → gestión administrativa → historial → recarga; probar dos identidades y rechazos. Sin llamadas a Meta para estas pruebas. Registrar resultados antes del siguiente bloque.
 - T11 | S5 | inline | completado, 26ac94f publicado | plan y cinco commits anteriores publicados con autorización; publicaciones posteriores no implícitas.
 - T9 | S4 | inline: correcciones relacionadas de experiencia y errores | implementado, commit de esta unidad | mantener controles fuera de la navegación fija y distinguir errores de consulta de perfiles ausentes.
@@ -28,6 +28,8 @@ Verificación: node:test HTTP, pruebas diferenciales, TypeScript y lint. Previsi
 - T8 | S3 | pendiente después de S2 | pendiente | separar repositorio backend con historial, pruebas y configuración propia.
 
 ## Log
+
+- Continuación autorizada: «no que continues con lo demas». Se detiene el trabajo sobre el reporte y la revisión nativa, sin desactivar revisiones futuras. El decline del candidato fue confirmado como declined_this_candidate; la reentrada STATUS volvió a fallar por operation_timeout. No se afirma aprobación IA. Unidad local guardada en 965b137, sin push. T7c requiere autorización concreta para crear una solicitud de prueba en Supabase y gestionar solo ese registro mediante la sesión existente; las solicitudes anteriores permanecen intactas. La comprobación con una segunda cuenta real sigue pendiente.
 
 - Cierre local de S7: web 71/71 y backend 48/48 en verificación independiente inicial; diez comparaciones diferenciales idénticas y ocho eventos malformados rechazados. Detectados y corregidos en una sola tanda: diccionario inglés omitido, acentos dañados por pipe PowerShell y estado inicial dentro de efecto. Revalidación acotada: diccionarios reales 2/2, TypeScript exit 0 y lint exit 0; persiste una advertencia exhaustive-deps sobre el contador de revisión en cleanup. Regresión incorporada: carga de diccionarios reales, UI 4/4. Sin llamadas Meta ni escrituras remotas.
 - Navegador real, sesión administrativa existente: /solicitudes muestra las dos solicitudes reales y permite abrir historial; fechas y estados recibidos del backend. No se cambiaron sus estados. T7c sigue parcial: falta recorrido de escritura y recarga con solicitud remota de prueba autorizada, y segundo usuario real; aislamiento entre identidades comprobado en harness local, no presentado como prueba de dos cuentas reales.
