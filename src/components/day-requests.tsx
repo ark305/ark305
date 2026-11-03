@@ -297,7 +297,7 @@ export function DayRequests({ locale, entries }: { locale: Locale; entries: DayE
                 <li key={item.id} className="rounded-xl border border-white/10 px-3 py-2 text-sm">
                   <span className="font-semibold text-white">{getItem(item.serviceId)?.name[locale] ?? item.serviceId}</span>
                   <span className="ml-2 text-cream">{item.requestedDate}</span>
-                  <span className="ml-2 text-mute">{t.received}</span>
+                  <span className="ml-2 text-mute">{t.requestStates[item.status]}</span>
                 </li>
               ))}
             </ul>

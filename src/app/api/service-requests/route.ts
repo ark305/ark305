@@ -13,7 +13,7 @@ type ServiceRequestDto = {
   requestedDate: string;
   guests: number;
   preferences: string;
-  status: "received";
+  status: "received" | "in_progress" | "closed" | "cancelled";
   createdAt: string;
 };
 
@@ -58,7 +58,7 @@ function safeDto(value: unknown): ServiceRequestDto | null {
       !isCalendarDate(value.requestedDate) || !Number.isInteger(value.guests) ||
       Number(value.guests) < 1 || Number(value.guests) > 20 ||
       typeof value.preferences !== "string" || value.preferences.length > 2000 ||
-      value.status !== "received" || typeof value.createdAt !== "string" ||
+      (value.status !== "received" && value.status !== "in_progress" && value.status !== "closed" && value.status !== "cancelled") || typeof value.createdAt !== "string" ||
       !Number.isFinite(Date.parse(value.createdAt))) return null;
   return {
     id: value.id,
@@ -66,7 +66,7 @@ function safeDto(value: unknown): ServiceRequestDto | null {
     requestedDate: value.requestedDate,
     guests: Number(value.guests),
     preferences: value.preferences,
-    status: "received",
+    status: value.status,
     createdAt: value.createdAt,
   };
 }
@@ -111,7 +111,7 @@ async function requestNest(request: NextRequest, method: "GET" | "POST", body?: 
     }
     if (method === "POST") {
       const item = safeDto(payload);
-      return item ? Response.json(item, { status: 201, headers: { "Cache-Control": "no-store" } }) :
+      return item?.status === "received" ? Response.json(item, { status: 201, headers: { "Cache-Control": "no-store" } }) :
         errorResponse(502, "Invalid response from service requests");
     }
     if (!isRecord(payload) || !Array.isArray(payload.items) || payload.items.length > 50) {

@@ -96,6 +96,23 @@ test('list helper validates a private history response and returns safe DTOs onl
   assert.deepEqual(result.map((item) => ({ ...item })), [dto]);
 });
 
+test('history preserves each management state through proxy and client', async () => {
+  const { listServiceRequests, createServiceRequest } = loadLibrary();
+  for (const status of ['received', 'in_progress', 'closed', 'cancelled']) {
+    const item = { ...dto, status };
+    const { route } = routeHarness({ body: { items: [item] } });
+    const response = await route.GET(proxyRequest('GET'));
+    assert.equal(response.status, 200, status);
+    const result = await listServiceRequests('access-token', async () => response);
+    assert.equal(result[0].status, status);
+    if (status !== 'received') {
+      await assert.rejects(createServiceRequest(request, 'access-token', async () => Response.json(item, { status: 201 })), /response/i);
+      const post = routeHarness({ body: item, status: 201 });
+      assert.equal((await post.route.POST(proxyRequest('POST', request))).status, 502);
+    }
+  }
+});
+
 test('client helper rejects invalid calendar dates and owner injection before transport', async () => {
   const { createServiceRequest } = loadLibrary();
   let calls = 0;

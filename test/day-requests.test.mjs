@@ -108,6 +108,7 @@ const labels = {
   sendingRequests: 'Sending', received: 'Received', uncertainResult: 'Uncertain; refresh history',
   requestRejected: 'Rejected', notSubmitted: 'Pending', historyError: 'History error', requestHistory: 'History',
   loadingHistory: 'Loading', refreshHistory: 'Refresh history', emptyHistory: 'No history',
+  requestStates: { received: 'Received', in_progress: 'In progress', closed: 'Closed', cancelled: 'Cancelled' },
 };
 const dto = (input, count) => ({
   id: `a1ed2f79-e725-4916-8d61-03689bb78ac${count % 10}`,
@@ -120,6 +121,26 @@ const entries = [
 const session = (userId = 'user-1', accessToken = 'access-1') => ({ user: { id: userId }, access_token: accessToken });
 const flush = async () => { await new Promise((resolve) => setImmediate(resolve)); };
 const textButton = (tree, label) => findNodes(tree, (node) => node.type === 'button' && textOf(node).includes(label))[0];
+
+test('history shows current management states and refreshes them without resending', async () => {
+  let status = 'in_progress';
+  const app = harness({ list: async () => [{ ...dto({ serviceId: 'yacht', requestedDate: '2027-01-15', guests: 4 }, 1), status }] });
+  function Component(props) { return app.Component(props); }
+  app.render(Component, { locale: 'en', entries });
+  app.listeners[0]('INITIAL_SESSION', session());
+  await flush();
+  let tree = app.render(Component, { locale: 'en', entries });
+  assert.match(textOf(tree), /In progress/);
+  for (status of ['closed', 'cancelled', 'received']) {
+    await textButton(tree, labels.refreshHistory).props.onClick();
+    await flush();
+    tree = app.render(Component, { locale: 'en', entries });
+    const historyItems = findNodes(tree, node => node.type === 'li');
+    assert.ok(historyItems.some(item => textOf(item).includes(labels.requestStates[status])));
+  }
+  assert.equal(app.submitted.length, 0);
+  app.unmount();
+});
 
 test('one selected calendar date is sent for every cart item and duplicate clicks are blocked', async () => {
   const completions = [];

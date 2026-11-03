@@ -258,6 +258,7 @@ export const es = {
     sendRemaining: "Enviar solicitudes pendientes",
     sendingRequests: "Enviando solicitudes…",
     received: "Recibida",
+    requestStates: { received: "Recibida", in_progress: "En gestión", closed: "Cerrada", cancelled: "Cancelada" },
     uncertainResult: "No se pudo confirmar el resultado. Actualiza el historial antes de volver a intentarlo.",
     requestRejected: "La solicitud no fue aceptada. Revisa la fecha y vuelve a intentarlo.",
     notSubmitted: "Pendiente",

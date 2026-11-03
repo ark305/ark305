@@ -260,6 +260,7 @@ export const en: typeof es = {
     sendRemaining: "Send remaining requests",
     sendingRequests: "Sending requests…",
     received: "Received",
+    requestStates: { received: "Received", in_progress: "In progress", closed: "Closed", cancelled: "Cancelled" },
     uncertainResult: "The result could not be confirmed. Refresh history before trying again.",
     requestRejected: "The request was not accepted. Check the date and try again.",
     notSubmitted: "Pending",

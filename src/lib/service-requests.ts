@@ -11,7 +11,7 @@ export type ServiceRequest = {
   requestedDate: string;
   guests: number;
   preferences: string;
-  status: "received";
+  status: "received" | "in_progress" | "closed" | "cancelled";
   createdAt: string;
 };
 
@@ -54,7 +54,7 @@ function safeRequest(value: unknown): ServiceRequest | null {
       !isCalendarDate(value.requestedDate) || !Number.isInteger(value.guests) ||
       Number(value.guests) < 1 || Number(value.guests) > 20 ||
       typeof value.preferences !== "string" || value.preferences.length > 2000 ||
-      value.status !== "received" || typeof value.createdAt !== "string" ||
+      (value.status !== "received" && value.status !== "in_progress" && value.status !== "closed" && value.status !== "cancelled") || typeof value.createdAt !== "string" ||
       !Number.isFinite(Date.parse(value.createdAt))) return null;
   return {
     id: value.id,
@@ -62,7 +62,7 @@ function safeRequest(value: unknown): ServiceRequest | null {
     requestedDate: value.requestedDate,
     guests: Number(value.guests),
     preferences: value.preferences,
-    status: "received",
+    status: value.status,
     createdAt: value.createdAt,
   };
 }
@@ -112,7 +112,7 @@ export async function createServiceRequest(
     throw new ServiceRequestError(kind, `Service request outcome was not confirmed (${response.status})`);
   }
   const item = safeRequest(await readResponse(response));
-  if (!item) throw new ServiceRequestError("uncertain", "Invalid service request response");
+  if (!item || item.status !== "received") throw new ServiceRequestError("uncertain", "Invalid service request response");
   return item;
 }
 
