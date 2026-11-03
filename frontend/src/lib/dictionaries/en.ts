@@ -96,6 +96,9 @@ export const en: typeof es = {
   },
   snap: {
     title: "Your ARK Snapshot",
+    loading: "Preparing your Snapshot…",
+    unavailable: "We could not load your Snapshot. Check your connection and try again.",
+    retry: "Try again",
     who: "Who you are on ARK",
     placement: "Where you are",
     strengths: "Strengths",

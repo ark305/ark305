@@ -98,6 +98,9 @@ export const es = {
   },
   snap: {
     title: "Tu ARK Snapshot",
+    loading: "Estamos preparando tu Snapshot…",
+    unavailable: "No pudimos cargar tu Snapshot. Comprueba tu conexión e inténtalo de nuevo.",
+    retry: "Intentar de nuevo",
     who: "Quién eres en ARK",
     placement: "Dónde estás",
     strengths: "Fortalezas",

@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { courses } from "@/lib/community";
-import { buildSnapshot, sanitize, type Answers } from "@/lib/diagnosis";
+import { sanitize, type Answers, type Snapshot } from "@/lib/diagnosis";
 import { useLocalDiagnosis } from "@/lib/diagnosis-store";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
+import { requestSnapshot } from "@/lib/snapshot";
 import { positions } from "@/lib/talent";
 import { IconArrow, IconCap, IconCheck, IconSparkle } from "./icons";
 
@@ -35,8 +37,39 @@ export function SnapshotView({ locale, fromAccount }: { locale: Locale; fromAcco
   const t = dict(locale);
   const s = t.snap;
   const local = useLocalDiagnosis();
-  const answers = fromAccount ?? (local ? sanitize(local) : null);
-  const snap = answers ? buildSnapshot(answers) : null;
+  const rawAnswers = fromAccount ?? local;
+  const answers = rawAnswers ? sanitize(rawAnswers) : null;
+  const answersKey = answers?.who ? JSON.stringify(answers) : null;
+  const [retry, setRetry] = useState(0);
+  const [result, setResult] = useState<{ key: string; snapshot: Snapshot | null; error: boolean } | null>(null);
+  const requestKey = answersKey ? `${answersKey}:${retry}` : null;
+
+  useEffect(() => {
+    if (!answersKey || !requestKey) return;
+    let active = true;
+    const controller = new AbortController();
+    void requestSnapshot(JSON.parse(answersKey) as Answers, controller.signal)
+      .then((snapshot) => { if (active) setResult({ key: requestKey, snapshot, error: false }); })
+      .catch(() => { if (active) setResult({ key: requestKey, snapshot: null, error: true }); });
+    return () => { active = false; controller.abort(); };
+  }, [answersKey, requestKey]);
+
+  const current = requestKey && result?.key === requestKey ? result : null;
+  const snap = current?.snapshot ?? null;
+
+  if (requestKey && !current)
+    return <p role="status" className="px-4 pt-10 text-sm text-mute">{s.loading}</p>;
+
+  if (current?.error)
+    return (
+      <div className="flex flex-col gap-4 px-4 pt-10">
+        <h1 className="font-display text-[36px] leading-[1.05] font-semibold text-white">{s.title}</h1>
+        <p role="alert" className="text-sm text-mute">{s.unavailable}</p>
+        <button type="button" onClick={() => setRetry((value) => value + 1)} className="gold-grad flex h-[52px] items-center justify-center rounded-full text-base font-bold text-ink">
+          {s.retry}
+        </button>
+      </div>
+    );
 
   if (!snap)
     return (

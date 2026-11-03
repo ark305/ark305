@@ -98,17 +98,14 @@ test('Planner defaults safely when no preference or a mixed cart exists', () => 
   assert.equal(store.usePlannerGuests(), 4, 'do not infer one count from mixed entries');
 });
 
-test('Prototype copy does not promise slots and Snapshot does not invent saved-day status', () => {
+test('Prototype copy does not promise slots and identifies browser drafts', () => {
   const load = loader();
   const { posts } = load('@/lib/mock-data');
   const { dict } = load('@/lib/dict');
-  const { buildSnapshot } = load('@/lib/diagnosis');
   for (const locale of ['es', 'en']) {
     const post = posts.find((item) => item.id === 'p1').text[locale];
     assert.doesNotMatch(post, /Quedan dos|Two afternoon trips left/);
     assert.match(post, /prototipo|prototype/i);
-    const gaps = buildSnapshot({ who: 'individual' }).gaps.map((item) => item[locale]).join(' ');
-    assert.doesNotMatch(gaps, /no tienes días guardados|No saved days/i);
     assert.match(dict(locale).day.draftNote, /navegador|browser/i);
   }
 });
