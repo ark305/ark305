@@ -1,20 +1,38 @@
-# Web ARK305
+# ARK305 Web
 
-Aplicación Next.js independiente. Ejecutar desde esta carpeta:
+Aplicación Next.js de ARK305. Esta carpeta contiene la interfaz, sus adaptadores HTTP, recursos, configuración y pruebas. Las reglas de negocio y el acceso a datos se mantienen en el API HTTP independiente, disponible localmente en `../../ark305-api` desde esta carpeta.
+
+## Ejecutar y comprobar
 
 ```sh
 npm ci
 npm run dev
 ```
 
-La web escucha en http://localhost:3100. Configurar `.env.local` usando `.env.example`; Nest debe estar disponible en `ARK_API_URL`. No incluir claves de Meta ni claves secretas de Supabase en este paquete.
+La aplicación utiliza el puerto `3100`. Comprobaciones disponibles:
 
-`src/app/` contiene rutas y adaptadores web; `src/components/`, la interfaz; `public/`, recursos estáticos; `test/`, pruebas web. Los datos y reglas del servidor pertenecen a `../backend/` y se consumen por HTTP, nunca mediante imports entre aplicaciones.
+```sh
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
 
-Comprobaciones: `npm test`, `npm run lint`, `npm run typecheck` y `npm run build`.
+## Variables locales
 
-## Snapshot
+Copie `.env.example` como `.env.local` y configure la URL y la clave pública de Supabase, además de `ARK_API_URL`. Esta última debe ser un origen HTTP(S) accesible desde el servidor Next.js; no use el prefijo `NEXT_PUBLIC_`.
 
-El cálculo se realiza en Nest mediante `POST /api/v1/profiles/snapshot`; la ruta web `/api/snapshot` solo adapta y valida el transporte. Este cálculo no consulta cuentas, no guarda datos y no llama a Meta. Las respuestas guardadas en la cuenta tienen prioridad sobre el diagnóstico local. Si Nest no está disponible, la web muestra un error y permite reintentar; no genera un resultado alternativo en el navegador.
+No agregue aquí claves secretas del API ni credenciales administrativas de Supabase. La configuración privada del servidor pertenece al repositorio independiente `../../ark305-api` desde esta carpeta.
 
-En Vercel, seleccionar esta carpeta como raíz del proyecto web. No se modifica el despliegue remoto al mover los archivos localmente.
+## Organización
+
+- `src/app/`: páginas y rutas de adaptación HTTP.
+- `src/components/`: presentación e interacción.
+- `src/lib/`: estado local, formularios, configuración pública y transporte.
+- `src/lib/dictionaries/`: textos de interfaz en español e inglés.
+- `public/`: recursos estáticos.
+- `test/`: pruebas de interfaz, validación y transporte.
+
+Las rutas web actúan como adaptadores acotados: validan el formato de entrada, reenvían las operaciones permitidas al API y presentan respuestas seguras. No deben implementar reglas de negocio ni acceso directo a datos.
+
+En Vercel, el directorio raíz del proyecto web es `frontend`. La preparación local no modifica despliegues ni configuración remota.

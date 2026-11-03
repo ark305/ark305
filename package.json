@@ -7,12 +7,7 @@
     "build": "npm --prefix frontend run build --",
     "start": "npm --prefix frontend run start --",
     "lint": "npm --prefix frontend run lint --",
-    "test": "npm run test:web && npm run test:api",
-    "test:web": "npm --prefix frontend test",
-    "typecheck": "npm --prefix frontend run typecheck",
-    "dev:api": "npm --prefix backend run start:dev",
-    "build:api": "npm --prefix backend run build",
-    "test:api": "npm --prefix backend test",
-    "install:apps": "npm --prefix frontend ci && npm --prefix backend ci"
+    "test": "npm --prefix frontend test",
+    "typecheck": "npm --prefix frontend run typecheck"
   }
 }

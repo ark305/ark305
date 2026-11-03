@@ -7,6 +7,8 @@
 /frontend/out/
 /frontend/coverage/
 /frontend/build/
+# Legacy paths from before the API repository was separated. These patterns
+# keep old local artifacts ignored; the backend is maintained outside this repo.
 /backend/node_modules/
 /backend/dist/
 /backend/coverage/

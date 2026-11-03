@@ -1,36 +1,31 @@
-# Recorrido principal de Mi día
+# Recorrido principal: solicitudes desde Mi día
 
-El plan creado con Meta puede convertirse en solicitudes individuales de interés a través de Next.js y NestJS. Una solicitud con estado `received` solo confirma recepción: no garantiza disponibilidad, proveedor, precio, reserva ni cobro.
+Desde Mi día, el usuario puede convertir elementos del plan en solicitudes individuales de interés. Una solicitud recibida confirma únicamente que el API recibió la petición: no representa disponibilidad, proveedor confirmado, reserva ni cobro.
 
-## Ruta local
+## Comprobar la interfaz
 
-1. Configurar las variables públicas de Supabase para la web e iniciar sesión.
-2. Configurar NestJS con `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY`, aplicar la migración de solicitudes al entorno local autorizado e iniciar `npm run dev:api`.
-3. Iniciar Next.js con `npm run dev` para no ocupar el puerto 3000 del otro proyecto. La web usa `ARK_API_URL` del entorno del servidor; si se omite, llama a `http://127.0.0.1:3001`.
-4. En Mi día, generar o añadir servicios, elegir una fecha común y enviar. Consultar el historial para confirmar qué solicitudes recibió NestJS.
+1. Configurar `frontend/.env.local` y la URL `ARK_API_URL` para que Next pueda alcanzar el API de desarrollo.
+2. Iniciar la web desde la raíz con `npm run dev`; se utiliza el puerto `3100`.
+3. Iniciar sesión y abrir `/mi-dia`.
+4. Añadir elementos, elegir una fecha y enviar. Consultar el historial de solicitudes para ver el estado informado por el API.
 
-La integración requiere una sesión válida y la tabla `public.service_requests` creada. El navegador no llama directamente a NestJS: usa `POST` y `GET /api/service-requests` en Next.js, que reenvía solo el Bearer y el JSON permitido al API autenticado `POST`/`GET /api/v1/service-requests`.
+La ruta web `/api/service-requests` actúa como adaptador HTTP. El navegador no recibe la URL del API ni credenciales privadas. La preparación y los comandos del servicio se mantienen en la documentación del repositorio independiente `../ark305-api`.
 
-`ARK_API_URL` debe ser un origen HTTP de loopback o HTTPS, sin credenciales, ruta, consulta ni fragmento. Se configura solo en el servidor Next.js. No se reenvían cookies, claves de Supabase ni destinos proporcionados por el navegador; las redirecciones se rechazan y las solicitudes tienen un límite de cinco segundos.
+## Comportamiento visible
 
-## Envío y resultados
+- Cada elemento se envía como una solicitud independiente; no se combinan en una reserva.
+- Los elementos del mismo envío conservan la fecha seleccionada.
+- Los éxitos recibidos se mantienen aunque otra solicitud falle; un clic duplicado no vuelve a enviar elementos confirmados durante la misma sesión de interfaz.
+- Si la respuesta se pierde o el servicio falla, el resultado puede ser incierto. Actualice el historial antes de decidir un reenvío manual; no hay reintento automático.
+- Cambiar de cuenta o cerrar sesión limpia la información asociada a la cuenta anterior y descarta respuestas de sesión obsoletas.
+- Los textos de horario o cantidad son preferencias del usuario; no equivalen a precios, anticipos ni prioridad.
 
-- Cada elemento se guarda como una solicitud individual, en orden, con la misma fecha seleccionada.
-- La fecha se bloquea en el componente al iniciar el primer envío, incluso si una solicitud es rechazada. Así, los artículos restantes del mismo carrito conservan una fecha común.
-- El horario y la cantidad se envían como texto de preferencias; no se transmiten precios, anticipos ni prioridad.
-- Los éxitos permanecen marcados aunque otra solicitud falle. Un clic duplicado no vuelve a enviar elementos recibidos.
-- Si se pierde la respuesta o falla el servicio, el resultado se marca como incierto: actualizar el historial antes de decidir qué hacer. No hay reintento automático y el estado no implica rollback.
-- Al cerrar sesión o cambiar de cuenta, se vacían el historial y los estados asociados a la sesión anterior; los envíos pendientes se detienen antes de usar el nuevo token.
+El flujo de estados visible es **Recibida → En gestión → Cerrada**. La cancelación puede estar disponible mientras la solicitud no sea terminal. Los estados terminales no se presentan como reabribles.
 
-Los estados de prevención de duplicados viven solo mientras el componente está montado; el contrato Nest no ofrece idempotencia persistente. Tras recargar, la interfaz consulta el historial y reconcilia solicitudes coincidentes. Si un resultado incierto no aparece allí, revisar el historial antes de decidir un reenvío manual. El carrito sigue en el almacenamiento local existente y no se convierte en una reserva.
+## Pruebas web
 
-## Comprobaciones
-
-Sin credenciales reales ni llamadas de red, desde la raíz del repositorio:
-
-```powershell
+```sh
 node --test frontend/test/ai-route.test.mjs frontend/test/service-requests.test.mjs frontend/test/day-requests.test.mjs
-npm run lint -- src/app/api/service-requests/route.ts src/lib/service-requests.ts src/components/day-requests.tsx src/components/day-planner.tsx src/lib/dictionaries/es.ts src/lib/dictionaries/en.ts test/service-requests.test.mjs test/day-requests.test.mjs
 ```
 
-La verificación de extremo a extremo requiere Supabase local autorizado, la migración aplicada, NestJS configurado e inicio de sesión. Las pruebas HTTP de la web usan dependencias simuladas y no verifican una escritura real.
+Estas pruebas usan dependencias simuladas. No crean solicitudes reales, no llaman a Meta y no modifican servicios remotos.
