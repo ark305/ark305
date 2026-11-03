@@ -18,6 +18,25 @@ const item = { id, serviceId: 'yacht', guests: 4, requestedDate: '2027-01-15', p
 const libFile = 'src/lib/requests-inbox.ts';
 const routeFile = 'src/app/api/requests-inbox/[[...segments]]/route.ts';
 
+test('inbox proxy delegates transition policy to Nest while rejecting malformed envelopes', async () => {
+  let calls = 0;
+  const route = load(routeFile, { fetch: async (_url, init) => {
+    calls++;
+    assert.deepEqual(JSON.parse(init.body), { expectedStatus: 'received', status: 'closed' });
+    return Response.json({ error: 'Invalid transition' }, { status: 400 });
+  } });
+  const request = body => new Request('http://localhost/api/requests-inbox/admin/'+id, {
+    method: 'PATCH', headers: { authorization: 'Bearer token', 'content-type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const context = { params: Promise.resolve({ segments: ['admin', id] }) };
+  const rejected = await route.PATCH(request({ expectedStatus: 'received', status: 'closed' }), context);
+  assert.equal(rejected.status, 400);
+  assert.equal(calls, 1, 'Nest must decide whether a well-shaped transition is allowed');
+  const malformed = await route.PATCH(request({ expectedStatus: 'received', status: {}, owner: id }), context);
+  assert.equal(malformed.status, 400);
+  assert.equal(calls, 1);
+});
+
 test('inbox selects client view only on explicit forbidden admin response', async () => {
   const { readInbox } = load(libFile);
   const paths = [];

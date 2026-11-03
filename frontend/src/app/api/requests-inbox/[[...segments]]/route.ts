@@ -1,4 +1,4 @@
-import { collection, InboxError, nextStatuses, requestId, safeEvents, safeInboxItem, type RequestStatus } from "@/lib/requests-inbox";
+import { collection, InboxError, requestId, safeEvents, safeInboxItem } from "@/lib/requests-inbox";
 
 type Context = { params: Promise<{ segments?: string[] }> };
 const headers = { "Cache-Control": "no-store" };
@@ -20,8 +20,10 @@ async function proxy(request: Request, context: Context, method: "GET" | "PATCH"
     try {
       const raw = await request.text();
       if (raw.length > 512) return failure(400);
-      const value = JSON.parse(raw) as { expectedStatus: RequestStatus; status: RequestStatus };
-      if (!value || Object.keys(value).some((key) => !["expectedStatus", "status"].includes(key)) || !nextStatuses(value.expectedStatus).includes(value.status)) return failure(400);
+      const value = JSON.parse(raw) as { expectedStatus?: unknown; status?: unknown };
+      if (!value || Array.isArray(value) || Object.keys(value).some((key) => !["expectedStatus", "status"].includes(key)) ||
+        typeof value.expectedStatus !== "string" || !/^[a-z_]{1,20}$/.test(value.expectedStatus) ||
+        typeof value.status !== "string" || !/^[a-z_]{1,20}$/.test(value.status)) return failure(400);
       body = { expectedStatus: value.expectedStatus, status: value.status };
     } catch { return failure(400); }
   }
