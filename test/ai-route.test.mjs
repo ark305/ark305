@@ -45,10 +45,12 @@ test('seller draft errors cross BFF without exposing provider details', async ()
 test('day-plan client sends session and rejects failures without local fallback', async () => {
   const { requestDayPlan } = loadLibrary('@/lib/day-ai'); let calls = 0;
   const transport = async (url, init) => { calls++; assert.equal(url, '/api/ai'); assert.equal(init.headers.Authorization, 'Bearer session-token'); assert.equal(JSON.parse(init.body).task, 'day-plan');
-    return Response.json({ plan: { items: [{ id: 'yacht', time: '14:00', qty: 4, guests: 4 }], guests: 4, understood: true }, provenance: { provider: 'Meta', model: 'muse-spark-1.3', responseId: 'msg_test' } }); };
+    return Response.json({ plan: { items: [{ id: 'yacht', time: '14:00', qty: 4, guests: 4 }], guests: 4, understood: true }, provenance: { provider: 'Meta', model: 'muse-spark-1.3', responseId: 'msg_test' }, tools: [{name:'search_catalog',callId:'call_test',arguments:{query:'water'},serviceIds:['yacht'],source:'demo',availability:'unverified'}] }); };
   const input = { prompt: 'Yacht', guests: 4, locale: 'es' };
   await assert.rejects(requestDayPlan(input, undefined, transport), /auth/); assert.equal(calls, 0);
-  assert.equal((await requestDayPlan(input, 'session-token', transport)).plan.items[0].id, 'yacht');
+  const result = await requestDayPlan(input, 'session-token', transport);
+  assert.equal(result.plan.items[0].id, 'yacht');
+  assert.equal(result.tools[0].name, 'search_catalog');
   for (const response of [Response.json({ error: 'auth' }, { status: 401 }), Response.json({ plan: {} }), Response.json({ error: 'quota_unavailable' }, { status: 503 })]) await assert.rejects(requestDayPlan(input, 'session-token', async () => response));
 });
 
@@ -60,7 +62,7 @@ test('Next route forwards authenticated AI requests to Nest without provider cre
   assert.equal(calls.length, 1); assert.equal(String(calls[0].url), 'http://127.0.0.1:3001/api/v1/ai');
   assert.equal(calls[0].headers.Authorization, 'Bearer user-token'); assert.equal(calls[0].headers['Content-Type'], 'application/json');
   assert.deepEqual(JSON.parse(calls[0].body), requestBody); assert.equal(calls[0].redirect, 'error'); assert.equal(calls[0].cache, 'no-store');
-  assert.doesNotMatch(source, /META_API_KEY|api\.meta\.ai|muse-spark|bump_ai/);
+  assert.doesNotMatch(source, /MODEL_API_KEY|META_API_KEY|api\.meta\.ai|muse-spark|bump_ai/);
   assert.doesNotMatch(source, /NEXT_PUBLIC_SUPABASE|service_role|createClient/);
 });
 

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { entryPrice, getItem, packages, planSummary, type Plan } from "@/lib/catalog";
-import { requestDayPlan, type DayProvenance } from "@/lib/day-ai";
+import { requestDayPlan, type DayProvenance, type CatalogToolEvidence } from "@/lib/day-ai";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseReady } from "@/lib/supabase/config";
 import { day, plannerGuests, useDay, usePlannerGuests } from "@/lib/day-store";
@@ -28,6 +28,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
   const [building, setBuilding] = useState(false);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [provenance, setProvenance] = useState<DayProvenance | null>(null);
+  const [tools, setTools] = useState<CatalogToolEvidence[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
   const requestActive = useRef(false);
   const dayRef = useRef<HTMLElement>(null);
@@ -38,6 +39,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
     setText(prompt);
     setPlan(null);
     setProvenance(null);
+    setTools([]);
     setAiError(null);
     if (!supabaseReady) { setAiError(t.aiUnavailable); return; }
     requestActive.current = true;
@@ -49,6 +51,7 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
       plannerGuests.set(result.plan.guests);
       setPlan(result.plan);
       setProvenance(result.provenance);
+      setTools(result.tools);
     } catch (error) {
       const code = error instanceof Error ? error.message : "upstream";
       setAiError(code === "auth" ? t.aiSignIn : code === "rate_limited" ? t.aiLimit : t.aiError);
@@ -135,6 +138,13 @@ export function DayPlanner({ locale, initialPrompt = "" }: { locale: Locale; dis
           <p className="rounded-[18px_18px_18px_4px] border border-teal-line bg-teal-deep px-3.5 py-3 text-[15px] leading-normal text-cream">{plan.items.length ? planSummary(plan, locale) : t.aiNoMatch}</p>
           {provenance && <p className="break-all text-xs text-mute">{provenance.provider} · {provenance.model} · {provenance.responseId}</p>}
           <p className="text-xs text-mute">{t.aiEstimate}</p>
+          <details className="text-xs text-mute">
+            <summary>{t.catalogEvidence}</summary>
+            <ul>{tools.map(tool => <li key={tool.callId} className="mt-2 break-words">
+              <strong>{tool.name}</strong> · {JSON.stringify(tool.arguments)}<br />
+              {t.catalogReturned}: {tool.serviceIds.join(", ") || t.aiNoMatch}<br />{t.catalogDemo}
+            </li>)}</ul>
+          </details>
           <ul className="flex flex-col gap-2">
             {plan.items.map((i) => {
               const c = getItem(i.id)!;

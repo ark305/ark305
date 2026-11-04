@@ -37,6 +37,10 @@ Para autenticación local, permita `http://localhost:3100/**` en las URL de redi
 
 Next conserva sesión web, cookies y transporte; Nest concentra las operaciones de negocio y persistencia. Algunas pantallas de demostración todavía usan reglas locales y no deben presentarse como integraciones completas.
 
+## MVP de hackathon
+
+La web cubre catálogo consultado por Meta, solicitudes e historial, y complementos aceptados. Los precios y servicios del catálogo son DEMO; una solicitud recibida no confirma una reserva. El proceso, la auditoría previa a publicación y el guion de video están en `../ark305-api/docs/HACKATHON_MVP.md`, `../ark305-api/docs/HACKATHON_RELEASE_AUDIT.md` y `../ark305-api/docs/HACKATHON_VIDEO.md` dentro del espacio de trabajo conjunto. Este repositorio utiliza la [licencia MIT](LICENSE), con ARK305 como titular. La publicación sigue pendiente de autorización.
+
 ## Dos repositorios, un espacio de trabajo
 
 Abra `arkApp` para coordinar ambos proyectos. Ejecute Git y npm dentro de `ark305` para la web y de `ark305-api` para el backend; cada repositorio conserva su remoto e historial.
