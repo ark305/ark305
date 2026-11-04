@@ -1,4 +1,4 @@
-# ARK305 Web
+# ARK305 Web.
 
 Aplicación Next.js de ARK305. El frontend se ejecuta desde la raíz de este repositorio. El backend NestJS independiente está en la carpeta hermana `../ark305-api`.
 
