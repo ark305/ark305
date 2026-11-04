@@ -9,6 +9,7 @@ import { positions } from "@/lib/talent";
 import { requestTeamPlan, type TeamResult } from "@/lib/team-plan-ai";
 import { createClient } from "@/lib/supabase/client";
 import { supabaseReady } from "@/lib/supabase/config";
+import { TeamProposalHistory } from './team-proposal-history';
 
 export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: boolean }) {
   const b = dict(locale).biz.team;
@@ -53,6 +54,7 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
       if (operation !== generation.current) return;
       const code = cause instanceof Error ? cause.message : "upstream";
       setError(code === "auth" ? (es ? "Inicia sesión para generar tu propuesta." : "Sign in to generate your proposal.") :
+        code === "proposal_storage" ? (es ? "El guardado no está disponible. No se ha generado otra propuesta." : "Storage is unavailable. No new proposal was generated.") :
         code === "rate_limited" ? (es ? "Alcanzaste el límite de IA. Intenta más tarde." : "AI limit reached. Try again later.") :
           (es ? "No se pudo obtener una propuesta válida de Meta. Intenta nuevamente." : "Could not obtain a valid proposal from Meta. Try again."));
     } finally {
@@ -80,14 +82,16 @@ export function TeamBuilder({ locale, canHire }: { locale: Locale; canHire: bool
       <p className="text-xs text-mute">{es ? "Propuestas generadas con Meta. Los errores no se sustituyen por respuestas simuladas." : "Proposals generated with Meta. Errors are never replaced with simulated answers."}</p>
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
     </section>
+    <TeamProposalHistory es={es} disabled={busy} onRestore={value=>{generation.current++;active.current=false;setBusy(false);setText(value.prompt);setError('');setResult({...value,storage:{saved:true,id:value.id}});}} />
     {result && <section className="flex flex-col gap-3 rounded-[24px] border border-white/10 p-4">
       <h2 className="font-bold text-gold">{b.proposal}</h2>
       <p className="text-cream">{result.plan.rationale}</p>
       <p className="break-all text-xs text-mute">Meta · {result.provenance.model} · {result.provenance.responseId}</p>
+      <p role={result.storage?.saved?'status':'alert'} className="text-sm text-gold">{result.storage?.saved?(es?'Guardada en tu historial privado.':'Saved to your private history.'):(es?'No se confirmó el guardado. Conserva este texto antes de salir; no se reintentará la generación automáticamente.':'Saving was not confirmed. Keep this text before leaving; generation will not be retried automatically.')}</p>
       {result.plan.items.map(item => {
-        const role = positions.find(p => p.id === item.id)!;
+        const role = positions.find(p => p.id === item.id);
         return <div key={item.id} className="border-t border-white/10 py-2 text-sm text-cream">
-          <p className="font-semibold">{role.name[locale]}</p>
+          <p className="font-semibold">{item.name ?? role?.name[locale] ?? item.id}</p>
           <p>{labels[item.cadence]} · {item.hours ? item.hours + " " + (item.cadence === "monthly" ? (es ? "h/semana" : "h/week") : "h") : (es ? "1 unidad" : "1 unit")}</p>
           <p>{item.amount === null ? labels.quote : money(item.amount)}</p>
         </div>;

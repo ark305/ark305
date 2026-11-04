@@ -16,6 +16,7 @@ function harness(request, getSession) {
     },
     'react/jsx-runtime': { jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }) },
     'next/link': { default: 'link' },
+    './team-proposal-history': { TeamProposalHistory: 'history' },
     '@/lib/dict': { dict: () => ({ biz: { team: { suggestions: ['Contenido'], build: 'Generar', building: 'Esperando' } } }) },
     '@/lib/mock-data': { formatPrice: n => '$' + n },
     '@/lib/talent': { positions: [{ id: 'r-cm', name: { es: 'Community manager', en: 'Community manager' } }] },

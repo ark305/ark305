@@ -2,15 +2,17 @@ import { positions } from './talent';
 
 export type TeamEstimate = {
   understood: boolean; rationale: string; demo: true;
-  items: { id: string; hours: number; cadence: 'monthly' | 'one_off' | 'quote'; amount: number | null }[];
+  items: { id: string; hours: number; cadence: 'monthly' | 'one_off' | 'quote'; amount: number | null; name?: string; unit?: string; rate?: number }[];
   monthlyTotal: number; oneOffTotal: number; quoteCount: number;
 };
-export type TeamResult = { plan: TeamEstimate; provenance: { provider: 'Meta'; model: string; responseId: string } };
+export type TeamResult = { plan: TeamEstimate; provenance: { provider: 'Meta'; model: string; responseId: string }; storage?: { saved: boolean; id?: string } };
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 
 export function validTeamResult(value: unknown): value is TeamResult {
   if (!record(value) || !record(value.plan) || !record(value.provenance)) return false;
   const p = value.plan, source = value.provenance;
+  if (value.storage !== undefined && (!record(value.storage) || typeof value.storage.saved !== 'boolean' ||
+      (value.storage.saved && (typeof value.storage.id !== 'string' || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value.storage.id))))) return false;
   if (source.provider !== 'Meta' || typeof source.model !== 'string' || !source.model.trim() || typeof source.responseId !== 'string' || !source.responseId.trim() ||
       p.demo !== true || typeof p.rationale !== 'string' || !p.rationale.trim() || p.rationale.length > 1200 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f\ufffd]/u.test(p.rationale) ||
       !Array.isArray(p.items) || p.items.length > 8 || p.understood !== (p.items.length > 0)) return false;
