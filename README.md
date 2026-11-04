@@ -39,7 +39,7 @@ Next conserva sesión web, cookies y transporte; Nest concentra las operaciones 
 
 ## MVP de hackathon
 
-La web cubre catálogo consultado por Meta, solicitudes e historial, y complementos aceptados. Los precios y servicios del catálogo son DEMO; una solicitud recibida no confirma una reserva. El proceso, la auditoría previa a publicación y el guion de video están en `../ark305-api/docs/HACKATHON_MVP.md`, `../ark305-api/docs/HACKATHON_RELEASE_AUDIT.md` y `../ark305-api/docs/HACKATHON_VIDEO.md` dentro del espacio de trabajo conjunto. Este repositorio utiliza la [licencia MIT](LICENSE), con ARK305 como titular. La publicación sigue pendiente de autorización.
+La web cubre catálogo consultado por Meta, solicitudes e historial, y complementos aceptados. Los precios y servicios del catálogo son DEMO; una solicitud recibida no confirma una reserva. El proceso, la auditoría previa a publicación y el guion de video están en el [repositorio del API](https://github.com/ark305/ark305-api), en `docs/HACKATHON_MVP.md`, `docs/HACKATHON_RELEASE_AUDIT.md` y `docs/HACKATHON_VIDEO.md` de la rama `feat/hackathon-concierge`. Este repositorio utiliza la [licencia MIT](LICENSE), con ARK305 como titular. La publicación sigue pendiente de autorización.
 
 ## Dos repositorios, un espacio de trabajo
 
