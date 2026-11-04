@@ -21,7 +21,7 @@ export function validTeamResult(value: unknown): value is TeamResult {
     if (!role || ids.has(role.id) || typeof item.hours !== 'number' || !Number.isInteger(item.hours)) return false;
     ids.add(role.id);
     const periods = role.unit === 'h' ? ['monthly', 'one_off'] : role.unit === 'm' ? ['monthly'] : role.unit === 'q' ? ['quote'] : ['one_off'];
-    if (!periods.includes(String(item.cadence)) || (role.unit === 'h' ? item.hours < 1 || item.hours > 40 : item.hours !== 0)) return false;
+    if (typeof item.cadence !== 'string' || !periods.includes(item.cadence) || (role.unit === 'h' ? item.hours < 1 || item.hours > 40 : item.hours !== 0)) return false;
     const expected = role.unit === 'q' ? null : Math.round(role.rate * (role.unit === 'h' ? item.hours * (item.cadence === 'monthly' ? 4.33 : 1) : 1));
     if (item.amount !== expected) return false;
     if (item.cadence === 'monthly') monthly += expected ?? 0;

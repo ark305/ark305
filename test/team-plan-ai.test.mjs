@@ -10,6 +10,21 @@ function load(file) {
   { exports, require: name => load(name.replace('./', '')), fetch, AbortSignal });
   return exports;
 }
+
+test('team client rejects non-string cadence even when forged totals match coercion', async () => {
+  const { requestTeamPlan } = load('team-plan-ai');
+  for (const item of [
+    { id: 'r-cm', hours: 10, cadence: 'monthly', amount: 180 },
+    { id: 'turn', hours: 0, cadence: 'one_off', amount: 145 },
+    { id: 'kitchen', hours: 0, cadence: 'quote', amount: null },
+  ]) {
+    for (const cadence of [[item.cadence], [[item.cadence]], null, {}, true, 1]) {
+      const payload = { plan: { understood: true, rationale: 'Propuesta.', demo: true, monthlyTotal: 0, oneOffTotal: 0, quoteCount: 1,
+        items: [{ ...item, cadence }] }, provenance: { provider: 'Meta', model: 'muse-test', responseId: 'msg-team' } };
+      await assert.rejects(requestTeamPlan({ prompt: 'Equipo', locale: 'es' }, 'test', async () => Response.json(payload)), /invalid_plan/, JSON.stringify(cadence));
+    }
+  }
+});
 test('team client sends one authenticated request and rejects fabricated or malformed estimates', async () => {
   const { requestTeamPlan } = load('team-plan-ai');
   const input = { prompt: 'Equipo de marketing', locale: 'es' };
