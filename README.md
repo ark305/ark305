@@ -1,17 +1,15 @@
 # ARK305 Web
 
-Repositorio de la aplicación web de ARK305. El código de Next.js, sus pruebas y la documentación de la interfaz viven en `frontend/`; este repositorio no contiene la implementación del servidor ni sus migraciones.
+Aplicación Next.js de ARK305. El frontend se ejecuta desde la raíz de este repositorio. El backend NestJS independiente está en la carpeta hermana `../ark305-api`.
 
-## Inicio rápido
-
-Desde la raíz:
+## Ejecutar y comprobar
 
 ```sh
-npm ci --prefix frontend
+npm ci
 npm run dev
 ```
 
-La web queda disponible en `http://localhost:3100`. Para comprobarla:
+La web utiliza `http://localhost:3100`. Nest utiliza `http://127.0.0.1:3001` y se inicia por separado desde su repositorio.
 
 ```sh
 npm test
@@ -20,24 +18,31 @@ npm run typecheck
 npm run build
 ```
 
-Los comandos raíz solo delegan en el paquete web. El API HTTP se mantiene en un repositorio independiente, ubicado localmente como `../ark305-api`; para el proceso de instalación y configuración del servidor, consulte la documentación de ese repositorio.
+## Variables locales
 
-## Configuración web
+Copie `.env.example` como `.env.local`. Configure la URL y la clave pública de Supabase, además de `ARK_API_URL`, un origen HTTP(S) sin `/api/v1`. Esta última variable es exclusiva del servidor Next y no debe llevar el prefijo `NEXT_PUBLIC_`.
 
-Copie `frontend/.env.example` como `frontend/.env.local`. La web utiliza la configuración pública de Supabase y `ARK_API_URL`, que debe apuntar al origen HTTP del API independiente. `ARK_API_URL` es una variable de servidor de Next.js y no debe llevar el prefijo `NEXT_PUBLIC_`.
+No coloque claves de Meta ni credenciales administrativas de Supabase en el frontend. Esas credenciales pertenecen al entorno privado del backend. Los archivos `.env.local`, las dependencias y los resultados de compilación no se versionan.
 
-No copie secretos del API en la aplicación web. El archivo `.env.local` local no se publica; los nombres de variables requeridos por el servidor y sus valores deben configurarse en el repositorio del API.
+Para autenticación local, permita `http://localhost:3100/**` en las URL de redirección de Supabase. Mantenga la URL principal de producción. HTTP y HTTPS no son equivalentes.
 
-## Estructura
+## Organización
 
-- `frontend/src/app/`: páginas y adaptadores HTTP de Next.js.
-- `frontend/src/components/`: componentes de interfaz.
-- `frontend/src/lib/`: presentación, estado local, configuración pública y clientes HTTP.
-- `frontend/test/`: pruebas web y de contratos de sus adaptadores.
-- `frontend/public/`: recursos estáticos.
-- `docs/`: guía de producto, recorridos de interfaz e inventarios del frontend.
-- `supabase/templates/`: plantillas de correo utilizadas al configurar Supabase Auth.
+- `src/app/`: páginas y adaptadores HTTP.
+- `src/components/`: presentación e interacción.
+- `src/lib/`: estado local, formularios, configuración pública y transporte.
+- `src/lib/dictionaries/`: interfaz en español e inglés.
+- `public/`: recursos estáticos.
+- `test/`: pruebas de interfaz, validación y transporte.
 
-La interfaz maneja presentación, formularios, navegación y estado local. La identidad de sesión del navegador y la carga de archivos requieren los adaptadores correspondientes; las reglas de negocio y el acceso a datos pertenecen al API independiente.
+Next conserva sesión web, cookies y transporte; Nest concentra las operaciones de negocio y persistencia. Algunas pantallas de demostración todavía usan reglas locales y no deben presentarse como integraciones completas.
 
-Consulte la [guía del proyecto](docs/GUIA_DEL_PROYECTO.md) para conocer las pantallas y límites del frontend. El proyecto web local no cambia ni publica configuraciones de Vercel u otros servicios remotos.
+## Dos repositorios, un espacio de trabajo
+
+Abra `arkApp` para coordinar ambos proyectos. Ejecute Git y npm dentro de `ark305` para la web y de `ark305-api` para el backend; cada repositorio conserva su remoto e historial.
+
+Los residuos locales de `frontend/` están ignorados y no forman parte de la aplicación activa. Se conservan para no borrar configuración privada durante la migración. `../respaldo` contiene documentos históricos y archivos privados: no debe publicarse. La documentación histórica también permanece en Git.
+
+## Despliegue
+
+En Vercel, el directorio raíz del proyecto web debe ser la raíz del repositorio (`.`), no `frontend`. Configure `ARK_API_URL` con el origen del backend desplegado. Estas instrucciones no implican que la configuración remota ya haya sido modificada o verificada.

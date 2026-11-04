@@ -101,3 +101,15 @@ test('AI proxy allows preprocessing plus the full provider deadline without retr
   assert.deepEqual(await response.json(), { error: 'upstream' });
   assert.equal(expired.calls.length, 1);
 });
+
+
+test('day-plan reasons reach the browser without private or cross-task details', async () => {
+  for (const reason of ['truncated', 'invalid_metadata', 'invalid_json', 'invalid_items', 'invalid_answers', 'private-output']) {
+    const proxy = harness({ response: Response.json({ error: 'invalid_plan', reason, secret: 'private' }, { status: 502 }) });
+    const response = await proxy.invoke({ task: 'day-plan' });
+    assert.equal(response.status, 502);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    const accepted = ['truncated', 'invalid_metadata', 'invalid_json', 'invalid_items'].includes(reason);
+    assert.deepEqual(await response.json(), { error: 'invalid_plan', ...(accepted ? { reason } : {}) });
+  }
+});

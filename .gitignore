@@ -50,3 +50,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local residue from the completed root promotion; never publish backups.
+/frontend/
+/.codegraph/
