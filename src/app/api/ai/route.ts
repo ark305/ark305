@@ -50,8 +50,10 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const upstreamError = "error" in payload && typeof payload.error === "string" ? payload.error : "";
       if (response.status === 401) return errorResponse(401, "auth");
-      const allowedErrors = new Set(["ai_not_configured", "auth", "prompt", "diagnosis_input", "rate_limited", "quota_unavailable", "upstream", "invalid_plan", "invalid_diagnosis"]);
+      const allowedErrors = new Set(["ai_not_configured", "auth", "prompt", "diagnosis_input", "rate_limited", "quota_unavailable", "upstream", "invalid_plan", "invalid_diagnosis", "seller_input", "seller_service", "invalid_draft"]);
       if (!allowedErrors.has(upstreamError)) return errorResponse(response.status === 400 ? 400 : 503, "upstream");
+      if (upstreamError === "seller_service") return errorResponse(404, "seller_service");
+      if (upstreamError === "invalid_draft") return errorResponse(502, "invalid_draft");
       if (upstreamError === "invalid_diagnosis" || upstreamError === "invalid_plan") {
         const reasons = new Set(["truncated", "invalid_metadata", "invalid_json", upstreamError === "invalid_plan" ? "invalid_items" : "invalid_answers"]);
         const reason = "reason" in payload && typeof payload.reason === "string" && reasons.has(payload.reason) ? payload.reason : null;

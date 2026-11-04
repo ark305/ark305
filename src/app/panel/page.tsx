@@ -48,7 +48,8 @@ export default async function PanelPage() {
   const business = view === "business";
   const p = t.panel;
   // Tu perfil real si entraste; si no, el de ejemplo para que el Panel se pueda recorrer.
-  const me = (await getViewer()).profile ?? getProfile(CURRENT_HANDLE)!;
+  const viewer = await getViewer();
+  const me = viewer.profile ?? getProfile(CURRENT_HANDLE)!;
   const lvl = getLevel(level);
 
   const groups: FeatureGroup[] = GROUPS.map((g) => ({
@@ -129,7 +130,8 @@ export default async function PanelPage() {
           </>
         )}
 
-        <SellerAi tone={business ? "business" : "lifestyle"} locale={locale} name={me.name} handle={me.handle} services={me.services.map((s) => ({ title: s.title[locale], price: s.price }))} />
+        <SellerAi key={viewer.userId ?? "anonymous"} tone={business ? "business" : "lifestyle"} locale={locale} userId={viewer.userId}
+          services={(viewer.profile?.services ?? []).map((s) => ({ id: s.id, title: s.title[locale] }))} />
       </div>
 
       <FeaturesFeed

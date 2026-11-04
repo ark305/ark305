@@ -34,6 +34,14 @@ function harness(options = {}) {
   return { invoke, calls };
 }
 
+test('seller draft errors cross BFF without exposing provider details', async () => {
+  for (const [error, status] of [['seller_input', 400], ['seller_service', 404], ['invalid_draft', 502]]) {
+    const h = harness({ response: Response.json({ error, reason: 'private-provider-detail', token: 'private' }, { status }) });
+    const response = await h.invoke({ task: 'seller-draft' });
+    assert.equal(response.status, status); assert.deepEqual(await response.json(), { error });
+  }
+});
+
 test('day-plan client sends session and rejects failures without local fallback', async () => {
   const { requestDayPlan } = loadLibrary('@/lib/day-ai'); let calls = 0;
   const transport = async (url, init) => { calls++; assert.equal(url, '/api/ai'); assert.equal(init.headers.Authorization, 'Bearer session-token'); assert.equal(JSON.parse(init.body).task, 'day-plan');
