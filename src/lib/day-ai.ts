@@ -43,9 +43,28 @@ export function parseDayPlan(value: unknown): Plan | null {
 }
 
 export type DayProvenance = { provider: "Meta"; model: string; responseId: string };
+export type CatalogToolEvidence = { name: "search_catalog" | "get_complements"; callId: string;
+  arguments: Record<string, string>; serviceIds: string[]; source: "demo"; availability: "unverified" };
+
+export function parseCatalogTools(value: unknown): CatalogToolEvidence[] | null {
+  if (!Array.isArray(value) || !value.length || value.length > 3) return null;
+  const seen = new Set<string>();
+  for (const tool of value) {
+    if (!tool || !["search_catalog", "get_complements"].includes(tool.name) ||
+        typeof tool.callId !== "string" || !/^[a-zA-Z0-9_-]{1,200}$/.test(tool.callId) || seen.has(tool.callId) ||
+        tool.source !== "demo" || tool.availability !== "unverified" ||
+        !Array.isArray(tool.serviceIds) || tool.serviceIds.length > catalog.length || tool.serviceIds.some((id: unknown) => typeof id !== "string" || !ids.includes(id)) ||
+        !tool.arguments || typeof tool.arguments !== "object" || Array.isArray(tool.arguments) ||
+        Object.keys(tool.arguments).length !== 1 ||
+        typeof tool.arguments[tool.name === "search_catalog" ? "query" : "serviceId"] !== "string" ||
+        Object.values(tool.arguments).some(value => typeof value !== "string" || value.length > 120)) return null;
+    seen.add(tool.callId);
+  }
+  return value;
+}
 
 export async function requestDayPlan(input: { prompt: string; guests: number; locale: string }, token: string | undefined,
-  fetcher: typeof fetch = fetch): Promise<{ plan: Plan; provenance: DayProvenance }> {
+  fetcher: typeof fetch = fetch): Promise<{ plan: Plan; provenance: DayProvenance; tools: CatalogToolEvidence[] }> {
   if (!token) throw new Error("auth");
   const response = await fetcher("/api/ai", {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -55,7 +74,9 @@ export async function requestDayPlan(input: { prompt: string; guests: number; lo
   if (!response.ok) throw new Error(data.error || "upstream");
   const plan = parseDayPlan(data.plan);
   const proof = data.provenance;
+  const tools = parseCatalogTools(data.tools);
   if (!plan || proof?.provider !== "Meta" || typeof proof.model !== "string" || !proof.model ||
-      typeof proof.responseId !== "string" || !proof.responseId) throw new Error("invalid_plan");
-  return { plan, provenance: proof };
+      typeof proof.responseId !== "string" || !proof.responseId || !tools ||
+      plan.items.some(item => !tools.some(tool => tool.serviceIds.includes(item.id)))) throw new Error("invalid_plan");
+  return { plan, provenance: proof, tools };
 }

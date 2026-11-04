@@ -8,6 +8,7 @@ import { supabaseReady } from "@/lib/supabase/config";
 import { createServiceRequest, isCalendarDate, listServiceRequests, ServiceRequestError, type ServiceRequest, type ServiceRequestInput } from "@/lib/service-requests";
 import { dict } from "@/lib/dict";
 import type { Locale } from "@/lib/locale";
+import { RequestUpsell } from './request-upsell';
 
 type SessionSnapshot = { userId: string; accessToken: string; revision: number };
 type EntryStatus = { state: "sending" | "received" | "uncertain" | "rejected"; requestDate: string; request?: ServiceRequest };
@@ -298,6 +299,7 @@ export function DayRequests({ locale, entries }: { locale: Locale; entries: DayE
                   <span className="font-semibold text-white">{getItem(item.serviceId)?.name[locale] ?? item.serviceId}</span>
                   <span className="ml-2 text-cream">{item.requestedDate}</span>
                   <span className="ml-2 text-mute">{t.requestStates[item.status]}</span>
+                  <RequestUpsell key={`${session.userId}:${session.revision}:${item.id}`} request={item} token={session.accessToken} locale={locale} />
                 </li>
               ))}
             </ul>

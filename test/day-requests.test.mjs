@@ -86,6 +86,7 @@ function harness(options = {}) {
   const context = {
     exports: {}, AbortSignal, AbortController, Date, Promise, console, fetch,
     require: (name) => {
+      if (name === './request-upsell') return { RequestUpsell: () => null };
       if (name === 'react') return reactHooks.react;
       if (name === 'react/jsx-runtime') return { jsx: (type, props, key) => ({ type, props, key }), jsxs: (type, props, key) => ({ type, props, key }) };
       if (name === '@/lib/catalog') return { getItem: (id) => ({ id, name: { es: id, en: id } }) };
